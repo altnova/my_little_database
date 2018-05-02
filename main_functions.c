@@ -11,7 +11,7 @@
 
 struct Books {
 	I book_id;
-	C deleted;
+	C deleted;				// 0 -- deleted
 	H year;
 	C publisher[NAME_LEN];
 	I pages;
@@ -22,10 +22,10 @@ struct Books {
 	C subject[SUB_LEN];
 } book;
 
+///////////////////////////////////////////////////////////////////////////////////////
 
+/*	asks user to tap something */
 C menu(const C *hint);
-
-book ask_note(FILE *db, I ask);
 
 /*	returns pointer for a note with given id or -1 */
 I get_pos_by_id(FILE *db, I id);
@@ -34,10 +34,10 @@ I get_pos_by_id(FILE *db, I id);
 I last_id(FILE *db);
 
 /*	prints one note */
-void print_notes(book *note);
+void print_note(book note);
 
-/*	struct 	--> 	..[db]..	*/
-void include_note(FILE *db, book note);
+/*	prints few notes 	*/
+void print_notes(book *note);
 
 /* 	gets one line from a file */
 /* 	retuns 0 if this line is too long 	*/
@@ -54,13 +54,21 @@ book make_structure(FILE *f, FILE *db);
 /*	returns 1 or 0	*/ 
 I match_all(book note, H yr, S publ, I pg, S ttl, S nm, S surnm, S patr, S subj);
 
-/*	finds a wanted note and sets note.deleted = 1 */
+/*	finds required note and sets note.deleted = 1 */
 I delete_note(FILE *db, I id);
 
 /* 	struct		-->		..[db] 	*/	
 I add_note(FILE *db, book note);
 
+/*	asks user to enter a note 	*/
+book ask_note(FILE *db, I ask);
 
+/* 	book n2 complements book n1	*/
+book combine(book n1, book n2)
+
+///////////////////////////////////////////////////////////////////////////////////////
+
+/*	asks user to tap something */
 C menu(const C *hint) 
 {
     C c;
@@ -73,14 +81,19 @@ C menu(const C *hint)
 /*	returns pointer for a note with given id or -1 */
 I get_pos_by_id(FILE *db, I id)
 {
-	I pos, num;
+	I pos, num, d;
 	rewind(db);
-	while(fread(&num, SIZE(I), 1, db)) {
-		pos = ftell(db) - SIZE(I);
-		if (num == id)
-			R pos;
-		fseek(db, SIZE(book) - SIZE(I), SEEK_CUR);	
+
+	while(fseek(db, SIZE(book) - SIZE(I) - SIZE(C))) {
+		fread(&num, SIZE(I), 1, db);
+		fread(&d, SIZE(C), I, db);
+		if (d) {
+			pos = ftell(db) - SIZE(I) - SIZE(C);
+			if (num == id)
+				R pos;
+		}
 	}
+
 	R -1;
 }
 
@@ -98,22 +111,20 @@ I last_id(FILE *db)
 	R nm;
 }
 
+void print_note(book note)
+{
+	printf("%s %s %s\n%s\n", note.name, note.surname, 
+			note.patronymic, note.title);
+	printf("%d pages  %hi %s\n%s\n\n", note.pages, 
+			note.year, note.publisher, note.subject);
+}
+
 /*	prints one note */
 void print_notes(book *note)
 {
 	I i = 0;
-	while(note[i]) {  
-		fprintf("%s %s %s\n%s\n", note.name, note.surname, 
-			note.patronymic, note.title);
-		printf("%d pages  %hi %s\n%s\n\n", note.pages, 
-			note.year, note.publisher, note.subject);
-	}
-}
-
-/*	struct 	--> 	..[db]..	*/
-void include_note(FILE *db, book note) 
-{	
-	fseek(&note, SIZE(book), 1, db);
+	while(note[i]) 
+		print_note(note[i++]);
 }
 
 /* 	gets one line from a file */
@@ -168,14 +179,6 @@ book make_structure(FILE *f, FILE *db)
 		!get_line(f, note.patronymic, NAME_LEN) 
 		!get_line(f, note.subject, SUB_LEN))
 		R 0;
-	/*if (!get_line(f, note.name, NAME_LEN))
-		R 0;
-	if (!get_line(f, note.surname, NAME_LEN))
-		R 0;
-	if (!get_line(f, note.patronymic, NAME_LEN))
-		R 0;
-	if (!get_line(f, note.subject, SUB_LEN))
-		R 0;*/
 
 	R book note;
 }
@@ -184,52 +187,34 @@ book make_structure(FILE *f, FILE *db)
 /*	returns 1 or 0	*/ 
 I match_all(book note, H yr, S publ, I pg, S ttl, S nm, S surnm, S patr, S subj)
 {
-	if (note.deleted || (yr && yr != note.year) 
-		|| (publ && strcmp(publ, note.publisher)) 
-		|| (pg && pg != note.page) || (ttl && strcmp(ttl, note.title)) 
-		|| (nm && strcmp(nm, note.name)) || (surnm && strcmp(surnm, note.surname)) 
-		|| (patr && strcmp(patr, note.patronymic)) || (subj && strstr(note.subject), subj))
+	if (!note.deleted || (yr && yr != note.year) 
+			|| (publ && strcmp(publ, note.publisher)) 
+			|| (pg && pg != note.page) || (ttl && strcmp(ttl, note.title)) 
+			|| (nm && strcmp(nm, note.name)) || (surnm && strcmp(surnm, note.surname)) 
+			|| (patr && strcmp(patr, note.patronymic)) || (subj && strstr(note.subject), subj))
 		R 0;
-	/*
-	if (note.deleted)
-		R 0;
-	if (yr && yr != note.year)
-		R 0;
-	if (publ && strcmp(publ, note.publisher))
-		R 0;
-	if (pg && pg != note.page)
-		R 0;
-	if (ttl && strcmp(ttl, note.title))
-		R 0;
-	if (nm && strcmp(nm, note.name))
-		R 0;
-	if (surnm && strcmp(surnm, note.surname))
-		R 0;
-	if (patr && strcmp(patr, note.patronymic))
-		R 0;
-	if (subj && strstr(note.subject), subj)
-		R 0;*/
+
 	R 1;
 }
 
 /*	finds a wanted note and sets note.deleted = 1 */
 I delete_note(FILE *db, I id)
 {
-	I num = 0, pos = get_pos_by_id(db, id);
+	I num = 1;
 
-	if (pos == -1) 
+	if (fseek(db, get_pos_by_id(db, id) + SIZE(I), SEEK_SET))
 		R 0;
-	
-	fseek(db, pos + SIZE(I), SEEK_SET);
+
 	fwrite(&num, SIZE(C), 1, db);
 	R 1;	
 }
 	
-/* 	struct		-->		..[db] 	*/		
-I add_note(FILE *db, book note)
+/* 	struct		-->		..[db]..	*/		
+I add_note(FILE *db, book note, I ptr)
 {
 	if (note) {
-		fseek(db, 0, SEEK_END);
+		if (fseek(db, ptr, SEEK_SET))
+			R 0;
 		fwrite(&note, SIZE(book), 1, db);
 		R 1;
 	}
@@ -237,69 +222,23 @@ I add_note(FILE *db, book note)
 		R 0;
 }
 
-
-
+/*	asks user to enter a note 	*/
 book ask_note(FILE *db, I ask) 
 { 
 	book note;
 	note.deleted = 0;
 	if (ask) {
-		/*
-		menu("year? [y/n]  ") == 'y' ? 		(scanf("%d", &note.year) && getchar())					: note.year = 0;
-		menu("publisher? [y/n]  ") == 'y' ? while (!get_line(stdin, note.publisher, NAME_LEN)); 	: note.publisher = 0;
-		menu("pages? [y/n]  ") == 'y' ? 	(scanf("%d", &note.pages) && getchar())					: note.pages = 0;
-		menu("title? [y/n]  ") == 'y' ?	 	while (!get_line(stdin, note.title, NAME_LEN)); 		: note.title = 0;
-		menu("name? [y/n]" == 'y') ? 		while (!get_line(stdin, note.name, NAME_LEN)); 			: note.name = 0;
-		menu("surname? [y/n]" == 'y') ? 	while (!get_line(stdin, note.surname, NAME_LEN)); 		: note.surname = 0;	
-		menu("patronymic? [y/n]" == 'y') ? 	while (!get_line(stdin, note.patronymic, NAME_LEN)); 	: note.patronymic = 0;	
-		menu("subject? [y/n]" == 'y' ? 		while (!get_line(stdin, note.subject, SUB_LEN))			: note.subject = 0; 
-		*/
-
+		
+		menu("year? [y/n]  ") == 'y' 		? 		(scanf("%d", &note.year) && getchar())					: note.year = 0;
+		menu("publisher? [y/n]  ") == 'y' 	? 		get_line(stdin, note.publisher, NAME_LEN)			 	: note.publisher = 0;
+		menu("pages? [y/n]  ") == 'y' 		? 		(scanf("%d", &note.pages) && getchar())					: note.pages = 0;
+		menu("title? [y/n]  ") == 'y' 		?	 	get_line(stdin, note.title, NAME_LEN) 					: note.title = 0;
+		menu("name? [y/n]" == 'y') 			? 		get_line(stdin, note.name, NAME_LEN) 					: note.name = 0;
+		menu("surname? [y/n]" == 'y') 		? 		get_line(stdin, note.surname, NAME_LEN) 				: note.surname = 0;	
+		menu("patronymic? [y/n]" == 'y') 	?	 	get_line(stdin, note.patronymic, NAME_LEN)			 	: note.patronymic = 0;	
+		menu("subject? [y/n]" == 'y' 		? 		get_line(stdin, note.subject, SUB_LEN)) 				: note.subject = 0; 
 		note.book_id = -1;
 
-		if (menu("year? [y/n]  ") == 'y') {
-			scanf("%d", &note.year);
-			getchar();
-		}
-		else
-			note.year = 0;
-
-		if (menu("publisher? [y/n]  ") == 'y') 
-			while (!get_line(stdin, note.publisher, NAME_LEN));
-		else 
-			note.publisher = 0;
-		
-		if (menu("pages? [y/n]  ") == 'y') {
-			scanf("%d", &note.pages);
-			getchar();
-		}
-		else 
-			note.pages = 0;
-
-		if (menu("title? [y/n]  ") == 'y') 
-			while (!get_line(stdin, note.title, NAME_LEN));
-		else 
-			note.title = 0;
-
-		if (menu("name? [y/n]" == 'y'))
-			while (!get_line(stdin, note.name, NAME_LEN));
-		else 
-			note.name = 0;
-
-		if (menu("surname? [y/n]" == 'y'))
-			while (!get_line(stdin, note.surname, NAME_LEN));
-		else 
-			note.surname = 0;
-
-		if (menu("patronymic? [y/n]" == 'y'))
-			while (!get_line(stdin, note.patronymic, NAME_LEN));
-		else 
-			note.patronymic = 0;
-
-		if (menu("subject? [y/n]" == 'y'))
-			while (!get_line(stdin, note.subject, SUB_LEN));
-		else 
-			note.subject = 0; 
 
 	}
 	else {
@@ -312,30 +251,29 @@ book ask_note(FILE *db, I ask)
 		
 
 		O("publisher:\n");
-		while (!get_line(stdin, note.publisher, NAME_LEN));
+		get_line(stdin, note.publisher, NAME_LEN);
 		
 		O("pages:\n");
 		scanf("%d", &note.pages);
 		getchar();
 
 		O("title:\n"); 
-		while (!get_line(stdin, note.title, NAME_LEN));
+		get_line(stdin, note.title, NAME_LEN);
 
 		O("name:\n");
-		while (!get_line(stdin, note.name, NAME_LEN));
+		get_line(stdin, note.name, NAME_LEN);
 
 		O("surname:\n");
-		while (!get_line(stdin, note.surname, NAME_LEN));
+		get_line(stdin, note.surname, NAME_LEN);
 		
 		O("patronymic:\n");
-		while (!get_line(stdin, note.patronymic, NAME_LEN));
+		get_line(stdin, note.patronymic, NAME_LEN);
 
 		O("subject:\n");
-		while (!get_line(stdin, note.subject, SUB_LEN));
+		get_line(stdin, note.subject, SUB_LEN);
 	}
 	R note;
 }
-
 
 /* 	book n2 complements book n1	*/
 book combine(book n1, book n2)
