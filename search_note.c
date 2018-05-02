@@ -8,11 +8,14 @@ I match_all(book note, H yr, S publ, I pg, S ttl, S nm, S surnm, S patr, S subj)
 book* search_note(FIlE *db, H yr, S publ, I pg, S ttl, S nm, S surnm, S patr, S subj)
 {
 	I i = 0;
-	book *note = calloc(2, SIZE(book));
+	book *note = calloc(1, SIZE(book));
+
 	while (fread(&note[i], SIZE(book), 1, db))
-		if (match_all(note[i], yr, publ, pg, ttl, nm, surnm, patr, subj)) {
-			note = realloc(note, i + 3);
-			note[++i + 1] = 0;
+		if (note[i].deleted && match_all(note[i], yr, publ, pg, ttl, nm, surnm, patr, subj)) {
+			note = realloc(note, ++i + 1);
+			note[i] = 0;
 		}
+		
+	note[i] = 0;
 	R note;
 }
