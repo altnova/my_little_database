@@ -2,19 +2,25 @@
 I get_line(FILE *f, C buf[], I length);
 
 /* ..[txt]..	-->		struct 	*/
-book make_structure(FILE *f);
+book rec_make(FILE *f);
 
 /* adds one note into db */
-I add_note(FILE *db, book note);
+I rec_add(FILE *db, book note);
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /* fills db with info from file_name */
-void fill_db(FILE *db, S file_name)
+I fill_db(FILE *db, S file_name)
 {
-	book note;
+	rec note;
+
+	if (!access(file_name, F_OK ) != -1)
+		R 0;
 	FILE *text = fopen(file_name, "r");
 	fseek(db, 0, SEEK_END);
-	while (add_note(db, make_structure(file_name)));
+
+	while (rec_add(db, rec_make(text, db), ftell(db)));
+	
 	fclose(text);
+	R 1;
 }

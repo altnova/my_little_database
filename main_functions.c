@@ -7,10 +7,10 @@
 #define SUB_LEN 140
 #define NAME_LEN 50
 #define MAX(a, b) {(a) > (b) ? (a) : (b);}
-#define SIZE sizeof
+#define SZ sizeof
 
 struct Books {
-	I book_id;
+	I rec_id;
 	C deleted;				// 0 -- deleted
 	H year;
 	C publisher[NAME_LEN];
@@ -20,9 +20,12 @@ struct Books {
 	C surname[NAME_LEN];
 	C patronymic[NAME_LEN]
 	C subject[SUB_LEN];
-} book;
+} rec;
 
 ///////////////////////////////////////////////////////////////////////////////////////
+
+/* 	str1 subline search with no case in str2	*/
+I strstr_no_case(S str1, S str2)
 
 /*	asks user to tap something */
 C menu(const C *hint);
@@ -30,43 +33,56 @@ C menu(const C *hint);
 /*	returns pointer for a note with given id or -1 */
 I get_pos_by_id(FILE *db, I id);
 
-/* 	returns last used id or -1 	*/
-I last_id(FILE *db);
+/* 	returns next id 	*/
+I next_id(FILE *db);
 
 /*	prints one note */
-void print_note(book note);
-
-/*	prints few notes 	*/
-void print_notes(book *note);
+void rec_print(rec note);
 
 /* 	gets one line from a file */
-/* 	retuns 0 if this line is too long 	*/
-I get_line(FILE *f, C buf[], I length);
+void get_line(FILE *f, C buf[], I length);
 
 /* 	..[db]..	-->		struct 	*/ 
 /* 	returns 0 if eof	*/
-book get_note(FILE *db, I ptr);
+rec rec_get(FILE *db, I ptr);
 
 /* ..[txt]..	-->		struct 	*/
-book make_structure(FILE *f, FILE *db);
+rec rec_make(FILE *f, FILE *db);
 
 /*	checks for subject matching in current note */
 /*	returns 1 or 0	*/ 
-I match_all(book note, H yr, S publ, I pg, S ttl, S nm, S surnm, S patr, S subj);
+I rec_match(rec note, H yr, S publ, I pg, S ttl, S nm, S surnm, S patr, S subj);
 
 /*	finds required note and sets note.deleted = 1 */
-I delete_note(FILE *db, I id);
+I rec_delete(FILE *db, I id);
 
 /* 	struct		-->		..[db] 	*/	
-I add_note(FILE *db, book note);
+I rec_add(FILE *db, rec note);
 
 /*	asks user to enter a note 	*/
-book ask_note(FILE *db, I ask);
+rec rec_ask(FILE *db, I ask);
 
-/* 	book n2 complements book n1	*/
-book combine(book n1, book n2)
+/* 	rec n2 complements rec n1	*/
+rec rec_merge(rec n1, rec n2)
 
 ///////////////////////////////////////////////////////////////////////////////////////
+
+/* 	str1 subline search with no case in str2	*/
+I strstr_no_case(S str1, S str2)
+{
+	for (I i = 0; str1[i] != '\0'; i++) 
+		if (str1[i] >= 'A' && <= 'Z')
+			str1[i] += 32;
+	
+	for (i = 0; str2[i] != '\0'; i++) 
+		if (str2[i] >= 'A' && <= 'Z')
+			str2[i] += 32;
+
+	if (strstr(str1, str2) == NULL)
+		R 0;
+	else
+		R 1:
+}
 
 /*	asks user to tap something */
 C menu(const C *hint) 
@@ -81,55 +97,25 @@ C menu(const C *hint)
 /*	returns pointer for a note with given id or -1 */
 I get_pos_by_id(FILE *db, I id)
 {
-	I pos, num, d;
-	rewind(db);
-
-	while(fseek(db, SIZE(book) - SIZE(I) - SIZE(C))) {
-		fread(&num, SIZE(I), 1, db);
-		fread(&d, SIZE(C), I, db);
-		if (d) {
-			pos = ftell(db) - SIZE(I) - SIZE(C);
-			if (num == id)
-				R pos;
-		}
-	}
-
-	R -1;
+	/* что-то */
 }
 
-/* 	returns last used id or -1 	*/
-I last_id(FILE *db)
+/* 	returns next id 	*/
+I next_id(FILE *db)
 {
-	I num, id;
-	rewind(db);
-	fread(&id, SIZE(I), 1, db) ? fseek(db, SIZE(book) - SIZE(I), SEEK_CUR) : R -1;
-
-	while(fread(&nm, SIZE(I), 1, db)) {
-		nm = MAX(nm, id);
-		fseek(db, SIZE(book) - SIZE(I), SEEK_CUR);
-	} 
-	R nm;
+	/* что-то */
 }
 
-void print_note(book note)
+void rec_print(rec note)
 {
 	printf("%s %s %s\n%s\n", note.name, note.surname, 
 			note.patronymic, note.title);
-	printf("%d pages  %hi %s\n%s\n\n", note.pages, 
-			note.year, note.publisher, note.subject);
-}
-
-/*	prints one note */
-void print_notes(book *note)
-{
-	I i = 0;
-	while(note[i]) 
-		print_note(note[i++]);
+	printf("%d pages  %hi %s\n%s\nid: %d\n\n", note.pages, 
+			note.year, note.publisher, note.subject, note.rec_id);
 }
 
 /* 	gets one line from a file */
-/* 	retuns 0 if this line is too long 	*/
-I get_line(FILE *f, C buf[], I length)
+void get_line(FILE *f, C buf[], I length)
 {
 	C c;
 	for (I i = 0; c != '\n' && i < length && !feof(f); i++) {
@@ -141,81 +127,79 @@ I get_line(FILE *f, C buf[], I length)
 		while (c != '\n' && !feof(f))
 			getc(f, "%c", c);
 	
-	R i == length ? 0 : 1 && (buf[--i] = '\0');
+	buf[--i] = '\0';
 }
 
 /* 	..[db]..	-->		struct 	*/ 
 /* 	returns 0 if eof	*/
-book get_note(FILE *db, I ptr) 
+rec rec_get(FILE *db, I ptr) 
 {
-	book note;
+	rec note;
 	if (ptr == SEEK_END)
 		R 0;
-	fread(&note, SIZE(book), 1, db);
+	fread(&note, SZ(rec), 1, db);
 	R note;
 }
 
 /* ..[txt]..	-->		struct 	*/
-book make_structure(FILE *f, FILE *db)
+rec rec_make(FILE *f, FILE *db)
 {
 	C c;
-	book note;
+	rec note;
 
-	note.id = ++last_id(db);
+	note.id = next_id(db);
 	note.deleted = 0;
 
 	fscanf(f, "%hi", &note.year);
 	getc(f, "%c", &c);
 
-	if (!get_line(f, note.publisher, NAME_LEN))
-		R 0;
+	get_line(f, note.publisher, NAME_LEN);
 
 	fscanf(f, "%d", &note.pages);
 	getc(f, "%c", &c);
 
-	if (!get_line(f, note.title, NAME_LEN) || 
-		!get_line(f, note.name, NAME_LEN) || 
-		!get_line(f, note.surname, NAME_LEN) || 
-		!get_line(f, note.patronymic, NAME_LEN) 
-		!get_line(f, note.subject, SUB_LEN))
-		R 0;
+	get_line(f, note.title, NAME_LEN);
+	get_line(f, note.name, NAME_LEN);
+	get_line(f, note.surname, NAME_LEN);
+	get_line(f, note.patronymic, NAME_LEN);
+	get_line(f, note.subject, SUB_LEN);
 
-	R book note;
+	R note;
 }
 
 /*	checks for subject matching in current note */
 /*	returns 1 or 0	*/ 
-I match_all(book note, H yr, S publ, I pg, S ttl, S nm, S surnm, S patr, S subj)
+I rec_match(rec note, H yr, S publ, I pg, S ttl, S nm, S surnm, S patr, S subj)
 {
 	if (!note.deleted || (yr && yr != note.year) 
-			|| (publ && strcmp(publ, note.publisher)) 
-			|| (pg && pg != note.page) || (ttl && strcmp(ttl, note.title)) 
-			|| (nm && strcmp(nm, note.name)) || (surnm && strcmp(surnm, note.surname)) 
-			|| (patr && strcmp(patr, note.patronymic)) || (subj && strstr(note.subject), subj))
+			|| (publ && strstr_no_case(publ, note.publisher)) 
+			|| (pg && pg != note.page) || (ttl && strstr_no_case(ttl, note.title)) 
+			|| (nm && strstr_no_case(nm, note.name)) || (surnm && strstr_no_case(surnm, note.surname)) 
+			|| (patr && strstr_no_case(patr, note.patronymic)) || (subj && strstr_no_case(note.subject), subj))
 		R 0;
 
 	R 1;
 }
 
 /*	finds a wanted note and sets note.deleted = 1 */
-I delete_note(FILE *db, I id)
+I rec_delete(FILE *db, I id)
 {
 	I num = 1;
 
-	if (fseek(db, get_pos_by_id(db, id) + SIZE(I), SEEK_SET))
+	if (fseek(db, get_pos_by_id(db, id) + SZ(I), SEEK_SET))
 		R 0;
 
-	fwrite(&num, SIZE(C), 1, db);
+	fwrite(&num, SZ(C), 1, db);
 	R 1;	
 }
 	
 /* 	struct		-->		..[db]..	*/		
-I add_note(FILE *db, book note, I ptr)
+I rec_add(FILE *db, rec note, I ptr)
 {
 	if (note) {
 		if (fseek(db, ptr, SEEK_SET))
 			R 0;
-		fwrite(&note, SIZE(book), 1, db);
+		fwrite(&note, SZ(rec), 1, db);
 		R 1;
 	}
 	else 
@@ -223,9 +207,9 @@ I add_note(FILE *db, book note, I ptr)
 }
 
 /*	asks user to enter a note 	*/
-book ask_note(FILE *db, I ask) 
+rec rec_ask(FILE *db, I ask) 
 { 
-	book note;
+	rec note;
 	note.deleted = 0;
 	if (ask) {
 		
@@ -237,12 +221,12 @@ book ask_note(FILE *db, I ask)
 		menu("surname? [y/n]" == 'y') 		? 		get_line(stdin, note.surname, NAME_LEN) 				: note.surname = 0;	
 		menu("patronymic? [y/n]" == 'y') 	?	 	get_line(stdin, note.patronymic, NAME_LEN)			 	: note.patronymic = 0;	
 		menu("subject? [y/n]" == 'y' 		? 		get_line(stdin, note.subject, SUB_LEN)) 				: note.subject = 0; 
-		note.book_id = -1;
+		note.rec_id = -1;
 
 
 	}
 	else {
-		note.book_id = ++last_id(db);
+		note.rec_id = next_id(db);
 		note.deleted = 0;
 
 		O("year:\n");
@@ -275,8 +259,8 @@ book ask_note(FILE *db, I ask)
 	R note;
 }
 
-/* 	book n2 complements book n1	*/
-book combine(book n1, book n2)
+/* 	rec n2 complements rec n1	*/
+rec rec_merge(rec n1, rec n2)
 {
 	if (!n1.year)
 		n1.year = n2.year;
@@ -295,6 +279,20 @@ book combine(book n1, book n2)
 	if (!n1.subject)
 		n1.subject = n2.subject;
 	R n1;
+}
+
+void rec_swap(FILE *db, I ptr1, I ptr2)
+{
+	rec a, b;
+	fseek(db, ptr1, SEEK_SET);
+	fread(&a, SZ(rec), 1, db);
+
+	fseek(db, ptr2, SEEK_SET);
+	fread(&b, SZ(rec), 1, db);
+	fwrite(&a, SZ(rec), 1, db);
+
+	fseek(db, ptr1, SEEK_SET);
+	fwrite(&b, SZ(rec), 1, db);
 }
 
 

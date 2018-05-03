@@ -1,8 +1,5 @@
-/*	fills one stucture from a file */
-book make_structure(FILE *f, I id);
-
 /* 	struct		-->		..[db] 	*/	
-I add_note(FILE *db, book note);
+I rec_add(FILE *db, book note);
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -14,7 +11,7 @@ I update_db(FILE *db)
 	C file_name[30];
 
 	if (menu("console? [y/n] ") == 'y') 
-		note = add_note(db, ask(db, 0));
+		note = rec_add(db, rec_ask(db, 0));
 	
 	else {
 		O("name of input file?\n");
@@ -27,6 +24,6 @@ I update_db(FILE *db)
 		}
 
 	}
-	note.book_id = ++last_id(db);
+	note.rec_id = next_id(db);
 	R 1;
 }
