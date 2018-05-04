@@ -43,7 +43,7 @@ int main() {
 	S query = "idiot";
 
 	strcpy( r.publisher, "Hachette" );
-	strcpy( r.title, "Idiot" );	
+	strcpy( r.title, "IDIOT" );	
 	strcpy( r.surname, "Dostoyevsky" );
 
 	O("publisher match: %d\n", rec_search_txt_field(&r, fld_publisher, "ette"));
