@@ -3,13 +3,14 @@
 0 - MAIN MENU
 --------------
 ```
-1. Search                 -> 1
+1. Search records           -> 1
 2. Add record
 3. Delete record
 4. Edit record
 5. Show record
 6. Show all records
 7. Database stats
+
 0. Exit program
 ```
 
@@ -20,6 +21,7 @@
 2. By Title               -> 1.1
 3. By Author              -> 1.1
 4. By Subject             -> 1.1
+
 0. To main menu           -> 0
 ```
 
