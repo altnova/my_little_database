@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -10,7 +12,6 @@
 #define O printf
 #define SUB_LEN 140
 #define NAME_LEN 50
-#define MAX(a, b) {(a) > (b) ? (a) : (b);}
 #define SZ sizeof
 
 typedef struct books {
