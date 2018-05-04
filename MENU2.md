@@ -74,3 +74,11 @@ Last ID:      2
 
 Press any key to return to main menu.                     -> 0
 ```
+
+8 - VACUUM DATABASE
+--------------------------------------------------------------
+```
+[OK: Successfuly purged 2 deleted records.]
+
+Press any key to return to main menu.                     -> 0
+```
