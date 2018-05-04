@@ -41,7 +41,6 @@ int rec_search_txt_field(void *rec, int fld, S needle) {
 
 int main() {
 	Book r;
-	S query = "idiot";
 
 	strcpy( r.publisher, "Hachette" );
 	strcpy( r.title, "IDIOT" );	
