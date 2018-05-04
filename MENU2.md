@@ -7,8 +7,8 @@
 2. Add record
 3. Delete record
 4. Edit record
-5. Show record
-6. Show all records
+5. Display record
+6. Display all records
 7. Database stats
 8. Vacuum database
 
@@ -58,9 +58,66 @@ SURNAME: _
 YEAR: _
 SUBJECT: _
 
-[OK: Record created with ID 135. Press any key to return to main menu.] -> 0
+[OK: Record created with ID 135. Create another (Y/N)?]         -> 2 or 0 
 [ERR: Not a number]
 [ERR: Input too long]
+```
+
+3 - DELETE RECORD
+--------------------------------------------------------------
+```
+Enter Record ID (blank to abort): _
+
+[OK: Record ID nnn deleted. Delete another (Y/N)?]              - 3 or 0
+[ERR: Not a number]
+[ERR: No such record]
+```
+
+4 - EDIT RECORD
+--------------------------------------------------------------
+```
+Enter Record ID (blank to abort): _
+
+  RECORD 130
+
+  1. Title:       CHAPAEV AND VOID
+  2. Author:      Pelevin V.O.
+  3. Year:        1996
+  4. Publisher:   EKSMO
+  5. Pages:       423
+  6. Subject:     Pyotr Pustota is a poet who takes up a stolen identity and meets a strange man named Vasily Chapayev.
+  
+  0. Done.                            -> 0
+
+Select field to edit: _
+
+Old value: CHAPAEV AND VOID
+New value: _
+
+[OK: Record ID nnn updated. Continue editing (Y/N)?]        -> 4 or 0
+[ERR: Not a number]
+[ERR: No such record]
+[ERR: Input too long]
+
+```
+
+5 - DISPLAY RECORD
+--------------------------------------------------------------
+```
+Enter Record ID (blank to abort): _
+
+TODO
+```
+
+6 - DISPLAY ALL RECORDS
+--------------------------------------------------------------
+```
+1. Sorted by ID
+2. Sorted by Year
+3. Sorted by Title
+4. Sorted by Author
+
+TODO
 ```
 
 7 - DATABASE STATS
