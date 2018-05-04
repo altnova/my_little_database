@@ -9,4 +9,6 @@
 
 * improve searching algorythm (binary search) for sorting
 
+* rewrite deletion (forced)
+
 
