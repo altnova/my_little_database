@@ -1,5 +1,5 @@
 # TODO 
-* rewrite record matching (нет)
+* rewrite record matching 
 
 * user interface
 
