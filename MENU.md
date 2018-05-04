@@ -13,7 +13,7 @@
 	7.	Sorted by surname
 	8.	Sorted by patronymic
 	9.	Sorted by subject
-	-->
+	--------------------
 	0. 	Quit 
 	1.	Find specific record
 	2.	Add record
