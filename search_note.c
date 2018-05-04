@@ -5,10 +5,10 @@ I match_all(book note, H yr, S publ, I pg, S ttl, S nm, S surnm, S patr, S subj)
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /* 	searches for current fields in notes	*/
-void search_note(FIlE *db, H yr, S publ, I pg, S ttl, S nm, S surnm, S patr, S subj)
+void search_note(FIlE *db, H yr, S publ, I pg, S ttl, S nm, S surnm, S patr, S subj, I id)
 {
 	rec note;
 	while (fread(&note, SZ(book), 1, db)) 
-		if (note.deleted && match_all(note, yr, publ, pg, ttl, nm, surnm, patr, subj))
+		if (note.deleted && match_all(note, yr, publ, pg, ttl, nm, surnm, patr, subj, id))
 			rec_print(note);
 }

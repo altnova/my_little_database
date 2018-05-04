@@ -169,8 +169,10 @@ rec rec_make(FILE *f, FILE *db)
 
 /*	checks for subject matching in current note */
 /*	returns 1 or 0	*/ 
-I rec_match(rec note, H yr, S publ, I pg, S ttl, S nm, S surnm, S patr, S subj)
+I rec_match(rec note, H yr, S publ, I pg, S ttl, S nm, S surnm, S patr, S subj, I id)
 {
+	if (id == note.rec_id)
+		R 1;
 	if (!note.deleted || (yr && yr != note.year) 
 			|| (publ && strstr_no_case(publ, note.publisher)) 
 			|| (pg && pg != note.page) || (ttl && strstr_no_case(ttl, note.title)) 
