@@ -10,6 +10,7 @@
 5. Show record
 6. Show all records
 7. Database stats
+8. Vacuum database
 
 0. Exit program
 ```
