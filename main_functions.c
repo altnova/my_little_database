@@ -3,24 +3,22 @@
 #define S char*
 #define I int
 #define H short
+#define UJ unsigned long
 #define R return
-#define SUB_LEN 140
-#define NAME_LEN 50
+#define SUB_LEN 145
+#define NAME_LEN 51
 #define MAX(a, b) {(a) > (b) ? (a) : (b);}
 #define SZ sizeof
 
-struct Books {
-	I rec_id;
-	C deleted;				// 0 -- deleted
+struct books {
+	UJ book_id;
+	I pages;
 	H year;
 	C publisher[NAME_LEN];
-	I pages;
 	C title[NAME_LEN];
-	C name[NAME_LEN];
-	C surname[NAME_LEN];
-	C patronymic[NAME_LEN]
+	C author[NAME_LEN];
 	C subject[SUB_LEN];
-} rec;
+} Books;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -37,33 +35,33 @@ I get_pos_by_id(FILE *db, I id);
 I next_id(FILE *db);
 
 /*	prints one note */
-void rec_print(rec note);
+void rec_print(Books note);
 
 /* 	gets one line from a file */
 void get_line(FILE *f, C buf[], I length);
 
 /* 	..[db]..	-->		struct 	*/ 
 /* 	returns 0 if eof	*/
-rec rec_get(FILE *db, I ptr);
+Books rec_get(FILE *db, I ptr);
 
 /* ..[txt]..	-->		struct 	*/
-rec rec_make(FILE *f, FILE *db);
+Books rec_make(FILE *f, FILE *db);
 
 /*	checks for subject matching in current note */
 /*	returns 1 or 0	*/ 
-I rec_match(rec note, H yr, S publ, I pg, S ttl, S nm, S surnm, S patr, S subj);
+I rec_match(Books note, H yr, S publ, I pg, S ttl, S nm, S surnm, S patr, S subj);
 
 /*	finds required note and sets note.deleted = 1 */
 I rec_delete(FILE *db, I id);
 
 /* 	struct		-->		..[db] 	*/	
-I rec_add(FILE *db, rec note);
+I rec_add(FILE *db, Books note);
 
 /*	asks user to enter a note 	*/
-rec rec_ask(FILE *db, I ask);
+Books rec_ask(FILE *db, I ask);
 
-/* 	rec n2 complements rec n1	*/
-rec rec_merge(rec n1, rec n2)
+/* 	Books n2 complements Books n1	*/
+Books rec_merge(Books n1, Books n2)
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -106,7 +104,7 @@ I next_id(FILE *db)
 	/* что-то */
 }
 
-void rec_print(rec note)
+void rec_print(Books note)
 {
 	printf("%s %s %s\n%s\n", note.name, note.surname, 
 			note.patronymic, note.title);
@@ -132,9 +130,9 @@ void get_line(FILE *f, C buf[], I length)
 
 /* 	..[db]..	-->		struct 	*/ 
 /* 	returns 0 if eof	*/
-rec rec_get(FILE *db, I ptr) 
+Books rec_get(FILE *db, I ptr) 
 {
-	rec note;
+	Books note;
 	if (ptr == SEEK_END)
 		R 0;
 	fread(&note, SZ(rec), 1, db);
@@ -142,10 +140,10 @@ rec rec_get(FILE *db, I ptr)
 }
 
 /* ..[txt]..	-->		struct 	*/
-rec rec_make(FILE *f, FILE *db)
+Books rec_make(FILE *f, FILE *db)
 {
 	C c;
-	rec note;
+	Books note;
 
 	note.id = next_id(db);
 	note.deleted = 0;
@@ -169,7 +167,7 @@ rec rec_make(FILE *f, FILE *db)
 
 /*	checks for subject matching in current note */
 /*	returns 1 or 0	*/ 
-I rec_match(rec note, H yr, S publ, I pg, S ttl, S nm, S surnm, S patr, S subj, I id)
+I rec_match(Books note, H yr, S publ, I pg, S ttl, S nm, S surnm, S patr, S subj, I id)
 {
 	if (id == note.rec_id)
 		R 1;
@@ -196,7 +194,7 @@ I rec_delete(FILE *db, I id)
 }
 	
 /* 	struct		-->		..[db]..	*/		
-I rec_add(FILE *db, rec note, I ptr)
+I rec_add(FILE *db, Books note, I ptr)
 {
 	if (note) {
 		if (fseek(db, ptr, SEEK_SET))
@@ -209,9 +207,9 @@ I rec_add(FILE *db, rec note, I ptr)
 }
 
 /*	asks user to enter a note 	*/
-rec rec_ask(FILE *db, I ask) 
+Books rec_ask(FILE *db, I ask) 
 { 
-	rec note;
+	Books note;
 	note.deleted = 0;
 	if (ask) {
 		
@@ -261,8 +259,8 @@ rec rec_ask(FILE *db, I ask)
 	R note;
 }
 
-/* 	rec n2 complements rec n1	*/
-rec rec_merge(rec n1, rec n2)
+/* 	Books n2 complements Books n1	*/
+Books rec_merge(Books n1, Books n2)
 {
 	if (!n1.year)
 		n1.year = n2.year;
@@ -285,7 +283,7 @@ rec rec_merge(rec n1, rec n2)
 
 void rec_swap(FILE *db, I ptr1, I ptr2)
 {
-	rec a, b;
+	Books a, b;
 	fseek(db, ptr1, SEEK_SET);
 	fread(&a, SZ(rec), 1, db);
 
