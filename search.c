@@ -8,30 +8,27 @@
 #define S char*
 #define I int
 #define H short
+#define UJ unsigned long
 #define R return
 #define O printf
-#define SUB_LEN 140
+#define SUB_LEN 148
 #define NAME_LEN 50
 #define SZ sizeof
 
 typedef struct books {
-	I book_id;
-	C deleted;
+	UJ book_id;
+	I pages;
 	H year;
 	C publisher[NAME_LEN];
-	I pages;
 	C title[NAME_LEN];
-	C name[NAME_LEN];
-	C surname[NAME_LEN];
-	C patronymic[NAME_LEN];
+	C author[NAME_LEN];
 	C subject[SUB_LEN];
 } Book;
 
-enum txt_fields { fld_publisher, fld_title, fld_name, fld_surname, fld_patronymic, fld_subject };
+enum txt_fields { fld_publisher, fld_title, fld_author, fld_subject };
 
 int txt_field_offsets[] = {
-	offsetof(Book, publisher), offsetof(Book, title), offsetof(Book, name),
-	offsetof(Book, surname), offsetof(Book, patronymic), offsetof(Book, subject)
+	offsetof(Book, publisher), offsetof(Book, title), offsetof(Book, author), offsetof(Book, subject)
 };
 
 int rec_search_txt_field(void *rec, int fld, S needle) {
@@ -42,13 +39,16 @@ int rec_search_txt_field(void *rec, int fld, S needle) {
 int main() {
 	Book r;
 
+	O("%d %d %d %d %d %d\n", SZ(UJ), SZ(I), SZ(I), SZ(C), SZ(H), NAME_LEN*5 + SUB_LEN);
+	O("%d %d\n", SZ(UJ) + SZ(I) + SZ(H) + NAME_LEN*3 + SUB_LEN, SZ(Book));
+
 	strcpy( r.publisher, "Hachette" );
 	strcpy( r.title, "IDIOT" );	
-	strcpy( r.surname, "Dostoyevsky" );
+	strcpy( r.author, "Dostoyevsky" );
 
 	O("publisher match: %d\n", rec_search_txt_field(&r, fld_publisher, "ette"));
 	O("title match: %d\n", rec_search_txt_field(&r, fld_title, "Idiot"));
-	O("surname name: %d\n", rec_search_txt_field(&r, fld_surname, "dosto"));
+	O("surname name: %d\n", rec_search_txt_field(&r, fld_author, "dosto"));
 
 	R 0;
 }
