@@ -1,5 +1,5 @@
 # TODO 
-* rewrite record matching (нет)
+* rewrite record matching 
 
 * user interface
 
@@ -9,4 +9,6 @@
 
 * improve searching algorythm (binary search) for sorting
 
+* rewrite deletion (forced)
 
+* make metadata file with max_id and id-pos pairs 
