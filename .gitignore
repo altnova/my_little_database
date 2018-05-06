@@ -1,2 +1,6 @@
 books.csv
 books.dat
+.DS_Store
+*.dSYM
+menu
+search
