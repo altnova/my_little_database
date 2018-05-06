@@ -11,4 +11,4 @@
 
 * rewrite deletion (forced)
 
-* make metadata file with max_id and id-pos pairs 
+* make metadata file with max_id and id-pos pairs; update after each op. with id and index
