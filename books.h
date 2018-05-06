@@ -1,9 +1,10 @@
-#define C char
-#define S char*
-#define I int
-#define H short
-#define V void
-#define UJ unsigned long
+typedef char C;
+typedef char* S;
+typedef int I;
+typedef short H;
+typedef void V;
+typedef unsigned long UJ;
+
 #define R return
 #define O printf
 #define SZ sizeof
