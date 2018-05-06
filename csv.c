@@ -67,7 +67,7 @@ void csv_load(S fname) {
 	I bytesRead, fld=-1, fldpos=0;
 	C buf[BUF], is_line_end, is_fld_end, in_skip, in_field, in_quotes, curr, prev, fldbuf[FLDMAX+1];
 	
-	while ((bytesRead = fread(buf, 1, BUF, csv)) > 0) {
+	while((bytesRead = fread(buf, 1, BUF, csv)) > 0) {
 		DO(bytesRead,
 			curr = buf[i];				//< current byte
 			is_line_end = curr == LF; 
