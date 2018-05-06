@@ -8,12 +8,11 @@
 #define UJ unsigned long
 
 /*	returns number from input or error (-1)	*/
-UJ get_num()
+void get_num(UJ *num)
 {
-	UJ num = 0;
 	C c = '1';
 
-	while (c != '\n') {
+	for (*num = 0; c != '\n'; ) {
 		scanf("%c", &c);
 		if (c == '\n') 
 			break;
@@ -21,13 +20,12 @@ UJ get_num()
 		if (c < '0' || c > '9') {
 			while (c != '\n')
 				scanf("%c", &c);
-			R -1;
+			*num = -1;
+			R;
 		}
-		num *= 10;
-		num += c - '0';
+		*num *= 10;
+		*num += c - '0';
 	}
-
-	R num;
 }
 
 /*	main menu	*/
@@ -61,15 +59,14 @@ void scr_dbstat_7() {}
 /* 	vacuum database 	*/
 void scr_dbvacuum_8() {}
 
-void scr_search_1()
+void scr_search_1(UJ *command)
 {
-	I command;
 	O("1. by year\n2. by title\n3. by author\n");
-	O("4. by subject\n\n0. main menu\n");
+	O("4. by subject\n\n0. main menu\n\n");
 	O("select menu item: ");
 
-	command = get_num();
-	switch (command) {
+	get_num(command);
+	switch (*command) {
 		case 0:
 		scr_main_0();
 		break;
@@ -92,28 +89,28 @@ void scr_search_1()
 
 		default:
 		O("\nERROR: unknown command\n\n");
-		scr_search_1();
+		scr_search_1(command);
+		break;
 	}
 }
 
 
 
-void scr_main_0()
+void scr_main_0(UJ *command)
 {
-	I command;
 	O("1. search record\n2. add record\n3. delete record\n");
 	O("4. edit record\n5. display record\n6. display all records\n");
-	O("7. database status\n8. vaccum database\n\n0. exit program\n");
+	O("7. database status\n8. vaccum database\n\n0. exit program\n\n");
 	O("select menu item: ");
-	command = get_num();
+	get_num(command);
 
-	switch (command) {
+	switch (*command) {
 		case 0:
 		scr_exit_0(); 			// 	exit program
 		break;
 
 		case 1:
-		scr_search_1();			//	search records
+		scr_search_1(command);			//	search records
 		break;
 
 		case 2:
@@ -146,7 +143,7 @@ void scr_main_0()
 
 		default:
 		O("\nERROR: unknown command\n\n");
-		scr_main_0();
+		scr_main_0(command);
 	}
 
 }
@@ -154,7 +151,8 @@ void scr_main_0()
 
 I main()
 {
-	scr_main_0();
+	UJ command;
+	scr_main_0(&command);
 	R 0;
 }
 
