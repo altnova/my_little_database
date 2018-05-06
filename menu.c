@@ -65,7 +65,9 @@ void scr_search_1()
 {
 	I command;
 	O("1. by year\n2. by title\n3. by author\n");
-	O("4. by subject\n\n0. main menu\n\n");
+	O("4. by subject\n\n0. main menu\n");
+	O("select menu item: ");
+
 	command = get_num();
 	switch (command) {
 		case 0:
@@ -89,7 +91,7 @@ void scr_search_1()
 		break;*/
 
 		default:
-		O("ERROR: unknown command\n\n");
+		O("\nERROR: unknown command\n\n");
 		scr_search_1();
 	}
 }
@@ -101,7 +103,8 @@ void scr_main_0()
 	I command;
 	O("1. search record\n2. add record\n3. delete record\n");
 	O("4. edit record\n5. display record\n6. display all records\n");
-	O("7. database status\n8. vaccum database\n\n0. exit program\n\n");
+	O("7. database status\n8. vaccum database\n\n0. exit program\n");
+	O("select menu item: ");
 	command = get_num();
 
 	switch (command) {
@@ -142,7 +145,7 @@ void scr_main_0()
 		break;
 
 		default:
-		O("ERROR: unknown command\n\n");
+		O("\nERROR: unknown command\n\n");
 		scr_main_0();
 	}
 
