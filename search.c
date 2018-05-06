@@ -104,7 +104,7 @@ void db_load(S fname) {
 				if (curr == QUO)		//< if first char is quote...
 					in_quotes=1;		//< ..enter quoted state
 				else					
-					goto STORECHAR;		//< put current char
+					goto STORECHAR;
 			} else {
 				if (in_quotes && prev == QUO && curr == QUO) { //< escape sequence
 					prev = NUL;			//< discard
