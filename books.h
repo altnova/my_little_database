@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 typedef char C;
 typedef char* S;
 typedef int I;
