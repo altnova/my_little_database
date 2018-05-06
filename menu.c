@@ -25,11 +25,11 @@ void remote()
 }
 
 /*	returns number from input or error (-1)	*/
-I get_num()
+UJ get_num()
 {
 	UJ num = 0;
 	C c = '1';
-	
+
 	while (c != '\n') {
 		scanf("%c", &c);
 		if (c == '\n') 
