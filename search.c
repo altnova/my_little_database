@@ -128,6 +128,9 @@ int main() {
 
 	outfile = fopen("books.dat", "w+");
 
+	if (outfile == NULL)
+        exit(EXIT_FAILURE);
+
 	db_load("books.csv");
 	recbuf_flush();
 
