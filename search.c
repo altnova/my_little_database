@@ -12,15 +12,6 @@ I recbufpos = 0;
 UJ last_id = 0;
 Book recbuf[RECBUFLEN];
 
-enum rec_fields { fld_pages, fld_year, fld_publisher, fld_title, fld_author, fld_subject };
-
-I csv_max_field_widths[] = { 4, 4, 100, 200, 50, 2000 };
-
-I rec_field_offsets[] = {
-	offsetof(Book, pages), offsetof(Book, year), offsetof(Book, publisher),
-	offsetof(Book, title), offsetof(Book, author), offsetof(Book, subject)
-};
-
 I rec_search_txt_field(V *rec, I fld, S needle) {
 	S haystack = (S)rec+rec_field_offsets[fld];
 	R !!strcasestr(haystack, needle);
