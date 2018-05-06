@@ -7,23 +7,6 @@
 #define C char
 #define UJ unsigned long
 
-I pow_(I num, I exp)
-{
-	I i, n = num;
-	if (!exp)
-		R 1;
-	for (i = 0; i < exp; i++) 
-		num *= n;
-	R num;
-}
-
-void remote()
-{
-	C c = '1';
-	while (c != '\n')
-		scanf("%c", &c);
-}
-
 /*	returns number from input or error (-1)	*/
 UJ get_num()
 {
@@ -36,7 +19,8 @@ UJ get_num()
 			break;
 
 		if (c < '0' || c > '9') {
-			remote();
+			while (c != '\n')
+				scanf("%c", &c);
 			R -1;
 		}
 		num *= 10;
