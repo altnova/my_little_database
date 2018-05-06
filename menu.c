@@ -26,38 +26,31 @@ void get_num(UJ *num)
 		*num *= 10;
 		*num += c - '0';
 	}
+	// printf("%d!\n", num);
 }
 
 /*	main menu	*/
 void scr_main_0(); 
-
 /*	exit program	*/
-void scr_exit_0() {}
-
+// void scr_exit_0() {}
 /*	search record 	*/
 void scr_search_1();
 void scr_search_1_1();
-
 /*	add record 	*/
-void scr_addrec_2() {}
-
+// void scr_addrec_2() {}
 /*	delete record 	*/
-void scr_deleterec_3() {}
-
+// void scr_deleterec_3() {}
 /*	edit record 	*/
-void scr_editrec_4() {}
-
+// void scr_editrec_4() {}
 /*	display record 	*/
-void scr_displayrec_5() {}
-
+// void scr_displayrec_5() {}
 /*	display all records */
-void scr_displayall_6() {}
-
+// void scr_displayall_6() {}
 /* 	display database status */
-void scr_dbstat_7() {}
-
+// void scr_dbstat_7() {}
 /* 	vacuum database 	*/
-void scr_dbvacuum_8() {}
+// void scr_dbvacuum_8() {}
+
 
 void scr_search_1(UJ *command)
 {
@@ -68,7 +61,7 @@ void scr_search_1(UJ *command)
 	get_num(command);
 	switch (*command) {
 		case 0:
-		scr_main_0();
+		scr_main_0(command);
 		break;
 
 	/*	case 1:
@@ -106,14 +99,14 @@ void scr_main_0(UJ *command)
 
 	switch (*command) {
 		case 0:
-		scr_exit_0(); 			// 	exit program
+		// scr_exit_0(); 			// 	exit program
 		break;
 
 		case 1:
 		scr_search_1(command);			//	search records
 		break;
 
-		case 2:
+	/*	case 2:
 		scr_addrec_2();			// 	add record
 		break;
 
@@ -140,7 +133,7 @@ void scr_main_0(UJ *command)
 		case 8:
 		scr_dbvacuum_8();		//	vacuum database 
 		break;
-
+*/
 		default:
 		O("\nERROR: unknown command\n\n");
 		scr_main_0(command);
