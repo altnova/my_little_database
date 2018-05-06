@@ -17,6 +17,10 @@ typedef unsigned long UJ;
 #define RECBUFLEN 2048
 #define DO(n,x) {long i=0,_i=(n);for(;i<_i;++i){x;}}
 
+#define SW switch
+#define CD default
+#define CS(n,x)	case n:x;break;
+
 typedef struct books {
 	UJ book_id;
 	H pages;
