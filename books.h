@@ -17,7 +17,7 @@ typedef unsigned long UJ;
 #define LF '\n'
 #define FLDMAX 2000
 #define RECBUFLEN 2048
-#define DO(n,x) {long i=0,_i=(n);for(;i<_i;++i){x;}}
+#define DO(n,x) {UJ i=0,_i=(n);for(;i<_i;++i){x;}}
 
 #define SW switch
 #define CD default
