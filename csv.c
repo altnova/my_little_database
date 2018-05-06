@@ -20,9 +20,9 @@ V rec_print(Book *b, C force) {
 }
 
 V recbuf_flush() {
-	fwrite(recbuf, SZ(Book), recbufpos, outfile);
+	fwrite(recbuf, SZ(Book), recbufpos, outfile);	//< flush current buffer to outfile
 	O("[+] %d records\n", recbufpos);
-	recbufpos = 0;
+	recbufpos = 0;									//< rewind buffer
 }
 
 UJ next_id() {
@@ -37,13 +37,13 @@ void add_field(I fld, S val) {
 		//die("too many columns\n", currline);
 	}
 
-	I offset = rec_field_offsets[fld];
-	V *r = (V*)&recbuf[recbufpos];
-	V *f = r+offset;
+	V *r = (V*)&recbuf[recbufpos];			//< void ptr to current record
+	I offset = rec_field_offsets[fld];		//< offset of current field
+	V *f = r+offset;						//< void pointer to field
 
 	if (fld < 2) {							//< pages and year are shorts
 		H i = (H)atoi(val);					//< parse integer
-		memcpy(f,&i, SZ(H));				//< populate short field
+		memcpy(f, &i, SZ(H));				//< populate short field
 	} else									//< all other fields are strings
 		strcpy(f, val);						//< populate string field
 
@@ -102,8 +102,8 @@ void csv_load(S fname) {
 
 				in_skip = in_field = in_quotes = fldpos = 0; //< reset states
 				if (is_line_end) {
-					fld = -1; 		//< reset field count
-					currline++;		//< increment line counter
+					fld = -1; 			//< reset field count
+					currline++;			//< increment line counter
 				}
 				continue;
 			}
