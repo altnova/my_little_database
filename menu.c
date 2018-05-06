@@ -30,11 +30,11 @@ void get_num(UJ *num)
 }
 
 /*	main menu	*/
-void scr_main_0(); 
+I scr_main_0(); 
 /*	exit program	*/
 // void scr_exit_0() {}
 /*	search record 	*/
-void scr_search_1();
+I scr_search_1();
 void scr_search_1_1();
 /*	add record 	*/
 // void scr_addrec_2() {}
@@ -52,7 +52,7 @@ void scr_search_1_1();
 // void scr_dbvacuum_8() {}
 
 
-void scr_search_1(UJ *command)
+I scr_search_1(UJ *command)
 {
 	O("1. by year\n2. by title\n3. by author\n");
 	O("4. by subject\n\n0. main menu\n\n");
@@ -61,7 +61,7 @@ void scr_search_1(UJ *command)
 	get_num(command);
 	switch (*command) {
 		case 0:
-		scr_main_0(command);
+		R 0;
 		break;
 
 	/*	case 1:
@@ -82,14 +82,15 @@ void scr_search_1(UJ *command)
 
 		default:
 		O("\nERROR: unknown command\n\n");
-		scr_search_1(command);
+		R 1;
 		break;
 	}
+	R 0;
 }
 
 
 
-void scr_main_0(UJ *command)
+I scr_main_0(UJ *command)
 {
 	O("1. search record\n2. add record\n3. delete record\n");
 	O("4. edit record\n5. display record\n6. display all records\n");
@@ -99,11 +100,13 @@ void scr_main_0(UJ *command)
 
 	switch (*command) {
 		case 0:
-		// scr_exit_0(); 			// 	exit program
+		R 0;	 			// 	exit program
 		break;
 
 		case 1:
-		scr_search_1(command);			//	search records
+		while (scr_search_1(command));
+		R 1;
+	
 		break;
 
 	/*	case 2:
@@ -136,16 +139,17 @@ void scr_main_0(UJ *command)
 */
 		default:
 		O("\nERROR: unknown command\n\n");
-		scr_main_0(command);
+		R 1;
 	}
 
+R 0;
 }
 
 
 I main()
 {
 	UJ command;
-	scr_main_0(&command);
+	while (scr_main_0(&command));
 	R 0;
 }
 
