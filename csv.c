@@ -72,8 +72,8 @@ void csv_load(S fname) {
 			curr = buf[i];				//< current byte
 			is_line_end = curr == LF; 
 			is_fld_end = is_line_end
-				|| in_quotes && prev == QUO && curr == DEL
-				|| !in_quotes && curr == DEL; //< field end flag
+				|| in_quotes && prev == QUO && curr == DELIM
+				|| !in_quotes && curr == DELIM; //< field end flag
 
 			//O("fld=%d maxw=%d\n", fld+1, csv_max_field_widths[fld+1]);
 			if (fldpos == csv_max_field_widths[fld+1]) //< field is longer than max length, enter skip state

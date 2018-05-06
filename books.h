@@ -31,7 +31,7 @@ typedef struct books {
 #define COLS 6				//< csv column count
 #define BUF 1000000			//< csv read buffer
 #define QUO '"'				//< quote char
-#define DEL ';'				//< csv delimiter
+#define DELIM ';'				//< csv delimiter
 #define NUL '\0'			//< null char
 #define LF '\n'				//< newline char
 #define FLDMAX 2000			//< longest field len
