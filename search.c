@@ -12,19 +12,17 @@ I recbufpos = 0;
 UJ last_id = 0;
 Book recbuf[RECBUFLEN];
 
-enum txt_fields { fld_pages, fld_year, fld_publisher, fld_title, fld_author, fld_subject };
+enum rec_fields { fld_pages, fld_year, fld_publisher, fld_title, fld_author, fld_subject };
 
-I txt_field_offsets[] = {
-	offsetof(Book, pages), offsetof(Book, year), offsetof(Book, publisher), offsetof(Book, title), offsetof(Book, author), offsetof(Book, subject)
+I csv_max_field_widths[] = { 4, 4, 100, 200, 50, 2000 };
+
+I rec_field_offsets[] = {
+	offsetof(Book, pages), offsetof(Book, year), offsetof(Book, publisher),
+	offsetof(Book, title), offsetof(Book, author), offsetof(Book, subject)
 };
-
-I csv_max_field_widths[] = {
-	4, 4, 100, 200, 50, 2000
-};
-
 
 I rec_search_txt_field(V *rec, I fld, S needle) {
-	S haystack = (S)rec+txt_field_offsets[fld];
+	S haystack = (S)rec+rec_field_offsets[fld];
 	R !!strcasestr(haystack, needle);
 }
 
@@ -44,7 +42,7 @@ UJ next_id() {
 }
 
 void add_field(I fld, S val) {
-	I offset = txt_field_offsets[fld];
+	I offset = rec_field_offsets[fld];
 	V *r = (V*)&recbuf[recbufpos];
 	V *f = r+offset;
 
