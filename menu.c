@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#define R return
+#define O printf
+#define I int
+#define C char
 
 I get_num()
 {
@@ -62,39 +66,39 @@ void scr_main_0()
 
 	switch (get_num()) {
 		case 0:
-		scr_exit_0(); 		// 	exit program
+		scr_exit_0(); 			// 	exit program
 		break;
 
 		case 1:
-		scr_search_1():		//	search records
+		scr_search_1():			//	search records
 		break;
 
 		case 2:
-		scr_addrec_2();		// 	add record
+		scr_addrec_2();			// 	add record
 		break;
 
 		case 3:
-		scr_deleterec_3();	//	delete record
+		scr_deleterec_3();		//	delete record
 		break;
 
 		case 4:
-		scr_editrec_4();	//	edit record
+		scr_editrec_4();		//	edit record
 		break;
 
 		case 5:
-		scr_displayrec_5();	//	display record
+		scr_displayrec_5();		//	display record
 		break;
 
 		case 6:
-		scr_displayall_6();	//	display all records
+		scr_displayall_6();		//	display all records
 		break;
 
 		case 7:
-		scr_dbstat_7();		//	database status
+		scr_dbstat_7();			//	database status
 		break;
 
 		case 8:
-		scr_dbvacuum_8();	//	vacuum database 
+		scr_dbvacuum_8();		//	vacuum database 
 		break;
 
 		default:
@@ -102,8 +106,13 @@ void scr_main_0()
 		scr_main_0();
 	}
 
+}
 
 
+I main()
+{
+	scr_main_0();
+	R 0;
 }
 
 
