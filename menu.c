@@ -5,6 +5,7 @@
 #define O printf
 #define I int
 #define C char
+#define UJ unsigned long
 
 I pow_(I num, I exp)
 {
@@ -16,39 +17,32 @@ I pow_(I num, I exp)
 	R num;
 }
 
+void remote()
+{
+	C c = '1';
+	while (c != '\n')
+		scanf("%c", &c);
+}
+
 /*	returns number from input or error (-1)	*/
 I get_num()
 {
-	I num = 0, i, i_, j;
-	C buf[15], c = '1';
-
-	for (i = 0; i < 14; i++)
-		buf[i] = 0;
-
-	for (i = 0; i < 15 && c != '\n'; i++) {
+	UJ num = 0;
+	C c = '1';
+	
+	while (c != '\n') {
 		scanf("%c", &c);
-		if (c == '\n') {
-			buf[i] = '\0';
+		if (c == '\n') 
 			break;
+
+		if (c < '0' || c > '9') {
+			remote();
+			R -1;
 		}
-		buf[i] = c;
+		num *= 10;
+		num += c - '0';
 	}
 
-	if (c != '\n') {
-		while (c != '\n')
-			scanf("%c", &c);
-		R -1;
-	}
-
-	for (i = 14; buf[i] <= 32 || buf[i] == 127; i--);
-
-
-	for (i_ = i; i >= 0; i--) {
-		c = buf[i];
-		if (c < '0' || c > '9') 						// if c is not a digit
-			R -1;	
-		num += (c - '0') * pow_(10, i_ - i);
-	}
 	R num;
 }
 
@@ -87,14 +81,14 @@ void scr_search_1()
 {
 	I command;
 	O("1. by year\n2. by title\n3. by author\n");
-	O("4. by subject\n\n 0. main menu\n\n");
+	O("4. by subject\n\n0. main menu\n\n");
 	command = get_num();
 	switch (command) {
 		case 0:
 		scr_main_0();
 		break;
 
-		case 1:
+	/*	case 1:
 		scr_search_1_1(fld_year);
 		break;
 
@@ -108,7 +102,7 @@ void scr_search_1()
 
 		case 4:
 		scr_search_1_1(fld_subject);
-		break;
+		break;*/
 
 		default:
 		O("ERROR: unknown command\n\n");
