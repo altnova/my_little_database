@@ -10,13 +10,7 @@ typedef unsigned long UJ;
 #define R return
 #define O printf
 #define SZ sizeof
-#define BUF 1000000
-#define QUO '"'
-#define DEL ';'
-#define NUL '\0'
-#define LF '\n'
-#define FLDMAX 2000
-#define RECBUFLEN 2048
+
 #define DO(n,x) {UJ i=0,_i=(n);for(;i<_i;++i){x;}}
 
 #define SW switch
@@ -32,6 +26,17 @@ typedef struct books {
 	C author[51];
 	C subject[2001];
 } Book;
+
+// csv parser config
+#define COLS 6				//< csv column count
+#define BUF 1000000			//< csv read buffer
+#define QUO '"'				//< quote char
+#define DEL ';'				//< csv delimiter
+#define NUL '\0'			//< null char
+#define LF '\n'				//< newline char
+#define FLDMAX 2000			//< longest field len
+#define RECBUFLEN 2048		//< db write buffer
+#define CSVDEBUG 0			//< debug output
 
 enum rec_fields { fld_pages, fld_year, fld_publisher, fld_title, fld_author, fld_subject };
 
