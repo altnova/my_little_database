@@ -52,7 +52,6 @@ I get_num()
 	R num;
 }
 
-
 /*	main menu	*/
 void scr_main_0(); 
 
@@ -60,7 +59,8 @@ void scr_main_0();
 void scr_exit_0() {}
 
 /*	search record 	*/
-void scr_search_1() {}
+void scr_search_1();
+void scr_search_1_1();
 
 /*	add record 	*/
 void scr_addrec_2() {}
@@ -83,6 +83,39 @@ void scr_dbstat_7() {}
 /* 	vacuum database 	*/
 void scr_dbvacuum_8() {}
 
+void scr_search_1()
+{
+	I command;
+	O("1. by year\n2. by title\n3. by author\n");
+	O("4. by subject\n\n 0. main menu\n\n");
+	command = get_num();
+	switch (command) {
+		case 0:
+		scr_main_0();
+		break;
+
+		case 1:
+		scr_search_1_1(fld_year);
+		break;
+
+		case 2:
+		scr_search_1_1(fld_title);
+		break;
+
+		case 3:
+		scr_search_1_1(fld_author);
+		break;
+
+		case 4:
+		scr_search_1_1(fld_subject);
+		break;
+
+		default:
+		O("ERROR: unknown command\n\n");
+		scr_search_1();
+	}
+}
+
 
 
 void scr_main_0()
@@ -90,7 +123,7 @@ void scr_main_0()
 	I command;
 	O("1. search record\n2. add record\n3. delete record\n");
 	O("4. edit record\n5. display record\n6. display all records\n");
-	O("7. database status\n8. vaccum database\n\n0. exit program\n");
+	O("7. database status\n8. vaccum database\n\n0. exit program\n\n");
 	command = get_num();
 
 	switch (command) {
@@ -131,7 +164,7 @@ void scr_main_0()
 		break;
 
 		default:
-		O("input error\n\n");
+		O("ERROR: unknown command\n\n");
 		scr_main_0();
 	}
 
