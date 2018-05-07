@@ -43,6 +43,13 @@ typedef struct books {
 #define RECBUFLEN 2048		//< db write buffer
 #define CSVDEBUG 0			//< debug output
 
+// string manipulation
+#define scnt(x)   (UJ)strlen((S)(x))			//!< string length \param str
+#define scmp(x,y) strcmp((S)(x),(S)(y))     //!< compare two strings \param x str \param y str
+#define scpy(x,y) (S)strcpy((S)(x),(S)(y))  //!< copy x into y \param x srcstr \param y deststr
+#define schr(x,y) (S)strchr((S)(x),y)       //!< pointer to the first occurrence of y in x
+#define rchr(x,y) (S)strrchr((S)(x),y)      //!< pointer to the last occurrence of y in x
+
 enum rec_fields { fld_pages, fld_year, fld_publisher, fld_title, fld_author, fld_subject };
 
 I csv_max_field_widths[] = { 4, 4, 100, 200, 50, 2000 };
