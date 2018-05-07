@@ -5,40 +5,41 @@
 
 typedef J T;	//< array type in main()
 
-V _arr_init(Arr *a, size_t initialSize, size_t elSize) {
-	a->data = (V*)malloc(initialSize * elSize);
+Arr* _arr_init(size_t initialSize, size_t elSize) {
+	Arr *a = (Arr*)malloc(SZ(Arr) + initialSize * elSize);
 	a->used = 0;
 	a->size = initialSize;
 	a->el_size = elSize;
+	R a;
 }
 
-V _arr_add(Arr *a, V *el) {
+Arr* _arr_add(Arr **aptr, V *el) {
+	Arr *a = *aptr;
 	if(a->used == a->size){
 		a->size *= 2;
-		a->data = (V*)realloc(a->data, a->size * a->el_size);
+		*aptr = a = (Arr*)realloc(a, SZ(Arr) + a->size * a->el_size);
 	}
-	memcpy(((V**)(a->data + (a->el_size * a->used++))), el, a->el_size);
+	memcpy((V*)(a->data + a->el_size * a->used++), el, a->el_size);
+	R *aptr;
 }
 
-V* _arr_at(Arr*a, UJ idx) {
-	R ((V**)(a->data + (a->el_size * idx)));
+V* _arr_at(Arr*a, J idx) {
+	R (V*)(a->data + a->el_size * idx);
 }
 
 V arr_free(Arr *a) {
-	free(a->data);
-	a->data = NULL;
-	a->used = a->size = 0;
+	free(a);
 }
 
 I main() {
-	Arr a;
 	J i;
-	arr_init(&a, 5, T);	//< initially 5 elements
-	DO(100, arr_add(&a,i)) //< will auto resize as necessary
-	O("el[9]: %lu\n", arr_at(&a, 9, T)); //< print nth element
-	DO(100, O("%lu %lu|", i, arr_at(&a, i, T)))
-	O("total: %lu\n", a.used); //< print number of elements
-	arr_free(&a); //< don't forget!
+	I t = 100; //< test iterations
+
+	Arr *a = arr_init(5, T);	//< initially 5 elements
+	DO(t,arr_add(a, i)) //< will grow as necessary
+	DO(t, O("%lu %lu|", i, arr_at(a, i, T)))
+	O("\ntotal: %lu\n", a->used); //< print number of elements
+	arr_free(a); //< don't forget!
 
 	R 0;
 }
