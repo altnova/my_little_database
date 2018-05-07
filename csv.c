@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include "books.h"
 
-void die(S,UJ);
+V die(S,UJ);
 
 FILE * outfile;
 
@@ -29,7 +29,7 @@ UJ next_id() {
 	return last_id++;
 }
 
-void add_field(I fld, S val) {
+V add_field(I fld, S val) {
 
 	if (fld >= COLS) {
 		O("too many columns: line=(%lu) fld=(%d) val=(%s)\n", currline, fld, val);
@@ -57,7 +57,7 @@ void add_field(I fld, S val) {
 		recbuf_flush();						//< ...flush it to disk.
 }
 
-void csv_load(S fname) {
+V csv_load(S fname) {
 	FILE *csv = fopen(fname, "r+");
 
 	if (csv == NULL)
@@ -134,7 +134,7 @@ void csv_load(S fname) {
 	recbuf_flush();						//< flush remaining buffer to disk
 }
 
-void die(S err, UJ line) {
+V die(S err, UJ line) {
 	if (line)
 		O("line %lu: %s\n", line, err);
 	else
@@ -142,7 +142,7 @@ void die(S err, UJ line) {
 	exit(EXIT_FAILURE);
 }
 
-int main() {
+I main() {
 
 	outfile = fopen("books.dat", "w+");
 

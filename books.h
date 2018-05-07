@@ -6,7 +6,10 @@ typedef int I;
 typedef short H;
 typedef void V;
 typedef unsigned long UJ;
+typedef unsigned int UI;
+typedef unsigned char G;
 
+#define Z static
 #define R return
 #define O printf
 #define SZ sizeof
