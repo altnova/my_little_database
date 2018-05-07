@@ -52,9 +52,9 @@ typedef struct books {
 
 enum rec_fields { fld_pages, fld_year, fld_publisher, fld_title, fld_author, fld_subject };
 
-I csv_max_field_widths[] = { 4, 4, 100, 200, 50, 2000 };
+Z I csv_max_field_widths[] = { 4, 4, 100, 200, 50, 2000 };
 
-I rec_field_offsets[] = {
+Z I rec_field_offsets[] = {
 	offsetof(Book, pages), offsetof(Book, year), offsetof(Book, publisher),
 	offsetof(Book, title), offsetof(Book, author), offsetof(Book, subject)
 };
