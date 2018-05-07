@@ -17,7 +17,7 @@ C _cmp(V*a, V*b, size_t t){
 	R !r?r:r<0?-1:1;}			 //< -1,0,1 le,eq,ge 
 
 UJ _bin(V*haystack, V*needle, size_t t, size_t len){
- if(!len)R -1;if(len==1)R _cmp(haystack,needle,t)?-1:0;	//< len<2
+ if(len<1)R -1;if(len==1)R _cmp(haystack,needle,t)?-1:0;	//< len<2
  if(_cmp(haystack,needle,t)>0||_cmp(haystack+(len-1)*t,needle,t)<0)R -1; //< out of range
  UJ l=0,h=len,i; C r=1; //< lo, hi, mid
  for(;l<h&r;)if(i=(l+h)/2,r=_cmp(haystack+i*t,needle,t),r>=0)h=i;else l=i+1;
