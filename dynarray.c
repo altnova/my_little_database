@@ -13,17 +13,17 @@ Arr* _arr_init(size_t initialSize, size_t elSize) {
 	R a;
 }
 
-Arr* _arr_add(Arr **aptr, V *el) {
+V _arr_add(Arr **aptr, V *el) {
 	Arr *a = *aptr;
 	if(a->used == a->size){
 		a->size *= 2;
 		*aptr = a = (Arr*)realloc(a, SZ(Arr) + a->size * a->el_size);
 	}
 	memcpy((V*)(a->data + a->el_size * a->used++), el, a->el_size);
-	R *aptr;
 }
 
 V* _arr_at(Arr*a, J idx) {
+	if(idx<0||idx>a->used)R NULL;
 	R (V*)(a->data + a->el_size * idx);
 }
 
@@ -31,7 +31,7 @@ V arr_free(Arr *a) {
 	free(a);
 }
 
-I main() {
+Z I arr_test() {
 	J i;
 	I t = 100; //< test iterations
 
@@ -43,5 +43,7 @@ I main() {
 
 	R 0;
 }
+
+//Z I main() {R arr_test();}
 
 //:~

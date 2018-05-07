@@ -29,7 +29,7 @@ V rec_print(Book *b) {
 	O("record: id=(%lu) pages=(%d) year=(%d) title=(%s) author=(%s)\n", b->book_id, b->pages, b->year, b->title, b->author);
 }
 
-I rec_get(Book *dest, UJ book_id) {
+UJ rec_get(Book *dest, UJ book_id) {
 	UJ pos = rec_get_pos(book_index, book_id);
 	//O("rec_get pos=%ld\n", pos);
 	if(pos < 0) R pos;

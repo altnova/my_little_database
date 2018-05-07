@@ -8,3 +8,6 @@ typedef struct {
 	size_t el_size;	
 	G data[0];
 } Arr;
+
+extern Arr* _arr_init(size_t,size_t);
+extern V _arr_add(Arr**, V*);
