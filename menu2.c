@@ -5,12 +5,21 @@
 #define VER "1.0.0"
 #define MI(i,label) O("\t%d. %s\n", i, label);
 #define NL() O("\n");
-/*
-S fld_year = "fld_year";
-S fld_title = "fld_title";
-S fld_author = "fld_author";
-S fld_subject = "fld_subject";
-*/
+
+typedef struct books {
+	UJ book_id;
+	H pages;
+	H year;
+	C publisher[101];
+	C title[201];
+	C author[51];
+	C subject[2001];
+} Book;
+
+
+
+
+
 void banner() {
 	O("\tAmazon Kindle Database v%s\n", VER);
 	O("\t_____________________________\n");
@@ -71,10 +80,21 @@ I rec_add()
 { O("rec_add\n"); R 1;}
 
 void scr_search_1_1(I fld) 
-{}
+{	
+	C string[200];
+	UJ num;
+
+	O("please, enter keyword:  ");
+	fgets(string, 200, stdin);
+	O("\tSearch results:\n\n");
+	rec_search(fld, string);
+	NL();
+}
 
 void scr_displayall_6_1(I fld)
-{}
+{
+	rec_sort(fld);
+}
 
 I rec_display(UJ id)
 {
@@ -229,7 +249,7 @@ I scr_displayall_6(UJ *num)
 
 	SW(*num) {
 		CS(0, R 0);
-		CS(1, scr_displayall_6_1(7));
+		CS(1, scr_displayall_6_1(7));			// by id
 		CS(2, scr_displayall_6_1(fld_year));
 		CS(3, scr_displayall_6_1(fld_title));
 		CS(4, scr_displayall_6_1(fld_author));
