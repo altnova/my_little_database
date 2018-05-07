@@ -42,7 +42,7 @@ V rec_print(Book *b) {
 J rec_get(Book *dest, UJ book_id) {
 	J pos = rec_get_pos(book_index, book_id);
 	//O("rec_get pos=%ld\n", pos);
-	if(pos < 0) R pos;
+	if(pos<0)R pos;
 	J offset = pos * SZ(Book);
 	FILE *db = fopen("books.dat", "r");
 	fseek(db, offset, SEEK_SET);
