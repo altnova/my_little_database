@@ -29,7 +29,7 @@ I input_num(int *number, S prompt) {
 V scr_search_1() {
 	I choice;
 
-	NL();
+	NL()
 	O("\tSearch record\n");
 	O("\t-------------\n");
 	NL();
@@ -39,7 +39,7 @@ V scr_search_1() {
 	MI(4, "By Subject")
 	NL()
 	MI(0, "Main Menu")
-	NL();
+	NL()
 	input_num(&choice, "Select field");
 	SW(choice){
 		CS(0, R)
@@ -54,7 +54,7 @@ V scr_search_1() {
 V scr_main_0() {
 	I choice;
 
-	NL();
+	NL()
 	banner();
 	NL();
 	MI(1, "Search record")
