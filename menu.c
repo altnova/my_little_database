@@ -40,6 +40,7 @@ V scr_search_1() {
 	NL()
 	MI(0, "Main Menu")
 	NL()
+	
 	input_num(&choice, "Select field");
 	SW(choice){
 		CS(0, R)
