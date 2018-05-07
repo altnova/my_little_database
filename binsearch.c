@@ -21,7 +21,7 @@ UJ _binfn(V*haystack, V*needle, size_t t, size_t len, BIN_CMP_FN cmpfn){
  if(cmpfn(haystack,needle,t)>0||cmpfn(haystack+(len-1)*t,needle,t)<0)R -1; //< out of range
  UJ l=0,h=len,i; C r=1; //< lo, hi, mid
  for(;l<h&r;)if(i=(l+h)/2,r=cmpfn(haystack+i*t,needle,t),r>=0)h=i;else l=i+1;
- O("l=%lu i=%lu h=%lu needle=%d hay(%lu)=%d r=%d\n", l, i, h, *((I*)needle), i, *((I*)(haystack+i*t)), r); //< debug
+ //O("l=%lu i=%lu h=%lu needle=%d hay(%lu)=%d r=%d\n", l, i, h, *((I*)needle), i, *((I*)(haystack+i*t)), r); //< debug
  R r?-1:i;}
 
 UJ _bin(V*haystack, V*needle, size_t t, size_t len){

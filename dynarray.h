@@ -10,4 +10,4 @@ typedef struct {
 } Arr;
 
 extern Arr* _arr_init(size_t,size_t);
-extern V _arr_add(Arr**, V*);
+extern V _arr_add(Arr**, V*), arr_free(Arr*);

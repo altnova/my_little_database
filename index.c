@@ -17,7 +17,7 @@ C index_cmp(V*a, V*b, size_t t){
 	UJ x = ((Idx*)a)->book_id;
 	UJ y = ((Idx*)b)->book_id;
 	J r = x-y;
-	O("index_cmp %lu %lu r=%ld\n", x, y, r);
+	//O("index_cmp %lu %lu r=%ld\n", x, y, r);
 	R !r?r:r<0?-1:1;
 }
 
@@ -29,8 +29,8 @@ V rec_print(Book *b) {
 	O("record: id=(%lu) pages=(%d) year=(%d) title=(%s) author=(%s)\n", b->book_id, b->pages, b->year, b->title, b->author);
 }
 
-UJ rec_get(Book *dest, UJ book_id) {
-	UJ pos = rec_get_pos(book_index, book_id);
+J rec_get(Book *dest, UJ book_id) {
+	J pos = rec_get_pos(book_index, book_id);
 	//O("rec_get pos=%ld\n", pos);
 	if(pos < 0) R pos;
 	J offset = pos * SZ(Book);
@@ -67,7 +67,6 @@ I main() {
 
 	Book b;
 	J res = rec_get(&b, 666);
-	O("rec_get=%ld\n", res);
 
 	rec_print(&b);
 
