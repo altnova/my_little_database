@@ -5,14 +5,14 @@
 
 typedef J T;	//< array type in main()
 
-Z V _arr_init(Arr *a, size_t initialSize, size_t elSize) {
+V _arr_init(Arr *a, size_t initialSize, size_t elSize) {
 	a->data = (V*)malloc(initialSize * elSize);
 	a->used = 0;
 	a->size = initialSize;
 	a->el_size = elSize;
 }
 
-Z V _arr_add(Arr *a, V *el) {
+V _arr_add(Arr *a, V *el) {
 	if(a->used == a->size){
 		a->size *= 2;
 		a->data = (V*)realloc(a->data, a->size * a->el_size);
@@ -20,7 +20,7 @@ Z V _arr_add(Arr *a, V *el) {
 	memcpy(((V**)(a->data + (a->el_size * a->used++))), el, a->el_size);
 }
 
-Z V* _arr_at(Arr*a, UJ idx) {
+V* _arr_at(Arr*a, UJ idx) {
 	return ((V**)(a->data + (a->el_size * idx)));
 }
 
