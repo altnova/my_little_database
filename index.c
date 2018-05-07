@@ -21,6 +21,12 @@ C index_cmp(V*a, V*b, size_t t){
 	R !r?r:r<0?-1:1;
 }
 
+int qsort_cmp(const V*a, const V*b) {
+	UJ x = ((Idx*)a)->book_id;
+	UJ y = ((Idx*)b)->book_id;
+	R (x-y);
+}
+
 J rec_get_pos(Arr* idx, UJ book_id) {
 	R binfn(idx->data, &book_id, Idx, idx->used, (BIN_CMP_FN)&index_cmp);
 }
@@ -63,6 +69,9 @@ V rec_build_idx(S fname) {
 
 	fclose(in);
 	O("built record index: %lu entries\n", book_index->used);
+
+	qsort(book_index->data, book_index->used, SZ(Idx), qsort_cmp);
+	O("index sorted\n");
 }
 
 V rec_destroy_idx() {
