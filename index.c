@@ -13,19 +13,22 @@ typedef struct idx {
 
 Arr *book_index;
 
-C index_cmp(V*a, V*b, size_t t){
+Z J _cmp(V*a, V*b) {
 	UJ x = ((Idx*)a)->book_id;
 	UJ y = ((Idx*)b)->book_id;
-	J r = x-y;
+	R (x-y);
+}
+
+C index_cmp(V*a, V*b, size_t t){
+	J r = _cmp(a,b);
 	//O("index_cmp %lu %lu r=%ld\n", x, y, r);
 	R !r?r:r<0?-1:1;
 }
 
 I qsort_cmp(const V*a, const V*b) {
-	UJ x = ((Idx*)a)->book_id;
-	UJ y = ((Idx*)b)->book_id;
+	J r = _cmp(a,b);
 	//O("cmp %lu %lu", x, y);
-	R (x-y);
+	R r;
 }
 
 J rec_get_pos(Arr* idx, UJ book_id) {
