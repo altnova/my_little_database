@@ -30,11 +30,11 @@ void get_num(UJ *num)
 }
 
 /*	main menu	*/
-I scr_main_0(); 
+I scr_main_0(UJ *num); 
 /*	exit program	*/
 // void scr_exit_0() {}
 /*	search record 	*/
-I scr_search_1();
+I scr_search_1(UJ *num);
 void scr_search_1_1();
 /*	add record 	*/
 // void scr_addrec_2() {}
@@ -51,14 +51,24 @@ void scr_search_1_1();
 /* 	vacuum database 	*/
 // void scr_dbvacuum_8() {}
 
+void input(UJ *command)
+{
+	get_num(command);
+
+	while(*command == -1) {
+		O("\nERROR: unknown command\n\n");
+		O("select menu item: ");
+		get_num(command);
+	}
+
+}
 
 I scr_search_1(UJ *command)
 {
 	O("1. by year\n2. by title\n3. by author\n");
 	O("4. by subject\n\n0. main menu\n\n");
-	O("select menu item: ");
+	input(command);
 
-	get_num(command);
 	switch (*command) {
 		case 0:
 		R 0;
@@ -104,7 +114,7 @@ I scr_main_0(UJ *command)
 		break;
 
 		case 1:
-		while (scr_search_1(command));
+		for  (;scr_search_1(command); printf("-----------------------------\n"));
 		R 1;
 	
 		break;
