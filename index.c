@@ -41,8 +41,8 @@ J rec_get(Book *dest, UJ book_id) {
 	R pos;
 }
 
-I main() {
-	FILE * in = fopen("books.dat", "r");
+V rec_build_idx(S fname) {
+	FILE *in = fopen(fname, "r");
 
 	book_index = arr_init(BUFSIZE, Idx);
 
@@ -62,14 +62,16 @@ I main() {
 	}
 
 	fclose(in);
-
 	O("built record index: %lu entries\n", book_index->used);
+}
 
+V rec_destroy_idx() {
+	arr_free(book_index);
+}
+
+I main() {
+	rec_build_idx("books.dat");
 	Book b;
 	J res = rec_get(&b, 666);
-
 	rec_print(&b);
-
-	arr_free(book_index);
-
 }
