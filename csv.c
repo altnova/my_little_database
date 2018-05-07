@@ -11,7 +11,7 @@ FILE * outfile;
 
 UJ currline;
 I recbufpos = 0;
-UJ last_id = 0;
+UJ last_id = 99999;
 Book recbuf[RECBUFLEN];
 
 V rec_print(Book *b, C force) {
@@ -26,7 +26,8 @@ V recbuf_flush() {
 }
 
 UJ next_id() {
-	return last_id++;
+	//return last_id++;
+	return last_id--;
 }
 
 V add_field(I fld, S val) {

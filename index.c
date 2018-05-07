@@ -21,9 +21,10 @@ C index_cmp(V*a, V*b, size_t t){
 	R !r?r:r<0?-1:1;
 }
 
-int qsort_cmp(const V*a, const V*b) {
+I qsort_cmp(const V*a, const V*b) {
 	UJ x = ((Idx*)a)->book_id;
 	UJ y = ((Idx*)b)->book_id;
+	//O("cmp %lu %lu", x, y);
 	R (x-y);
 }
 
@@ -47,6 +48,14 @@ J rec_get(Book *dest, UJ book_id) {
 	R pos;
 }
 
+Z V idx_print() {
+	Idx e;
+	DO(book_index->used,
+		e = arr_at(book_index, i, Idx);
+		O("idx %lu %lu\n", e.book_id, e.pos);
+	)
+}
+
 V rec_build_idx(S fname) {
 	FILE *in = fopen(fname, "r");
 
@@ -59,8 +68,8 @@ V rec_build_idx(S fname) {
 		Idx entry;
 		DO(rcnt,
 			Book *b = &buf[i];
-			if (b->book_id < last_book_id)
-				O("WARN: unsorted book_id=(%lu) at pos=(%lu)\n", b->book_id, pos);
+			//if (b->book_id < last_book_id)
+			//	O("WARN: unsorted book_id=(%lu) at pos=(%lu)\n", b->book_id, pos);
 			last_book_id = entry.book_id = b->book_id;
 			entry.pos = pos++;
 			arr_add(book_index, entry);
@@ -80,7 +89,10 @@ V rec_destroy_idx() {
 
 I main() {
 	rec_build_idx("books.dat");
+
+	//idx_print();
+
 	Book b;
-	J res = rec_get(&b, 666);
+	J res = rec_get(&b, 99965);
 	rec_print(&b);
 }

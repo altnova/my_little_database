@@ -11,3 +11,4 @@ typedef struct {
 
 extern Arr* _arr_init(size_t,size_t);
 extern V _arr_add(Arr**, V*), arr_free(Arr*);
+extern V* _arr_at(Arr*a, J idx);
