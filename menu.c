@@ -18,10 +18,10 @@ void banner() {
 
 I input_num(int *number, S prompt) {
     C line[4096];
-    while(O("%s: ", prompt) > 0 && fgets(line, sizeof(line), stdin) != 0) {
+    while(O("%s: ", prompt) > 0 && fgets(line, SZ(line), stdin) != 0) {
         if (sscanf(line, "%d", number) == 1)
-            return 0;
-        printf("ERR: invalid format\n");
+            R 0;
+        O("ERR: invalid format\n");
     }
     return EOF;
 }
@@ -40,7 +40,7 @@ V scr_search_1() {
 	NL()
 	MI(0, "Main Menu")
 	NL()
-	
+
 	input_num(&choice, "Select field");
 	SW(choice){
 		CS(0, R)
