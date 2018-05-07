@@ -21,7 +21,7 @@ V _arr_add(Arr *a, V *el) {
 }
 
 V* _arr_at(Arr*a, UJ idx) {
-	return ((V**)(a->data + (a->el_size * idx)));
+	R ((V**)(a->data + (a->el_size * idx)));
 }
 
 V arr_free(Arr *a) {
@@ -39,6 +39,8 @@ I main() {
 	DO(100, O("%lu %lu|", i, arr_at(&a, i, T)))
 	O("total: %lu\n", a.used); //< print number of elements
 	arr_free(&a); //< don't forget!
+
+	R 0;
 }
 
 //:~
