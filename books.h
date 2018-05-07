@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <stdio.h>
 
 typedef char C;
 typedef char* S;
@@ -6,6 +7,7 @@ typedef int I;
 typedef short H;
 typedef void V;
 typedef unsigned long UJ;
+typedef long J;
 typedef unsigned int UI;
 typedef unsigned char G;
 
