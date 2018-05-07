@@ -3,6 +3,9 @@ books.dat
 .DS_Store
 *.dSYM
 menu
+menu2
 search
 csv
 readint
+hashtable
+dynarray

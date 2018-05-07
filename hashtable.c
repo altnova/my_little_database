@@ -10,7 +10,9 @@ Z I split,level=2;
 Z struct bucket **buckets;
 
 //! djbhash
-I hC(G*a,UI n){I h=5381;DO(n,h=33*(h^a[i]))R h;}  // djb2 https://groups.google.com/forum/#!topic/comp.lang.c/lSKWXiuNOAk
+I hC(G*a,UI n){I h=5381;DO(n,h=33*(h^a[i]))R h;}
+
+  // djb2 https://groups.google.com/forum/#!topic/comp.lang.c/lSKWXiuNOAk
 
 //! check memory limit
 Z G*chk(G*a){if(!a)O("out of memory\n"),exit(1);R a;}
@@ -85,7 +87,7 @@ I main() {
  _snn("frameset");
  _snn("cos");
  _snn("fmt");
- 
+
  struct bucket *b;
  UJ c=0;
  DO(level*2,
