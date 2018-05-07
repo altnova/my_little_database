@@ -33,12 +33,12 @@ V arr_free(Arr *a) {
 I main() {
 	Arr a;
 	J i;
-	arr_init(&a, 5, T);														//< initially 5 elements
-	DO(100, arr_add(&a,i))												//< will auto resize as necessary
-	O("el[9]: %lu\n", arr_at(&a, 9, T));					//< print nth element
+	arr_init(&a, 5, T);	//< initially 5 elements
+	DO(100, arr_add(&a,i)) //< will auto resize as necessary
+	O("el[9]: %lu\n", arr_at(&a, 9, T)); //< print nth element
 	DO(100, O("%lu %lu|", i, arr_at(&a, i, T)))
-	O("total: %lu\n", a.used);										//< print number of elements
-	arr_free(&a);
+	O("total: %lu\n", a.used); //< print number of elements
+	arr_free(&a); //< don't forget!
 }
 
 //:~
