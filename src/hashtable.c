@@ -77,7 +77,7 @@ S _snn(S s){
  }
  R b->s;}
 
-I main() {
+Z I test() {
 
  buckets=(struct bucket**)calloc(2*level,SIZE);  //< initialize hash table
 
@@ -100,3 +100,7 @@ I main() {
  O("\n=%d\n",c);
 
 }
+
+//I main() { R test(); }
+
+//:!

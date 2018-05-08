@@ -143,18 +143,20 @@ V die(S err, UJ line) {
 	exit(EXIT_FAILURE);
 }
 
-I main() {
+Z I test() {
 
 	outfile = fopen("books.dat", "w+");
 
 	if (outfile == NULL)
         die("cannot open outfile", 0);
 
-	csv_load("books3.csv");
+	csv_load("sample.csv");
 	
 	fclose(outfile);
 
 	R 0;
 }
+
+I main() { R test(); }
 
 //:~

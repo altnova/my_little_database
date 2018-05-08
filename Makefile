@@ -1,9 +1,9 @@
 csv:
-	gcc -g -o csv csv.c
+	gcc -g -o csv src/csv.c
 	./csv
 
 index:
-	gcc -g -o idx dynarray.c binsearch.c rec.c io.c trc.c idx.c
+	gcc -g -o idx src/binsearch.c src/dynarray.c src/idx.c src/io.c src/rec.c src/trc.c
 	./idx
 
 menu:
