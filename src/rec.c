@@ -17,6 +17,12 @@ UJ rec_get_idx_pos(Arr* idx, UJ book_id) {
 	R binfn(idx->data, &book_id, Idx, idx->used, (BIN_CMP_FN)&cmp_binsearch);
 }
 
+//! substring search in given field
+C rec_search_txt_field(V *rec, I fld, S needle) {
+	S haystack = (S)rec+rec_field_offsets[fld];
+	R !!strcasestr(haystack, needle);
+}
+
 //! find database position by book_id
 UJ rec_get_db_pos(UJ book_id) {
 	UJ idx_pos = rec_get_idx_pos(book_index, book_id);
