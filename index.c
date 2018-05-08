@@ -28,9 +28,12 @@ Z UJ fsize(FILE *fp) {
 	R sz;
 }
 
-Z V ftouch(S fname) {
+//! create db file if not exists \returns number of records
+Z UJ db_touch(S fname) {
 	FILE*f = fopen(fname, "a");
+	UJ sz = fsize(f)/SZ(Book);
 	fclose(f);
+	R sz;
 }
 
 //! index entry comparator kernel
@@ -88,7 +91,7 @@ UJ rec_get(Book *dest, UJ book_id) {
 //! sort index by book_id
 Z V idx_sort() {
 	qsort(book_index->data, book_index->used, SZ(Idx), cmp_qsort);
-	//O("idx_rebuild: sorted, last_id=%ld\n", last->book_id);
+	//O("idx_sort: sorted, last_id=%ld\n", last->book_id);
 }
 
 //! rebuild index from scratch
@@ -115,7 +118,7 @@ V idx_rebuild() {
 	Idx *last = arr_last(book_index, Idx);
 	book_index->hdr = last->book_id; 	//< use Arr header field for last_id
 
-	O("idx_rebuild: rebuilt, entries=%lu\n", book_index->used);
+	//O("idx_rebuild: rebuilt, entries=%lu, last_id=%lu\n", book_index->used, book_index->hdr);
 }
 
 //! free memory
@@ -140,7 +143,7 @@ V idx_save() {
 	fwrite(book_index, SZ(Arr)+book_index->size*SZ(Idx), 1, out);
 	J size = fsize(out);
 	fclose(out);
-	O("idx_save: %lu bytes\n", size);
+	//O("idx_save: %lu bytes\n", size);
 }
 
 //! load index from a file
@@ -152,8 +155,7 @@ V idx_load() {
 	*idx = arr_init((size-SZ(Arr))/SZ(Idx), Idx);
 	fread(book_index, size, 1, in);
 	fclose(in);
-	O("idx_load: %lu bytes, %lu entries, capacity=%lu, last_id=%lu\n", size, book_index->used, book_index->size, book_index->hdr);
-	//idx_print(100);
+	//O("idx_load: %lu bytes, %lu entries, capacity=%lu, last_id=%lu\n", size, book_index->used, book_index->size, book_index->hdr);
 }
 
 //! update index header on disk
@@ -290,34 +292,37 @@ V rec_set(V*b, I fld, V* val) {
 	//O("rec_set: fld=%d, len=%d\n", fld, len);
 }
 
-//! create empty index if necessary
+//! create or rebuild index if necessary
 Z V idx_touch() {
+	UJ db_size = db_touch(db_file);
 	FILE*f = fopen(idx_file, "w+");
-	UJ size = fsize(f);
-	if (!size) {
-		book_index = arr_init(BUFSIZE,Idx);
+	UJ idx_fsize = fsize(f);
+	book_index = arr_init(BUFSIZE,Idx);
+	if (!idx_fsize) {
 		idx_save();
 		idx_load();
 		//O("idx_touch: initialized empty index file\n");
 	}
+	if (book_index->used != db_size) { //< out of sync
+		idx_rebuild();
+		idx_save();
+		//O("idx_touch: synchronized index file\n");
+	}
 	fclose(f);
 }
+
 
 V db_init(S d, S i) {
 	scpy_s(db_file, d, MAX_FNAME_LEN);
 	scpy_s(idx_file, i, MAX_FNAME_LEN);
-
-	ftouch(db_file);
 	idx_touch();
+	O("db_init: database initialized\n");
 }
 
 I test() {
 	Book b;
 
 	db_init("books.dat", "books.idx");
-
-	idx_rebuild();
-	idx_save();
 
 	DO(3, next_id())
 
@@ -326,21 +331,22 @@ I test() {
 		O("no such record %lu\n", delete_test);
 	//db_dump(); idx_dump(0);
 
-	idx_load();
-
 	rec_get(&b, 5); //< load from disk
-	O("before update: "); rec_print(&b);
+	O("\nbefore update: "); rec_print(&b);
 	H pages = 666;
 	rec_set(&b, fld_pages, &pages);
 	rec_set(&b, fld_title, "WINNIE THE POOH");
 	rec_update(&b);
 	rec_get(&b, 5); //< reload from disk
-	O("after update: "); rec_print(&b);
+	O("after update: "); rec_print(&b); O("\n");
 
 	//db_dump(); idx_dump(0);
 	DO(3, rec_create(&b);)
 	rec_delete(17);
 	db_dump(); idx_dump(0);
+
+	//rec_delete(20); //< delete last
+	//db_dump(); idx_dump(0);
 
 	idx_close();
 
