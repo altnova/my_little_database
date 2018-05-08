@@ -2,7 +2,7 @@
 typedef struct idx {
 	UJ rec_id;
 	UJ pos;
-} Idx;
+} Pair;
 
 extern C db_file[], idx_file[];
 
@@ -17,8 +17,8 @@ extern V idx_load();
 extern V idx_add(UJ rec_id, UJ pos);
 extern UJ idx_shift(UJ pos);
 extern UJ idx_update_pos(UJ rec_id, UJ new_pos);
-extern Idx* idx_data();
-extern Idx* idx_get_entry(UJ idx_pos);
+extern Pair* idx_data();
+extern Pair* idx_get_entry(UJ idx_pos);
 extern UJ idx_size();
 
 extern C cmp_binsearch(V*a, V*b, size_t t);

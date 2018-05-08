@@ -21,13 +21,13 @@ UJ idx_size() {
 }
 
 //! returns specific index entry
-Idx* idx_get_entry(UJ idx_pos) {
-	R arr_at(idx, idx_pos, Idx);
+Pair* idx_get_entry(UJ idx_pos) {
+	R arr_at(idx, idx_pos, Pair);
 }
 
 //! returns pointer to indexes' data section
-Idx* idx_data() {
-	R (Idx*)idx->data;
+Pair* idx_data() {
+	R (Pair*)idx->data;
 }
 //! create db file if not exists \returns number of records
 Z UJ db_touch(S fname) {
@@ -39,8 +39,8 @@ Z UJ db_touch(S fname) {
 
 //! comparator kernel
 Z J _c(const V*a, const V*b) {
-	UJ x = ((Idx*)a)->rec_id;
-	UJ y = ((Idx*)b)->rec_id;
+	UJ x = ((Pair*)a)->rec_id;
+	UJ y = ((Pair*)b)->rec_id;
 	R x-y;
 }
 
@@ -60,16 +60,16 @@ Z I cmp_qsort(const V*a, const V*b) {
 
 //! sort index by rec_id
 Z V idx_sort() {
-	qsort(idx->data, idx->used, SZ(Idx), cmp_qsort);
+	qsort(idx->data, idx->used, SZ(Pair), cmp_qsort);
 	T(DEBUG, "idx_sort: index sorted\n");
 }
 
 //! dump index to stdout
 Z V idx_dump(UJ head) {
-	Idx *e;
+	Pair *e;
 	T(TEST, "\nidx_dump: { last_id=%lu, used=%lu } =>\n\t", idx->hdr, idx->used);
 	DO(head?head:idx->used,
-		e = arr_at(idx, i, Idx);
+		e = arr_at(idx, i, Pair);
 		T(TEST, " (%lu->%lu)", e->rec_id, e->pos);
 	)
 	T(INFO, "\n\n");
@@ -82,7 +82,7 @@ V idx_rebuild() {
 
 	while((rcnt = fread(buf, SZ_REC, RECBUFLEN, in))) {
 		T(DEBUG, "idx_rebuild: read %lu records\n", rcnt);
-		Idx e; //< index entry
+		Pair e; //< index entry
 		DO(rcnt,
 			Rec b = &buf[i];
 			e.rec_id = b->rec_id;
@@ -94,7 +94,7 @@ V idx_rebuild() {
 	fclose(in);
 	idx_sort();
 
-	Idx *last = arr_last(idx, Idx);
+	Pair *last = arr_last(idx, Pair);
 	idx->hdr = last->rec_id; 	//< use Arr header field for last_id
 
 	T(INFO, "idx_rebuild: rebuilt, entries=%lu, last_id=%lu\n", idx->used, idx->hdr);
@@ -107,9 +107,9 @@ V idx_close() {
 
 //! zap index entry at pos
 UJ idx_shift(UJ pos) {
-	Idx*s = arr_at(idx, pos, Idx);
+	Pair *s = arr_at(idx, pos, Pair);
 	UJ to_move = idx->used-pos-1;
-	memcpy(s, s+1, SZ(Idx)*to_move);
+	memcpy(s, s+1, SZ(Pair)*to_move);
 	T(DEBUG, "idx_shift: shifted %lu entries, squashed db_pos=%lu\n", to_move, pos);
 	idx->used--;
 	idx_save();
@@ -119,7 +119,7 @@ UJ idx_shift(UJ pos) {
 //! persist index in a file
 V idx_save() {
 	FILE *out = fopen(idx_file, "w+");
-	fwrite(idx, SZ(Arr)+idx->size*SZ(Idx), 1, out);
+	fwrite(idx, SZ(Arr)+idx->size*SZ(Pair), 1, out);
 	J size = fsize(out);
 	fclose(out);
 	T(TRACE, "idx_save: %lu bytes\n", size);
@@ -131,7 +131,7 @@ V idx_load() {
 	idx_close();
 	J size = fsize(in);
 	Arr**tmp = &idx; //< replace pointer
-	*tmp = arr_init((size-SZ(Arr))/SZ(Idx), Idx);
+	*tmp = arr_init((size-SZ(Arr))/SZ(Pair), Pair);
 	fread(idx, size, 1, in);
 	fclose(in);
 	T(INFO, "idx_load: %lu bytes, %lu entries, capacity=%lu, last_id=%lu\n", size, idx->used, idx->size, idx->hdr);
@@ -157,23 +157,24 @@ UJ next_id() {
 UJ idx_update_pos(UJ rec_id, UJ new_pos) {
 	UJ idx_pos = rec_get_idx_pos(idx, rec_id);
 	BAIL_IF(idx_pos, NONE); //< no such record
-	Idx *i = arr_at(idx, idx_pos, Idx);
+	Pair *i = arr_at(idx, idx_pos, Pair);
 	i->pos = new_pos;
 	FILE *out = fopen(idx_file, "r+");
-	zseek(out, SZ(Arr)+SZ(Idx)*(idx_pos-1), SEEK_SET);
-	fwrite(i, SZ(Idx), 1, out);
+	zseek(out, SZ(Arr)+SZ(Pair)*(idx_pos-1), SEEK_SET);
+	fwrite(i, SZ(Pair), 1, out);
 	fclose(out);
 	T(DEBUG, "idx_update_pos: { rec_id=%lu, new_pos=%lu }\n", rec_id, new_pos);
 	R new_pos;
 }
 
+//! add new index element and save
 V idx_add(UJ rec_id, UJ pos) {
-	Idx e;
+	Pair e;
 	e.rec_id = rec_id;
 	e.pos = pos;
 	arr_add(idx, e);
 	T(DEBUG, "idx_add: { rec_id=%lu, pos=%lu }\n", rec_id, pos);
-	idx_save();
+	idx_save(); //< TODO append single item instead of full rewrite
 }
 
 //! perform sample index lookup
@@ -202,7 +203,7 @@ Z V idx_touch() {
 	UJ db_size = db_touch(db_file);
 	FILE*f = fopen(idx_file, "w+");
 	UJ idx_fsize = fsize(f);
-	idx = arr_init(RECBUFLEN, Idx);
+	idx = arr_init(RECBUFLEN, Pair);
 	if (!idx_fsize) {
 		idx_save();
 		idx_load();

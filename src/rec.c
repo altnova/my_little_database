@@ -15,7 +15,7 @@ V rec_print_dbg(Rec b) {
 
 //! find index position by rec_id
 UJ rec_get_idx_pos(UJ rec_id) {
-	R binfn(idx_data(), &rec_id, Idx, idx_size(), (BIN_CMP_FN)&cmp_binsearch);
+	R binfn(idx_data(), &rec_id, Pair, idx_size(), (BIN_CMP_FN)&cmp_binsearch);
 }
 
 //! substring search in given field
@@ -28,7 +28,7 @@ C rec_search_txt_field(V*rec, I fld, S needle) {
 UJ rec_get_db_pos(UJ rec_id) {
 	UJ idx_pos = rec_get_idx_pos(rec_id);
 	BAIL_IF(idx_pos, NONE);
-	Idx *e = idx_get_entry(idx_pos);
+	Pair *e = idx_get_entry(idx_pos);
 	T(TRACE, "rec_get_db_pos: { rec_id=%lu, idx_pos=%lu, db_pos=%lu }\n", e->rec_id, idx_pos, e->pos);
 	R e->pos;
 }
