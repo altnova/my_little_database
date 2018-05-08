@@ -8,7 +8,7 @@ index:
 
 menu:
 	rm -f menu
-	gcc -w -g -Werror menu2.c -o menu	
+	gcc -w -g -Werror src/scr.c -o menu	
 
 clean:
 	rm -rf csvp idx menu *.dSYM
