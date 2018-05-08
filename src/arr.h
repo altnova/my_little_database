@@ -8,7 +8,7 @@ typedef struct {
 	size_t used;		//< occupied
 	size_t size;		//< allocated
 	size_t el_size;		//< element size
-	G data[0];			//< array data
+	G data[0];			//< struct hack: array data
 } Arr;
 
 extern Arr* _arr_init(size_t initialSize, size_t elementSize);
