@@ -13,7 +13,7 @@ FILE * outfile;
 
 UJ currline;
 I recbufpos = 0;
-UJ last_id = 0;
+ID last_id = 0;
 bufRec recbuf;
 
 V rec_print(Rec b, C force) {
@@ -27,9 +27,8 @@ V recbuf_flush() {
 	recbufpos = 0;									//< rewind buffer
 }
 
-UJ next_id() {
-	return last_id++;
-	//return last_id--;
+ID next_id() {
+	R last_id++;
 }
 
 V add_field(I fld, S val) {
@@ -51,8 +50,8 @@ V add_field(I fld, S val) {
 		strcpy(f, val);						//< populate string field
 
 	if (fld == COLS-1) {					//< reached last field
-		UJ id = next_id();					//< allocate rec_id
-		memcpy(r, &id, SZ(UJ));				//< populate rec_id
+		ID id = next_id();					//< allocate rec_id
+		memcpy(r, &id, SZ(ID));				//< populate rec_id
 		rec_print(&recbuf[recbufpos++], 0);	//< debug print
 	}
 
@@ -131,9 +130,7 @@ V csv_load(S fname) {
 			}
 		)
 	}
-
 	fclose(csv);
-
 	recbuf_flush();						//< flush remaining buffer to disk
 }
 

@@ -92,7 +92,7 @@ UJ rec_update(Rec b) {
 	UJ db_pos = rec_get_db_pos(b->rec_id);
 	BAIL_IF(db_pos, NONE);
 	FILE *db = fopen(db_file, "r+");
-	J offset = SZ_REC*db_pos;
+	UJ offset = SZ_REC*db_pos;
 	zseek(db, offset, SEEK_SET);
 	fwrite(b, SZ_REC, 1, db); //< overwrite old data
 	fclose(db);
@@ -107,5 +107,6 @@ V rec_set(V*b, I fld, V*val) {
 	memcpy(b+offset, val, len+1);
 	T(TRACE, "rec_set: fld=%d, len=%d\n", fld, len);
 }
+
 
 //:~

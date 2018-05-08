@@ -39,8 +39,8 @@ Z UJ db_touch(S fname) {
 
 //! comparator kernel
 Z J _c(const V*a, const V*b) {
-	UJ x = ((Pair*)a)->rec_id;
-	UJ y = ((Pair*)b)->rec_id;
+	ID x = ((Pair*)a)->rec_id;
+	ID y = ((Pair*)b)->rec_id;
 	R x-y;
 }
 
@@ -148,14 +148,14 @@ V idx_update_hdr() {
 
 //! get next available id and store it on disk
 UJ next_id() {
-	UJ id = ++idx->hdr;
+	ID id = ++idx->hdr;
 	idx_update_hdr();
-	return id;
+	R id;
 }
 
 //! patch record's pos pointer and store it on disk
 UJ idx_update_pos(UJ rec_id, UJ new_pos) {
-	UJ idx_pos = rec_get_idx_pos(idx, rec_id);
+	UJ idx_pos = rec_get_idx_pos(rec_id);
 	BAIL_IF(idx_pos, NONE); //< no such record
 	Pair *i = arr_at(idx, idx_pos, Pair);
 	i->pos = new_pos;
@@ -168,7 +168,7 @@ UJ idx_update_pos(UJ rec_id, UJ new_pos) {
 }
 
 //! add new index element and save
-V idx_add(UJ rec_id, UJ pos) {
+V idx_add(ID rec_id, UJ pos) {
 	Pair e;
 	e.rec_id = rec_id;
 	e.pos = pos;
@@ -178,7 +178,7 @@ V idx_add(UJ rec_id, UJ pos) {
 }
 
 //! perform sample index lookup
-Z UJ idx_peek(UJ rec_id){
+Z UJ idx_peek(ID rec_id){
 	Rec b;
 	UJ pos = rec_get(b, rec_id);
 	BAIL_IF(pos, NONE); //< no such record
@@ -231,7 +231,7 @@ I test() {
 
 	DO(3, next_id())
 
-	UJ delete_test = 10;
+	ID delete_test = 10;
 	if(rec_delete(delete_test) == NONE)
 		T(WARN, "no such record %lu\n", delete_test);
 

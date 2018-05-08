@@ -14,9 +14,9 @@
 #define CSVDEBUG 0			//< debug output
 
 #define MAX_FNAME_LEN 200		//< db and idx files
-
+typedef UJ ID;
 typedef struct records {
-	UJ rec_id;
+	ID rec_id;
 	H pages;
 	H year;
 	C publisher[101];
