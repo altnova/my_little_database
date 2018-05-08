@@ -22,8 +22,8 @@ V _arr_add(Arr **aptr, V *el) {
 	memcpy((V*)(a->data + a->el_size * a->used++), el, a->el_size);
 }
 
-V* _arr_at(Arr*a, J idx) {
-	if(idx<0||idx>a->used)R NULL;
+V* _arr_at(Arr*a, UJ idx) {
+	if(idx>a->used)R NULL;
 	R (V*)(a->data + a->el_size * idx);
 }
 
@@ -42,7 +42,7 @@ Z I arr_test() {
 
 	Arr *a = arr_init(5, T);	//< initially 5 elements
 	DO(t,arr_add(a, i)) //< will grow as necessary
-	DO(t, O("%lu %lu|", i, arr_at(a, i, T)))
+	DO(t, O("%ld %ld|", i, *arr_at(a, i, T)))
 	O("\ntotal: %lu\n", a->used); //< print number of elements
 	arr_free(a); //< don't forget!
 

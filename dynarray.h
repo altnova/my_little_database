@@ -1,7 +1,7 @@
 #define arr_init(initSize,type)({_arr_init(initSize,SZ(type));})
 #define arr_add(a,val)({typeof(val) VAL = val; _arr_add(&a,&VAL);})
-#define arr_at(a,idx,type)({*(type*)_arr_at(a,idx);})
-#define arr_last(a,type)({*(type*)_arr_last(a);})
+#define arr_at(a,idx,type)({(type*)_arr_at(a,idx);})
+#define arr_last(a,type)({(type*)_arr_last(a);})
 
 typedef struct {
 	UJ hdr;				//< placeholder for custom metadata
@@ -13,7 +13,7 @@ typedef struct {
 
 extern Arr* _arr_init(size_t initialSize, size_t elementSize);
 extern V _arr_add(Arr**, V*);
-extern V* _arr_at(Arr*a, J idx);
+extern V* _arr_at(Arr*a, UJ idx);
 extern V* _arr_last(Arr*a);
 
 extern V arr_free(Arr*);	//< don't forget!
