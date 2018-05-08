@@ -3,22 +3,24 @@
 #include <math.h>
 #include <string.h>
 #include "___.h"
+#include "cfg.h"
+
 #define VER "1.0.0"
 #define MI(i,label) O("\t%d. %s", i, label);
 #define NL() O("\n");
 
-Book b1, b2;
+Rec b1, b2;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //									PRINTS											   //
 /////////////////////////////////////////////////////////////////////////////////////////
 
-V recprint_compressed(Book *b)
+V recprint_compressed(Rec b)
 {
-	O("\t(%d)\t%s\t\t%s\t%d\t%s\t%dpp\n", b->book_id, b->title, b->author, b->year, b->publisher, b->pages);
+	O("\t(%d)\t%s\t\t%s\t%d\t%s\t%dpp\n", b->rec_id, b->title, b->author, b->year, b->publisher, b->pages);
 }
 
-V recprint_formated(Book *b)
+V recprint_formated(Rec b)
 {
 	NL()
 	MI(1, "TITLE:\t"); 		O("%s\n", b->title);
@@ -55,7 +57,7 @@ V get_num(UJ *num, C buf[])
 {
 	C c = '1', i = 0;
 	for (*num = 0; c != '\n'; i++) {
-		c = buf[i]
+		c = buf[i];
 		if (c == '\n') 
 			break;
 
@@ -66,21 +68,6 @@ V get_num(UJ *num, C buf[])
 
 		*num *= 10;
 		*num += c - '0';
-	}
-}
-
-V input(UJ *command, I num, const S request)
-{
-	C buf[300];
-	O(request);
-	get_line(buf, 300);
-	get_num(command, buf);
-
-	while(*command == -1 || *command > num) {
-		O("\x1B[31mERROR:\x1B[0m unknown command\n");
-		O(request);
-		get_line(buf, 300);
-		get_num(command, buf);
 	}
 }
 
@@ -99,6 +86,22 @@ V get_line(C buf[], I length)
 	
 	buf[--i] = '\0';
 }
+
+V input(UJ *command, I num, const S request)
+{
+	C buf[300];
+	O(request);
+	get_line(buf, 300);
+	get_num(command, buf);
+
+	while(*command == -1 || *command > num) {
+		O("\x1B[31mERROR:\x1B[0m unknown command\n");
+		O(request);
+		get_line(buf, 300);
+		get_num(command, buf);
+	}
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //										RYBY										   //
@@ -135,8 +138,7 @@ UJ next_id()
 	R 2;
 }
 
-Book* rec_get(UJ id) {
-
+Rec rec_get(UJ id) {
 	R &b1;
 }
 
@@ -160,15 +162,13 @@ V scr_displayall_6_1(I fld)
 
 I rec_display_1(UJ id)
 {
-	if (id > 1)
-		R 0;
+	if (id > 1)R 0;
 	recprint_compressed(&b1);
 }
 
 I rec_display_2(UJ id)
 {
-	if (id > 1)
-		R 0;
+	if (id > 1)R 0;
 	recprint_compressed(&b1);
 }
 
@@ -189,13 +189,13 @@ V db_vacuum()
 //									SCREENS											   //
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////
-V scr_editrec_4_2(I fld, Book *origin) 
+V scr_editrec_4_2(I fld, Rec origin) 
 {
 	UJ num;
+	C buf[300];
+
 	O("fld %d; fld_year %d; fld_pages %d\n", fld, fld_year,fld_pages);
 
-
-	
 
 	if ((fld != fld_year) && (fld != fld_pages)) {
 		O("!!\n");
@@ -208,10 +208,10 @@ V scr_editrec_4_2(I fld, Book *origin)
 		O("!\n");
 		O("old value:\t%d\n", *(origin + rec_field_offsets[fld]));
 		O("new value:\t");
-		get_num(&num);
+		get_num(&num, buf);
 		while (num == -1) {
 			O("not a number. enter again\n");
-			get_num(&num);
+			get_num(&num, buf);
 		}
 
 		origin->year = num;
@@ -220,7 +220,7 @@ V scr_editrec_4_2(I fld, Book *origin)
 //////////////////////////////////////////
 I scr_editrec_4_1(UJ id)
 {
-	Book *origin;
+	Rec origin;
 	UJ num;
 
 	if (id == -1) 
@@ -283,56 +283,58 @@ I scr_addrec_2(UJ *command)
 {
 	C buf[15];
 	UJ id;
-	Book str;
+	Rec str = malloc(SZ_REC);
 	NL()
 	O("\tAdd record\n");
 	O("\t-------------\n");
 	NL();
 
 	O("TITLE:  ");
-	get_line(str.title, 201);
+	get_line(str->title, 201);
 	O("AUTHOR:  ");
-	get_line(str.author, 51);
+	get_line(str->author, 51);
 
 	O("YEAR:  ");
 	get_line(buf, 15);
 	get_num(&id, buf);
 	while (id == -1) {
 		O("not a number. enter again\n");
-		get_num(&id);
+		get_num(&id, buf);
 	}
-	str.year = id;
+	str->year = id;
 
 	O("PUBLISHER:  ");
-	get_line(str.publisher, 101);
-
+	get_line(str->publisher, 101);
 
 	O("PAGES:  ");
 	get_line(buf, 15);
 	get_num(&id, buf);
 	while (id == -1) {
 		O("not a number. enter again\n");
-		get_num(&id);
+		get_num(&id, buf);
 	}
-	str.pages = id;
+	str->pages = id;
 	O("SUBJECT:  ");
-	get_line(str.subject, 2001);
+	get_line(str->subject, 2001);
 
-	str.book_id = next_id();
+	str->rec_id = next_id();
 	rec_add(str);
 
-	O("[OK: record created with ID %lu]\n", str.book_id);
+	O("[OK: record created with ID %lu]\n", str->rec_id);
+
+	free(str);
 	R get_yn("create another one?");
 }
 
 I scr_deleterec_3(UJ *num)
 {
+	C buf[300];
 	NL()
 	O("\nDelete record\n");
 	O("\t-------------\n");
 	NL();
  	O("enter book ID or press any letter to go back to main menu\n");
- 	get_num(num);
+ 	get_num(num, buf);
 
  	if (*num == -1) 
  		R 0;
@@ -370,6 +372,7 @@ I scr_editrec_4(UJ *num)
 
 I scr_displayrec_5(UJ *num)
 {
+	C buf[300];
 	NL()
 	O("\tDisplay record\n");
 	O("\t-------------\n");
@@ -477,27 +480,32 @@ I scr_main_0(UJ *command)
 
 I main()
 {
-	UJ command;
-	b1.book_id = 0;
-	b1.pages = 423;
-	b1.year = 1996;
-	strcpy(b1.publisher, "EKSMO");
-	strcpy(b1.title, "CHAPAEV AND VOID");
-	strcpy(b1.author, "Pelevin V. O.");
-	strcpy(b1.subject, "Pyotr Pustota is a poet who has fled from Saint Petersburg to Moscow and who takes up the identity of a Soviet political commissar and meets a strange man named Vasily Chapayev who is some sort of an army commander. He spends his days drinking samogon, taking drugs and talking about the meaning of life with Chapayev.");
-	
-	b2.book_id = 1;
-	b2.pages = 543;
-	b2.year = 1992;
-	strcpy(b2.publisher, "EKSMO");
-	strcpy(b2.title, "OMON RA");
-	strcpy(b2.author, "Pelevin V. O.");
-	strcpy(b2.subject, "The protagonist is Omon Krivomazov, who was born in Moscow post-World War II. The plot traces his life from early childhood. In his teenage years, the realization strikes him that he must break free of Earth's gravity to free himself of the demands of the Soviet society and the rigid ideological confines of the state.");
+	b1 = malloc(SZ_REC);
+	b2 = malloc(SZ_REC);
 
+	UJ command;
+	b1->rec_id = 0;
+	b1->pages = 423;
+	b1->year = 1996;
+	strcpy(b1->publisher, "EKSMO");
+	strcpy(b1->title, "CHAPAEV AND VOID");
+	strcpy(b1->author, "Pelevin V. O.");
+	strcpy(b1->subject, "Pyotr Pustota is a poet who has fled from Saint Petersburg to Moscow and who takes up the identity of a Soviet political commissar and meets a strange man named Vasily Chapayev who is some sort of an army commander. He spends his days drinking samogon, taking drugs and talking about the meaning of life with Chapayev.");
+	
+	b2->rec_id = 1;
+	b2->pages = 543;
+	b2->year = 1992;
+	strcpy(b2->publisher, "EKSMO");
+	strcpy(b2->title, "OMON RA");
+	strcpy(b2->author, "Pelevin V. O.");
+	strcpy(b2->subject, "The protagonist is Omon Krivomazov, who was born in Moscow post-World War II. The plot traces his life from early childhood. In his teenage years, the realization strikes him that he must break free of Earth's gravity to free himself of the demands of the Soviet society and the rigid ideological confines of the state.");
 
 	NL();
 	banner();
 	while (scr_main_0(&command));
+
+	free(b1);
+	free(b2);
 	R 0;
 }
 
