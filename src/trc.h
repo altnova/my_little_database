@@ -1,5 +1,6 @@
 
 
+//! register function for logging
 #define LOG(fn) const Z S FN=fn;
 #define WARN L_WARN,FN,__FILE__,__LINE__
 #define INFO L_INFO,FN,__FILE__,__LINE__
