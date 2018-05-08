@@ -5,7 +5,7 @@
 #include "binsearch.h"
 #include "index.h"
 
-Z Arr *book_index;
+Z Arr *book_index = 0;
 
 Z UJ fsize(FILE *fp){
 	UJ prev = ftell(fp);
@@ -53,9 +53,9 @@ J rec_get(Book *dest, UJ book_id) {
 	R pos;
 }
 
-Z V rec_print_idx() {
+Z V rec_print_idx(UJ head) {
 	Idx e;
-	DO(book_index->used,
+	DO(head?head:book_index->used,
 		e = arr_at(book_index, i, Idx);
 		O("idx %lu %lu\n", e.book_id, e.pos);
 	)
@@ -94,7 +94,7 @@ V rec_destroy_idx() {
 
 V rec_save_idx(S fname) {
 	FILE *out = fopen(fname, "w+");
-	fwrite(book_index, SZ(Arr)+book_index->size, 1, out);
+	fwrite(book_index, SZ(Arr)+book_index->size*SZ(Idx), 1, out);
 	J size = fsize(out);
 	fclose(out);
 	O("index saved, %lu bytes\n", size);
@@ -102,14 +102,14 @@ V rec_save_idx(S fname) {
 
 V rec_load_idx(S fname) {
 	FILE *in = fopen(fname, "r");
-	//rec_destroy_idx();
+	rec_destroy_idx();
 	J size = fsize(in);
 	Arr**idx = &book_index;
-	*idx = (Arr*)realloc(book_index, size);
+	*idx = arr_init((size-SZ(Arr))/SZ(Idx), Idx);
 	fread(book_index, size, 1, in);
 	fclose(in);
-	O("loaded record index: %lu entries\n", book_index->used);
-	//rec_print_idx();
+	O("loaded record index: %lu bytes, %lu entries, capacity %lu\n", size, book_index->used, book_index->size);
+	//rec_print_idx(100);
 }
 
 V rec_peek(UJ book_id){
@@ -119,15 +119,11 @@ V rec_peek(UJ book_id){
 }
 
 I main() {
-	rec_rebuild_idx("books.dat");
-	rec_save_idx("books.idx");
-
-	rec_peek(66666);
+	//rec_rebuild_idx("books.dat");
+	//rec_save_idx("books.idx");
+	//rec_peek(66666);
 
 	rec_load_idx("books.idx");
-
-	//rec_print_idx();	//< debug
-
 	rec_peek(66666);
 
 	rec_destroy_idx();

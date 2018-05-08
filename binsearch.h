@@ -8,4 +8,5 @@ typedef C(*BIN_CMP_FN)(V*,V*,size_t);
 #define binfn(h,n,t,l,fn) _binfn((t*)h, (t*)n, SZ(t), l, (BIN_CMP_FN)fn)
 
 extern UJ _binfn(V*haystack, V*needle, size_t t, size_t len, BIN_CMP_FN cmpfn);
+extern UJ _binfn(V*haystack, V*needle, size_t t, size_t len, BIN_CMP_FN cmpfn);
 
