@@ -27,6 +27,11 @@ V* _arr_at(Arr*a, J idx) {
 	R (V*)(a->data + a->el_size * idx);
 }
 
+V* _arr_last(Arr*a) {
+	R (V*)(a->data + a->el_size * (a->used-1));
+}
+
+
 V arr_free(Arr *a) {
 	if (a)free(a);
 }

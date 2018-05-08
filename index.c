@@ -85,7 +85,12 @@ V rec_rebuild_idx(S fname) {
 	O("built record index: %lu entries\n", book_index->used);
 
 	qsort(book_index->data, book_index->used, SZ(Idx), qsort_cmp);
-	O("index sorted\n");
+
+	Idx last = arr_last(book_index,Idx);
+
+	O("index sorted, last id=%ld\n", last.book_id);
+
+	book_index->hdr = last.book_id; 	//< use Arr header field for last_id
 }
 
 V rec_destroy_idx() {
@@ -108,8 +113,17 @@ V rec_load_idx(S fname) {
 	*idx = arr_init((size-SZ(Arr))/SZ(Idx), Idx);
 	fread(book_index, size, 1, in);
 	fclose(in);
-	O("loaded record index: %lu bytes, %lu entries, capacity %lu\n", size, book_index->used, book_index->size);
+	O("loaded record index: %lu bytes, %lu entries, capacity=%lu, last_id=%lu\n", size, book_index->used, book_index->size, book_index->hdr);
 	//rec_print_idx(100);
+}
+
+UJ next_id() {
+	UJ id = ++book_index->hdr;
+	FILE *out = fopen("books.idx", "r+");
+	fseek(out, 0L, SEEK_SET);
+	fwrite(&id, SZ(UJ), 1, out);
+	fclose(out);
+	return id;
 }
 
 V rec_peek(UJ book_id){
@@ -119,9 +133,14 @@ V rec_peek(UJ book_id){
 }
 
 I main() {
-	//rec_rebuild_idx("books.dat");
-	//rec_save_idx("books.idx");
-	//rec_peek(66666);
+	rec_rebuild_idx("books.dat");
+	rec_save_idx("books.idx");
+	rec_peek(66666);
+
+	rec_load_idx("books.idx");
+	rec_peek(66666);
+
+	DO(3, next_id())
 
 	rec_load_idx("books.idx");
 	rec_peek(66666);
