@@ -150,7 +150,7 @@ Z I test() {
 	if (outfile == NULL)
         die("cannot open outfile", 0);
 
-	csv_load("sample.csv");
+	csv_load("csv/sample.csv");
 	
 	fclose(outfile);
 

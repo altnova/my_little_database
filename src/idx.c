@@ -1,12 +1,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include "books.h"
-#include "dynarray.h"
-#include "binsearch.h"
+#include "arr.h"
+#include "bin.h"
 #include "idx.h"
 #include "rec.h"
 #include "trc.h"
-#include "io.h"
+#include "fio.h"
 
 Arr *book_index = 0;
 C db_file[MAX_FNAME_LEN+1];

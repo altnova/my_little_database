@@ -3,7 +3,7 @@ csv:
 	./csvp
 
 index:
-	gcc -g -o idx src/binsearch.c src/dynarray.c src/idx.c src/io.c src/rec.c src/trc.c
+	gcc -g -o idx src/bin.c src/arr.c src/idx.c src/fio.c src/rec.c src/trc.c
 	./idx
 
 menu:

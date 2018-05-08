@@ -2,10 +2,10 @@
 #include <string.h>
 #include "books.h"
 #include "trc.h"
-#include "io.h"
-#include "binsearch.h"
-#include "dynarray.h"
+#include "bin.h"
+#include "arr.h"
 #include "idx.h"
+#include "fio.h"
 
 //! debug print
 V rec_print_dbg(Book *b) {
@@ -64,7 +64,6 @@ UJ rec_delete(UJ book_id) {
 	ftrunc(db, SZ(Book)*new_size);
 	T(TRACE, "rec_delete: db file truncated\n");
 	fclose(db);
-
 	R db_pos;
 }
 
