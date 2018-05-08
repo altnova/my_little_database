@@ -7,18 +7,18 @@
 #define MI(i,label) O("\t%d. %s", i, label);
 #define NL() O("\n");
 
-Book note1, note2;
+Book b1, b2;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //									PRINTS											   //
 /////////////////////////////////////////////////////////////////////////////////////////
 
-V rec_print_1(Book *b)
+V recprint_compressed(Book *b)
 {
 	O("\t(%d)\t%s\t\t%s\t%d\t%s\t%dpp\n", b->book_id, b->title, b->author, b->year, b->publisher, b->pages);
 }
 
-V rec_print_2(Book *b)
+V recprint_formated(Book *b)
 {
 	NL()
 	MI(1, "TITLE:\t"); 		O("%s\n", b->title);
@@ -37,7 +37,7 @@ V banner()
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-//										RYBY										   //
+//										PROCESS										   //
 /////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -51,20 +51,19 @@ C get_yn(const C *hint)
     R c == 'y' ? 1 : 0;
 }
 
-V get_num(UJ *num)
+V get_num(UJ *num, C buf[])
 {
-	C c = '1';
-	for (*num = 0; c != '\n'; ) {
-		scanf("%c", &c);
+	C c = '1', i = 0;
+	for (*num = 0; c != '\n'; i++) {
+		c = buf[i]
 		if (c == '\n') 
 			break;
 
 		if (c < '0' || c > '9') {
-			while (c != '\n')
-				scanf("%c", &c);
 			*num = -1;
 			R;
 		}
+
 		*num *= 10;
 		*num += c - '0';
 	}
@@ -72,13 +71,16 @@ V get_num(UJ *num)
 
 V input(UJ *command, I num, const S request)
 {
+	C buf[300];
 	O(request);
-	get_num(command);
+	get_line(buf, 300);
+	get_num(command, buf);
 
 	while(*command == -1 || *command > num) {
 		O("\x1B[31mERROR:\x1B[0m unknown command\n");
 		O(request);
-		get_num(command);
+		get_line(buf, 300);
+		get_num(command, buf);
 	}
 }
 
@@ -99,6 +101,10 @@ V get_line(C buf[], I length)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+//										RYBY										   //
+/////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////
 V csv_9() {}
 /////////////////////////////////////////////////////////////////////////////////////////
 I rec_delete(I num)
@@ -114,14 +120,14 @@ I rec_add()
 
 V rec_search(I fld, S string)
 {
-	rec_print_1(&note1);
-	rec_print_1(&note2);
+	recprint_compressed(&b1);
+	recprint_compressed(&b2);
 }
 
 V rec_sort(I fld)
 {
-	rec_print_1(&note1);
-	rec_print_1(&note2);
+	recprint_compressed(&b1);
+	recprint_compressed(&b2);
 }
 
 UJ next_id()
@@ -131,7 +137,7 @@ UJ next_id()
 
 Book* rec_get(UJ id) {
 
-	R &note1;
+	R &b1;
 }
 
 
@@ -156,14 +162,14 @@ I rec_display_1(UJ id)
 {
 	if (id > 1)
 		R 0;
-	rec_print_1(&note1);
+	recprint_compressed(&b1);
 }
 
 I rec_display_2(UJ id)
 {
 	if (id > 1)
 		R 0;
-	rec_print_1(&note1);
+	recprint_compressed(&b1);
 }
 
 
@@ -182,15 +188,24 @@ V db_vacuum()
 /////////////////////////////////////////////////////////////////////////////////////////
 //									SCREENS											   //
 /////////////////////////////////////////////////////////////////////////////////////////
-V scr_editrec_4_2(I fld, Book *note, Book *origin) 
+///////////////////////////////
+V scr_editrec_4_2(I fld, Book *origin) 
 {
 	UJ num;
-	if (fld != fld_year && fld != fld_pages) {
+	O("fld %d; fld_year %d; fld_pages %d\n", fld, fld_year,fld_pages);
+
+
+	
+
+	if ((fld != fld_year) && (fld != fld_pages)) {
+		O("!!\n");
 		O("old value:\t%s\n", *(origin + rec_field_offsets[fld]));
 		O("new value:\t");
-		scanf("%s", note + rec_field_offsets[fld]);
+		
+		scanf("%s", origin + rec_field_offsets[fld]);
 	}
 	else {
+		O("!\n");
 		O("old value:\t%d\n", *(origin + rec_field_offsets[fld]));
 		O("new value:\t");
 		get_num(&num);
@@ -198,12 +213,14 @@ V scr_editrec_4_2(I fld, Book *note, Book *origin)
 			O("not a number. enter again\n");
 			get_num(&num);
 		}
+
+		origin->year = num;
 	}
 }
-
+//////////////////////////////////////////
 I scr_editrec_4_1(UJ id)
 {
-	Book note, *origin;
+	Book *origin;
 	UJ num;
 
 	if (id == -1) 
@@ -212,19 +229,18 @@ I scr_editrec_4_1(UJ id)
  		origin = rec_get(id);
 
 	 	if ((rec_display_2(id))) {
-	 		rec_print_2(origin);
+	 		recprint_formated(origin);
 	 		while(1) { 
-				// O("Select field to edit:  ");
-				input(&num, 6, "Select field to edit:  ");
+				input(&num, 6, "\tSelect field to edit:  ");
 
 				SW(num) {
 					CS(0, R 0);
-					CS(1, scr_editrec_4_2(fld_title, &note, origin););
-					CS(2, scr_editrec_4_2(fld_author, &note, origin););
-					CS(3, scr_editrec_4_2(fld_year, &note, origin););
-					CS(4, scr_editrec_4_2(fld_publisher, &note, origin););
-					CS(5, scr_editrec_4_2(fld_pages, &note, origin););
-					CS(6, scr_editrec_4_2(fld_subject, &note, origin););
+					CS(1, scr_editrec_4_2(fld_title, origin););
+					CS(2, scr_editrec_4_2(fld_author, origin););
+					CS(3, scr_editrec_4_2(fld_year, origin););
+					CS(4, scr_editrec_4_2(fld_publisher, origin););
+					CS(5, scr_editrec_4_2(fld_pages, origin););
+					CS(6, scr_editrec_4_2(fld_subject, origin););
 				}
 		 	}
 	 	}
@@ -265,6 +281,7 @@ I scr_search_1(UJ *command)
 
 I scr_addrec_2(UJ *command)
 {
+	C buf[15];
 	UJ id;
 	Book str;
 	NL()
@@ -276,17 +293,23 @@ I scr_addrec_2(UJ *command)
 	get_line(str.title, 201);
 	O("AUTHOR:  ");
 	get_line(str.author, 51);
+
 	O("YEAR:  ");
-	get_num(&id);
+	get_line(buf, 15);
+	get_num(&id, buf);
 	while (id == -1) {
 		O("not a number. enter again\n");
 		get_num(&id);
 	}
 	str.year = id;
+
 	O("PUBLISHER:  ");
 	get_line(str.publisher, 101);
+
+
 	O("PAGES:  ");
-	get_num(&id);
+	get_line(buf, 15);
+	get_num(&id, buf);
 	while (id == -1) {
 		O("not a number. enter again\n");
 		get_num(&id);
@@ -328,13 +351,15 @@ I scr_deleterec_3(UJ *num)
 
 I scr_editrec_4(UJ *num)
 {
+	C buf[15];
 	I i = 1;
 	NL()
 	O("\tEdit record\n");
 	O("\t-------------\n");
 	NL();
-	O("enter book ID or press any letter to go back to main menu\n");
- 	get_num(num);
+	O("enter book ID or press any letter to go back to main menu  ");
+	get_line(buf, 15);
+ 	get_num(num, buf);
 
 	if (!scr_editrec_4_1(*num)) 
 		R 0;		
@@ -349,8 +374,9 @@ I scr_displayrec_5(UJ *num)
 	O("\tDisplay record\n");
 	O("\t-------------\n");
 	NL();	
-	O("enter book ID or press any letter to go back to main menu\n");
- 	get_num(num);
+	O("enter book ID or press any letter to go back to main menu  ");
+ 	get_line(buf, 15);
+ 	get_num(num, buf);
  	if (*num == -1) 
  		R 0;
 
@@ -452,21 +478,21 @@ I scr_main_0(UJ *command)
 I main()
 {
 	UJ command;
-	note1.book_id = 0;
-	note1.pages = 423;
-	note1.year = 1996;
-	strcpy(note1.publisher, "EKSMO");
-	strcpy(note1.title, "CHAPAEV AND VOID");
-	strcpy(note1.author, "Pelevin V. O.");
-	strcpy(note1.subject, "Pyotr Pustota is a poet who has fled from Saint Petersburg to Moscow and who takes up the identity of a Soviet political commissar and meets a strange man named Vasily Chapayev who is some sort of an army commander. He spends his days drinking samogon, taking drugs and talking about the meaning of life with Chapayev.");
+	b1.book_id = 0;
+	b1.pages = 423;
+	b1.year = 1996;
+	strcpy(b1.publisher, "EKSMO");
+	strcpy(b1.title, "CHAPAEV AND VOID");
+	strcpy(b1.author, "Pelevin V. O.");
+	strcpy(b1.subject, "Pyotr Pustota is a poet who has fled from Saint Petersburg to Moscow and who takes up the identity of a Soviet political commissar and meets a strange man named Vasily Chapayev who is some sort of an army commander. He spends his days drinking samogon, taking drugs and talking about the meaning of life with Chapayev.");
 	
-	note2.book_id = 1;
-	note2.pages = 543;
-	note2.year = 1992;
-	strcpy(note2.publisher, "EKSMO");
-	strcpy(note2.title, "OMON RA");
-	strcpy(note2.author, "Pelevin V. O.");
-	strcpy(note2.subject, "The protagonist is Omon Krivomazov, who was born in Moscow post-World War II. The plot traces his life from early childhood. In his teenage years, the realization strikes him that he must break free of Earth's gravity to free himself of the demands of the Soviet society and the rigid ideological confines of the state.");
+	b2.book_id = 1;
+	b2.pages = 543;
+	b2.year = 1992;
+	strcpy(b2.publisher, "EKSMO");
+	strcpy(b2.title, "OMON RA");
+	strcpy(b2.author, "Pelevin V. O.");
+	strcpy(b2.subject, "The protagonist is Omon Krivomazov, who was born in Moscow post-World War II. The plot traces his life from early childhood. In his teenage years, the realization strikes him that he must break free of Earth's gravity to free himself of the demands of the Soviet society and the rigid ideological confines of the state.");
 
 
 	NL();
