@@ -144,12 +144,12 @@ V die(S err, UJ line) {
 
 Z I test() {
 
-	outfile = fopen("dat/books.dat", "w+");
+	outfile = fopen(DAT_FILE, "w+");
 
 	if (outfile == NULL)
 		die("cannot open outfile", 0);
 
-	csv_load("csv/books.csv");
+	csv_load(CSV_FILE);
 	
 	fclose(outfile);
 

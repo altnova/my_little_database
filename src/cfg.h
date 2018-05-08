@@ -2,6 +2,10 @@
 
 #define DEBUG_LEVEL INFO
 
+#define DAT_FILE "dat/books.dat"
+#define IDX_FILE "dat/books.idx"
+#define CSV_FILE "csv/books.csv"
+
 //! csv parser config
 #define COLS 6				//< csv column count
 #define BUF 1000000			//< csv read buffer

@@ -227,7 +227,7 @@ V db_init(S d, S i) {
 I test() {
 	Rec b = malloc(SZ_REC);
 
-	db_init("dat/books.dat", "dat/books.idx");
+	db_init(DAT_FILE, IDX_FILE);
 
 	DO(3, next_id())
 
