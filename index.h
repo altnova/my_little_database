@@ -9,6 +9,7 @@ extern UJ next_id();
 
 extern J rec_get_pos(Arr* idx, UJ book_id);
 extern J rec_get(Book *dest, UJ book_id);
+
 extern V idx_rebuild(S fname);
 extern V idx_save(S fname);
 extern V idx_load(S fname);
