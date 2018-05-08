@@ -18,9 +18,9 @@ V rec_print_dbg(Rec r) {
 UJ rec_get_idx_pos(ID rec_id) {
 	R binfn(idx_data(), &rec_id, Pair, idx_size(), &cmp_binsearch);}
 
-//! substring search in given field
-C rec_search_txt_field(V*rec, I fld, S needle) {
-	S haystack = (S)rec+rec_field_offsets[fld];
+//! case insensitive substring search in a given field \return 1 if match found
+C rec_search_txt_field(V*r, I fld, S needle) {
+	S haystack = (S)r+rec_field_offsets[fld];
 	R !!strcasestr(haystack, needle);}
 
 //! find database position by rec_id
