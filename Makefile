@@ -1,5 +1,8 @@
+csv:
+	gcc -g -o csv csv.c
+	./csv
+
 index:
-	rm -f index
 	gcc -g -o index dynarray.c binsearch.c index.c
 	./index
 
@@ -8,4 +11,4 @@ menu:
 	gcc -w -g -Werror menu2.c -o menu	
 
 clean:
-	rm -rf menu *.dSYM
+	rm -rf csv index menu *.dSYM
