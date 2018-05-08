@@ -1,15 +1,27 @@
-csvp:
-	gcc -g -o csvp src/trc.c src/csv.c
-	./csvp
+csv: clean nodatafiles
+	gcc -g -o bin/csv src/trc.c src/csv.c
+	./bin/csv
 
-index:
-	gcc -g -o idx src/bin.c src/arr.c src/idx.c src/fio.c src/rec.c src/trc.c
-	./idx
+idx: clean
+	gcc -g -o bin/idx src/bin.c src/arr.c src/idx.c src/fio.c src/rec.c src/trc.c
+	./bin/idx
 
-menu:
-	rm -f menu
-	gcc -w -g -Werror src/scr.c -o menu
-	./menu
+menu: clean
+	gcc -w -Werror -g -o bin/menu src/scr.c
+	./bin/menu
+
+bin: clean
+	gcc -DRUN_TESTS -g -o bin/binsearch src/bin.c 
+	./bin/binsearch
+
+arr: clean
+	gcc -DRUN_TESTS -g -o bin/dynarray src/trc.c src/arr.c 
+	./bin/dynarray
 
 clean:
-	rm -rf csvp idx menu *.dSYM
+	mkdir -p bin
+	rm -rf *.dSYM
+
+nodatafiles:
+	rm -f dat/books.*
+
