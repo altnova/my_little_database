@@ -6,17 +6,16 @@ typedef struct idx {
 	UJ pos;
 } Idx;
 
-extern UJ next_id();
-
 extern V db_init(S db_file, S idx_file);
+
+extern UJ next_id();
 
 extern UJ rec_get(Book *dest, UJ book_id);
 extern UJ rec_create(Book *b);
 extern UJ rec_update(Book *b);
 extern UJ rec_delete(UJ book_id);
 
-extern V rec_set_num(Book *b, I fld, H val);
-extern V rec_set_str(Book *b, I fld, S val);
+extern V rec_set(V*b, I fld, V* val);
 
 extern V idx_rebuild();
 extern V idx_save();

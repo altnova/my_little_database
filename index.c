@@ -238,6 +238,7 @@ UJ rec_create(Book *b) {
 	R db_pos;
 }
 
+//! update record
 UJ rec_update(Book *b) {
 	UJ db_pos = rec_get_db_pos(b->book_id);
 	if(db_pos==NONE)R NONE; //< no such book
@@ -281,25 +282,15 @@ Z V db_dump() {
 	fclose(in);
 }
 
+//! update field
 V rec_set(V*b, I fld, V* val) {
 	I offset = rec_field_offsets[fld];
 	I len = fld<3?SZ(H)-1:MIN(csv_max_field_widths[fld],strlen(val));
-	//O("rec_set: fld=%d, len=%d\n", fld, len);
 	memcpy(b+offset, val, len+1);
+	//O("rec_set: fld=%d, len=%d\n", fld, len);
 }
 
-/*
-V rec_set_num(Book *b, I fld, H val) {
-	I offset = rec_field_offsets[fld];
-	memcpy((V*)b+offset, (V*)&val, SZ(H));
-}
-
-V rec_set_str(Book *b, I fld, S val) {
-	I offset = rec_field_offsets[fld];
-	strcpy((S)b+offset, val);
-}
-*/
-
+//! create empty index if necessary
 Z V idx_touch() {
 	FILE*f = fopen(idx_file, "w+");
 	UJ size = fsize(f);
@@ -307,14 +298,14 @@ Z V idx_touch() {
 		book_index = arr_init(BUFSIZE,Idx);
 		idx_save();
 		idx_load();
-		O("idx_touch: initialized empty index file\n");
+		//O("idx_touch: initialized empty index file\n");
 	}
 	fclose(f);
 }
 
 V db_init(S d, S i) {
-	memcpy(db_file, d, MAX_FNAME_LEN);
-	memcpy(idx_file, i, MAX_FNAME_LEN);
+	scpy_s(db_file, d, MAX_FNAME_LEN);
+	scpy_s(idx_file, i, MAX_FNAME_LEN);
 
 	ftouch(db_file);
 	idx_touch();
