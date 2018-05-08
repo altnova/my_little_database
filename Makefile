@@ -11,4 +11,4 @@ menu:
 	gcc -w -g -Werror menu2.c -o menu	
 
 clean:
-	rm -rf csv index menu *.dSYM
+	rm -rf csvp idx menu *.dSYM
