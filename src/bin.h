@@ -12,3 +12,4 @@ typedef C(*BIN_CMP_FN)(V*,V*,size_t);
 extern UJ _binfn(V*haystack, V*needle, size_t t, size_t len, BIN_CMP_FN cmpfn);
 extern UJ _binfn(V*haystack, V*needle, size_t t, size_t len, BIN_CMP_FN cmpfn);
 
+//:~

@@ -1,6 +1,6 @@
 #include <stdarg.h>
 #include <stdio.h>
-#include "books.h"
+#include "_.h"
 #include "trc.h"
 
 //! trace
@@ -11,3 +11,6 @@ V T(I lvl, S format, ...) {
 		vprintf(format, args);
 	va_end(args);
 }
+
+
+//:~

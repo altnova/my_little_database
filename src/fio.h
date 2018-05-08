@@ -10,3 +10,5 @@ extern I ftrunc(FILE*d,UJ n);
 
 
 extern UJ fsize(FILE *fp);
+
+//:~

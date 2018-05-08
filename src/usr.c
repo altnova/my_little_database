@@ -1,5 +1,5 @@
 #include <stdio.h>
-#inclide "books.h"
+#include "_.h"
 
 I input_number(I *num, S prompt, S errmsg){
     char line[4096];
@@ -18,3 +18,5 @@ I main(V){
 	input_number(&n);
 	O("%d\n", n);
 } 
+
+//:~

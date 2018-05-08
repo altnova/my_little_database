@@ -1,4 +1,4 @@
-#include "books.h"
+#include "_.h"
 
 #if WIN32||_WIN64
 J zseek(I d,J j,I f){UI h=(UI)(j>>32),l=SetFilePointer((HANDLE)d,(UI)j,&h,f);R((J)h<<32)+l;}
@@ -18,3 +18,6 @@ UJ fsize(FILE *fp) {
 	zseek(fp, prev, SEEK_SET);
 	R sz;
 }
+
+
+//:~
