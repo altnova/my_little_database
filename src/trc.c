@@ -1,6 +1,7 @@
 #include <stdarg.h>
 #include <stdio.h>
-#include "_.h"
+#include "___.h"
+#include "cfg.h"
 #include "trc.h"
 
 //! trace

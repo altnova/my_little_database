@@ -1,5 +1,5 @@
 csvp:
-	gcc -g -o csvp src/csv.c
+	gcc -g -o csvp src/trc.c src/csv.c
 	./csvp
 
 index:

@@ -3,7 +3,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "_.h"
+#include "___.h"
+#include "cfg.h"
+#include "trc.h"
 
 V die(S,UJ);
 
@@ -12,15 +14,15 @@ FILE * outfile;
 UJ currline;
 I recbufpos = 0;
 UJ last_id = 0;
-Book recbuf[RECBUFLEN];
+bufRec recbuf;
 
-V rec_print(Book *b, C force) {
+V rec_print(Rec b, C force) {
 	if (force||CSVDEBUG)
-		O("record: id=(%lu) pages=(%d) year=(%d) title=(%s) author=(%s)\n", b->book_id, b->pages, b->year, b->title, b->author);
+		T(TEST, "record: id=(%lu) pages=(%d) year=(%d) title=(%s) author=(%s)\n", b->rec_id, b->pages, b->year, b->title, b->author);
 }
 
 V recbuf_flush() {
-	fwrite(recbuf, SZ(Book), recbufpos, outfile);	//< flush current buffer to outfile
+	fwrite(recbuf, SZ_REC, recbufpos, outfile);	//< flush current buffer to outfile
 	O("[+] %d records\n", recbufpos);
 	recbufpos = 0;									//< rewind buffer
 }
@@ -49,8 +51,8 @@ V add_field(I fld, S val) {
 		strcpy(f, val);						//< populate string field
 
 	if (fld == COLS-1) {					//< reached last field
-		UJ id = next_id();					//< allocate book_id
-		memcpy(r, &id, SZ(UJ));				//< populate book_id
+		UJ id = next_id();					//< allocate rec_id
+		memcpy(r, &id, SZ(UJ));				//< populate rec_id
 		rec_print(&recbuf[recbufpos++], 0);	//< debug print
 	}
 

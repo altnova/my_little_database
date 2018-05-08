@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
-#include "_.h"
+#include "___.h"
+#include "cfg.h"
 #include "arr.h"
 #include "bin.h"
 #include "idx.h"
@@ -8,23 +9,39 @@
 #include "trc.h"
 #include "fio.h"
 
-Arr *book_index = 0;
+Z Arr *idx; //< in-memory instance of the index
+Z bufRec buf; //< readbuffer RECBUFLEN records
+
 C db_file[MAX_FNAME_LEN+1];
 C idx_file[MAX_FNAME_LEN+1];
 
+//! current idx size
+UJ idx_size() {
+	R idx->used;
+}
+
+//! returns specific index entry
+Idx* idx_get_entry(UJ idx_pos) {
+	R arr_at(idx, idx_pos, Idx);
+}
+
+//! returns pointer to indexes' data section
+Idx* idx_data() {
+	R (Idx*)idx->data;
+}
 //! create db file if not exists \returns number of records
 Z UJ db_touch(S fname) {
 	FILE*f = fopen(fname, "a");
-	UJ sz = fsize(f)/SZ(Book);
+	UJ sz = fsize(f)/SZ_REC;
 	fclose(f);
 	R sz;
 }
 
-//! index entry comparator kernel
+//! comparator kernel
 Z J _c(const V*a, const V*b) {
-	UJ x = ((Idx*)a)->book_id;
-	UJ y = ((Idx*)b)->book_id;
-	R (x-y);
+	UJ x = ((Idx*)a)->rec_id;
+	UJ y = ((Idx*)b)->rec_id;
+	R x-y;
 }
 
 //! comparator for binfn()
@@ -41,59 +58,68 @@ Z I cmp_qsort(const V*a, const V*b) {
 	R r;
 }
 
-//! sort index by book_id
+//! sort index by rec_id
 Z V idx_sort() {
-	qsort(book_index->data, book_index->used, SZ(Idx), cmp_qsort);
+	qsort(idx->data, idx->used, SZ(Idx), cmp_qsort);
 	T(DEBUG, "idx_sort: index sorted\n");
+}
+
+//! dump index to stdout
+Z V idx_dump(UJ head) {
+	Idx *e;
+	T(TEST, "\nidx_dump: { last_id=%lu, used=%lu } =>\n\t", idx->hdr, idx->used);
+	DO(head?head:idx->used,
+		e = arr_at(idx, i, Idx);
+		T(TEST, " (%lu->%lu)", e->rec_id, e->pos);
+	)
+	T(INFO, "\n\n");
 }
 
 //! rebuild index from scratch
 V idx_rebuild() {
 	FILE *in = fopen(db_file, "r");
+	UJ rcnt, pos=0;
 
-	UJ rcnt, pos;
-	Book buf[BUFSIZE];
-
-	while((rcnt = fread(buf, SZ(Book), BUFSIZE, in))) {
+	while((rcnt = fread(buf, SZ_REC, RECBUFLEN, in))) {
 		T(DEBUG, "idx_rebuild: read %lu records\n", rcnt);
-		Idx entry;
+		Idx e; //< index entry
 		DO(rcnt,
-			Book *b = &buf[i];
-			entry.book_id = b->book_id;
-			entry.pos = pos++;
-			arr_add(book_index, entry);
+			Rec b = &buf[i];
+			e.rec_id = b->rec_id;
+			e.pos = pos++;
+			arr_add(idx, e);
 		)
 	}
 
 	fclose(in);
 	idx_sort();
 
-	Idx *last = arr_last(book_index, Idx);
-	book_index->hdr = last->book_id; 	//< use Arr header field for last_id
+	Idx *last = arr_last(idx, Idx);
+	idx->hdr = last->rec_id; 	//< use Arr header field for last_id
 
-	T(INFO, "idx_rebuild: rebuilt, entries=%lu, last_id=%lu\n", book_index->used, book_index->hdr);
+	T(INFO, "idx_rebuild: rebuilt, entries=%lu, last_id=%lu\n", idx->used, idx->hdr);
 }
 
 //! free memory
 V idx_close() {
-	arr_free(book_index);
+	arr_free(idx);
 }
 
 //! zap index entry at pos
 UJ idx_shift(UJ pos) {
-	Idx*s = arr_at(book_index, pos, Idx);
-	UJ to_move = book_index->used-pos-1;
+	Idx*s = arr_at(idx, pos, Idx);
+	UJ to_move = idx->used-pos-1;
 	memcpy(s, s+1, SZ(Idx)*to_move);
-	T(DEBUG, "idx_shift: shifted %lu entries\n", to_move);
-	book_index->used--;
+	T(DEBUG, "idx_shift: shifted %lu entries, squashed db_pos=%lu\n", to_move, pos);
+	idx->used--;
 	idx_save();
-	R book_index->used;
+	R idx->used;
 } 
 
 //! persist index in a file
 V idx_save() {
 	FILE *out = fopen(idx_file, "w+");
-	fwrite(book_index, SZ(Arr)+book_index->size*SZ(Idx), 1, out);
+	fwrite(idx, SZ(Arr)+idx->size*SZ(Idx), 1, out);
 	J size = fsize(out);
 	fclose(out);
 	T(TRACE, "idx_save: %lu bytes\n", size);
@@ -104,80 +130,70 @@ V idx_load() {
 	FILE *in = fopen(idx_file, "r");
 	idx_close();
 	J size = fsize(in);
-	Arr**idx = &book_index;
-	*idx = arr_init((size-SZ(Arr))/SZ(Idx), Idx);
-	fread(book_index, size, 1, in);
+	Arr**tmp = &idx; //< replace pointer
+	*tmp = arr_init((size-SZ(Arr))/SZ(Idx), Idx);
+	fread(idx, size, 1, in);
 	fclose(in);
-	T(INFO, "idx_load: %lu bytes, %lu entries, capacity=%lu, last_id=%lu\n", size, book_index->used, book_index->size, book_index->hdr);
+	T(INFO, "idx_load: %lu bytes, %lu entries, capacity=%lu, last_id=%lu\n", size, idx->used, idx->size, idx->hdr);
 }
 
 //! update index header on disk
 V idx_update_hdr() {
 	FILE *out = fopen(idx_file, "r+");
 	zseek(out, 0L, SEEK_SET);
-	fwrite(book_index, SZ(Arr), 1, out);
+	fwrite(idx, SZ(Arr), 1, out);
 	fclose(out);
 	T(DEBUG, "idx_update_hdr: idx header updated\n");
 }
 
 //! get next available id and store it on disk
 UJ next_id() {
-	UJ id = ++book_index->hdr;
+	UJ id = ++idx->hdr;
 	idx_update_hdr();
 	return id;
 }
 
 //! patch record's pos pointer and store it on disk
-UJ idx_update_pos(UJ book_id, UJ new_pos) {
-	UJ idx_pos = rec_get_idx_pos(book_index, book_id);
-	if(idx_pos==NONE)R NONE; //< no such book
-	Idx *i = arr_at(book_index, idx_pos, Idx);
+UJ idx_update_pos(UJ rec_id, UJ new_pos) {
+	UJ idx_pos = rec_get_idx_pos(idx, rec_id);
+	BAIL_IF(idx_pos, NONE); //< no such record
+	Idx *i = arr_at(idx, idx_pos, Idx);
 	i->pos = new_pos;
 	FILE *out = fopen(idx_file, "r+");
 	zseek(out, SZ(Arr)+SZ(Idx)*(idx_pos-1), SEEK_SET);
 	fwrite(i, SZ(Idx), 1, out);
 	fclose(out);
-	T(DEBUG, "idx_update_pos: { book_id=%lu, new_pos=%lu }\n", book_id, new_pos);
+	T(DEBUG, "idx_update_pos: { rec_id=%lu, new_pos=%lu }\n", rec_id, new_pos);
 	R new_pos;
 }
 
-V idx_add(UJ book_id, UJ pos) {
+V idx_add(UJ rec_id, UJ pos) {
 	Idx e;
-	e.book_id = book_id;
+	e.rec_id = rec_id;
 	e.pos = pos;
-	arr_add(book_index, e);
-	T(DEBUG, "idx_add: { book_id=%lu, pos=%lu }\n", book_id, pos);
+	arr_add(idx, e);
+	T(DEBUG, "idx_add: { rec_id=%lu, pos=%lu }\n", rec_id, pos);
 	idx_save();
 }
 
 //! perform sample index lookup
-Z UJ idx_peek(UJ book_id){
-	Book b;
-	UJ pos = rec_get(&b, book_id);
-	if (pos==NONE)R NONE;
-	T(TRACE, "idx_peek book_id=%lu pos=%ld\n", book_id, pos);
-	rec_print_dbg(&b);
+Z UJ idx_peek(UJ rec_id){
+	Rec b;
+	UJ pos = rec_get(b, rec_id);
+	BAIL_IF(pos, NONE); //< no such record
+	T(TRACE, "idx_peek rec_id=%lu pos=%ld\n", rec_id, pos);
+	rec_print_dbg(b);
 	R pos;
-}
-
-//! dump index to stdout
-Z V idx_dump(UJ head) {
-	Idx *e;
-	T(TEST, "\nidx_dump: { last_id=%lu, used=%lu } =>\n\t", book_index->hdr, book_index->used);
-	DO(head?head:book_index->used,
-		e = arr_at(book_index, i, Idx);
-		T(TEST, " (%lu->%lu)", e->book_id, e->pos);
-	)
-	T(INFO, "\n\n");
 }
 
 //! dump db to stdout
 Z V db_dump() {
 	FILE *in = fopen(db_file, "r");
-	Book buf[BUFSIZE];
 	UJ rcnt;
-	while((rcnt = fread(buf, SZ(Book), BUFSIZE, in)))
+	while((rcnt = fread(buf, SZ_REC, RECBUFLEN, in))) {
+		T(DEBUG, "db_dump: read %lu records\n", rcnt);
 		DO(rcnt, rec_print_dbg(&buf[i]);)
+	}
 	fclose(in);
 }
 
@@ -186,20 +202,19 @@ Z V idx_touch() {
 	UJ db_size = db_touch(db_file);
 	FILE*f = fopen(idx_file, "w+");
 	UJ idx_fsize = fsize(f);
-	book_index = arr_init(BUFSIZE,Idx);
+	idx = arr_init(RECBUFLEN, Idx);
 	if (!idx_fsize) {
 		idx_save();
 		idx_load();
 		T(INFO, "idx_touch: initialized empty index file\n");
 	}
-	if (book_index->used != db_size) { //< out of sync
+	if (idx->used != db_size) { //< out of sync
 		idx_rebuild();
 		idx_save();
 		T(INFO, "idx_touch: synchronized index file\n");
 	}
 	fclose(f);
 }
-
 
 V db_init(S d, S i) {
 	scpy_s(db_file, d, MAX_FNAME_LEN);
@@ -209,7 +224,7 @@ V db_init(S d, S i) {
 }
 
 I test() {
-	Book b;
+	Rec b = malloc(SZ_REC);
 
 	db_init("dat/books.dat", "dat/books.idx");
 
@@ -218,19 +233,18 @@ I test() {
 	UJ delete_test = 10;
 	if(rec_delete(delete_test) == NONE)
 		T(WARN, "no such record %lu\n", delete_test);
-	//db_dump(); idx_dump(0);
 
-	rec_get(&b, 5); //< load from disk
-	T(TEST, "\nbefore update: "); rec_print_dbg(&b);
+	rec_get(b, 5); //< load from disk
+	T(TEST, "\nbefore update: "); rec_print_dbg(b);
 	H pages = 666;
-	rec_set(&b, fld_pages, &pages);
-	rec_set(&b, fld_title, "WINNIE THE POOH");
-	rec_update(&b);
-	rec_get(&b, 5); //< reload from disk
-	T(TEST, "after update: "); rec_print_dbg(&b); T(TEST, "\n");
+	rec_set(b, fld_pages, &pages);
+	rec_set(b, fld_title, "WINNIE THE POOH");
+	rec_update(b);
+	rec_get(b, 5); //< reload from disk
+	T(TEST, "after update: "); rec_print_dbg(b); T(TEST, "\n");
 
 	//db_dump(); idx_dump(0);
-	DO(3, rec_create(&b);)
+	DO(3, rec_create(b);)
 	rec_delete(17);
 	db_dump(); idx_dump(0);
 
@@ -238,6 +252,8 @@ I test() {
 	//db_dump(); idx_dump(0);
 
 	idx_close();
+
+	free(b);
 
 	R 0;
 }

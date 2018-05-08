@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-#include "_.h"
+#include "___.h"
 #include "bin.h"
 
 typedef I BINTYPE; //< type for test array

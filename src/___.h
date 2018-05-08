@@ -3,7 +3,6 @@
 
 //! global debug level (WARN|INFO|TEST|DEBUG|TRACE)
 enum loglevels { WARN, INFO, TEST, DEBUG, TRACE };
-#define DEBUG_LEVEL TEST
 
 typedef char C;
 typedef char* S;
@@ -26,27 +25,6 @@ typedef unsigned char G;
 #define CD default
 #define CS(n,x)	case n:x;break;
 
-typedef struct books {
-	UJ book_id;
-	H pages;
-	H year;
-	C publisher[101];
-	C title[201];
-	C author[51];
-	C subject[2001];
-} Book;
-
-// csv parser config
-#define COLS 6				//< csv column count
-#define BUF 1000000			//< csv read buffer
-#define QUO '"'				//< quote char
-#define DELIM ';'			//< csv delimiter
-#define NUL '\0'			//< null char
-#define LF '\n'				//< newline char
-#define FLDMAX 2000			//< longest field len
-#define RECBUFLEN 2048		//< db write buffer
-#define CSVDEBUG 0			//< debug output
-
 #define MIN(x,y) ((y)>(x)?(x):(y))
 #define MAX(x,y) ((y)>(x)?(y):(x))
 
@@ -57,14 +35,5 @@ typedef struct books {
 #define scpy_s(x,y,n) (S)memcpy((S)(x),(S)(y),MIN(scnt((S)y),n))  //!< secure copy max n bytes from y into x \param x dststr \param y srcstr \param n limit
 #define schr(x,y) (S)strchr((S)(x),y)       //!< pointer to the first occurrence of y in x
 #define rchr(x,y) (S)strrchr((S)(x),y)      //!< pointer to the last occurrence of y in x
-
-enum rec_fields { fld_pages, fld_year, fld_publisher, fld_title, fld_author, fld_subject };
-
-Z I csv_max_field_widths[] = { 4, 4, 100, 200, 50, 2000 };
-
-Z I rec_field_offsets[] = {
-	offsetof(Book, pages), offsetof(Book, year), offsetof(Book, publisher),
-	offsetof(Book, title), offsetof(Book, author), offsetof(Book, subject)
-};
 
 //:~
