@@ -1,26 +1,39 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 #include "books.h"
 #define VER "1.0.0"
-#define MI(i,label) O("\t%d. %s\n", i, label);
+#define MI(i,label) O("\t%d. %s", i, label);
 #define NL() O("\n");
 
-typedef struct books {
-	UJ book_id;
-	H pages;
-	H year;
-	C publisher[101];
-	C title[201];
-	C author[51];
-	C subject[2001];
-} Book;
+Book note1, note2;
 
+void rec_print_1(Book note)
+{
+	O("\t(%d)\t%s\t\t%s\t%d\t%s\t%dpp\n", note.book_id, note.title, note.author, note.year, note.publisher, note.pages);
+}
 
+void rec_print_2(Book note)
+{
+	NL()
+	MI(1, "TITLE:\t"); 			
+	O("%s\n", note.title);
+	MI(2, "AUTHOR:\t"); 		
+	O("%s\n", note.author);
+	MI(3, "YEAR:\t"); 			
+	O("%d\n", note.year);
+	MI(4, "PUBLISHER:\t"); 		
+	O("%s\n", note.publisher);
+	MI(5, "PAGES:\t"); 			
+	O("%d\n", note.pages);
+	MI(6, "SUBJECT:\t");		
+	O("%s\n\n", note.subject);
+	MI(0, "Done\n");
+}
 
-
-
-void banner() {
+void banner() 
+{
 	O("\tAmazon Kindle Database v%s\n", VER);
 	O("\t_____________________________\n");
 }
@@ -67,17 +80,58 @@ void input(UJ *command, I num, const S request)
 	}
 }
 
+/* 	gets one line from a file */
+void get_line(C buf[], I length)
+{
+	C c;
+	I i;
+	for (i = 0; c != '\n' && i < length && !feof(stdin); i++) {
+		scanf("%c", &c);
+		buf[i] = c;
+	}
+
+	if (i == length) 
+		while (c != '\n' && !feof(stdin))
+			scanf("%c", &c);
+	
+	buf[--i] = '\0';
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 void csv_9() {}
 /////////////////////////////////////////////////////////////////////////////////////////
 I rec_delete(I num)
 { 
-	R num % 2;
+	if (num < 0 || num > 1)
+		R 0;
+	else 
+	 	R 1;
 }
 
 I rec_add()
 { O("rec_add\n"); R 1;}
+
+V rec_search(I fld, S string)
+{
+	rec_print_1(note1);
+	rec_print_1(note2);
+}
+
+V rec_sort(I fld)
+{
+	rec_print_1(note1);
+	rec_print_1(note2);
+}
+
+I next_id()
+{
+	R 2;
+}
+
+Book rec_get(I id) {
+	R note1;
+}
+
 
 void scr_search_1_1(I fld) 
 {	
@@ -86,7 +140,7 @@ void scr_search_1_1(I fld)
 
 	O("please, enter keyword:  ");
 	fgets(string, 200, stdin);
-	O("\tSearch results:\n\n");
+	O("\n\tSearch hits:\n\n");
 	rec_search(fld, string);
 	NL();
 }
@@ -96,16 +150,20 @@ void scr_displayall_6_1(I fld)
 	rec_sort(fld);
 }
 
-I rec_display(UJ id)
+I rec_display_1(UJ id)
 {
-	O("rec_display ID %lu\n", id);
-	R id%2;
+	if (id > 1)
+		R 0;
+	rec_print_1(note1);
 }
 
-void rec_edit(UJ id) {
-	O("rec_edit ID %lu\n", id);
-	// R id%2;
+I rec_display_2(UJ id)
+{
+	if (id > 1)
+		R 0;
+	rec_print_1(note1);
 }
+
 
 V 	db_stat()
 {
@@ -117,9 +175,63 @@ V 	db_vacuum()
 {
 	O("[OK: Successfuly purged 2 deleted records.]\n\n");
 }
+
+
 /////////////////////////////////////////////////////////////////////////////////////////
 //									SCREENS											   //
 /////////////////////////////////////////////////////////////////////////////////////////
+void scr_editrec_4_2(I fld, Book *note, Book *origin) 
+{
+	UJ num;
+	if (fld != fld_year && fld != fld_pages) {
+		O("old value:\t%s\n", *(origin + rec_field_offsets[fld]));
+		O("new value:\t");
+		scanf("%s", note + rec_field_offsets[fld]);
+	}
+	else {
+		O("old value:\t%d\n", *(origin + rec_field_offsets[fld]));
+		O("new value:\t");
+		get_num(&num);
+		while (num == -1) {
+			O("not a number. enter again\n");
+			get_num(&num);
+		}
+	}
+}
+
+I scr_editrec_4_1(UJ id)
+{
+	Book note, origin;
+	UJ num;
+
+	if (id == -1) 
+ 		R 0;
+ 	else {
+ 		origin = rec_get(id);
+
+	 	if ((rec_display_2(id))) {
+	 		rec_print_2(origin);
+	 		while(1) { 
+				// O("Select field to edit:  ");
+				input(&num, 6, "Select field to edit:  ");
+
+				SW(num) {
+					CS(0, R 0);
+					CS(1, scr_editrec_4_2(fld_title, &note, origin););
+					CS(2, scr_editrec_4_2(fld_author, &note, origin););
+					CS(3, scr_editrec_4_2(fld_year, &note, origin););
+					CS(4, scr_editrec_4_2(fld_publisher, &note, origin););
+					CS(5, scr_editrec_4_2(fld_pages, &note, enter););
+					CS(6, scr_editrec_4_2(fld_subject, &note, enter););
+				}
+		 	}
+	 	}
+	 	else
+	 		O("ERROR: no such record\n");
+	}
+
+	R 1;
+}
 
 I scr_search_1(UJ *command)
 {
@@ -127,12 +239,12 @@ I scr_search_1(UJ *command)
 	O("\tSearch record\n");
 	O("\t-------------\n");
 	NL();
-	MI(1, "By Year")
-	MI(2, "By Title")
-	MI(3, "By Author")
-	MI(4, "By Subject")
+	MI(1, "By Year\n")
+	MI(2, "By Title\n")
+	MI(3, "By Author\n")
+	MI(4, "By Subject\n")
 	NL()
-	MI(0, "Main Menu")
+	MI(0, "Main Menu\n")
 	NL()
 	
 	input(command, 4, "select field:  ");
@@ -152,18 +264,39 @@ I scr_search_1(UJ *command)
 I scr_addrec_2(UJ *command)
 {
 	UJ id;
+	Book str;
 	NL()
 	O("\tAdd record\n");
 	O("\t-------------\n");
 	NL();
 
-	id = rec_add();
-	if (id == -1) {
-		O("ERROR\n");
-		R 1;
+	O("TITLE:  ");
+	get_line(str.title, 201);
+	O("AUTHOR:  ");
+	get_line(str.author, 51);
+	O("YEAR:  ");
+	get_num(&id);
+	while (id == -1) {
+		O("not a number. enter again\n");
+		get_num(&id);
 	}
+	str.year = id;
+	O("PUBLISHER:  ");
+	get_line(str.publisher, 101);
+	O("PAGES:  ");
+	get_num(&id);
+	while (id == -1) {
+		O("not a number. enter again\n");
+		get_num(&id);
+	}
+	str.pages = id;
+	O("SUBJECT:  ");
+	get_line(str.subject, 2001);
 
-	O("[OK: record created with ID %d]\n", id);
+	str.book_id = next_id();
+	rec_add(str);
+
+	O("[OK: record created with ID %lu]\n", str.book_id);
 	R menu("create another one? [y/n]  ") == 'y' ? 1 : 0;
 }
 
@@ -179,7 +312,7 @@ I scr_deleterec_3(UJ *num)
  	if (*num == -1) 
  		R 0;
  
- 	if (rec_display(*num)) {
+ 	if (rec_display_1(*num)) {
  		if (menu("this one? [y/n]  ") == 'y') {
  			rec_delete(*num);
  			O("record ID %lu deleted\n", *num);
@@ -193,6 +326,7 @@ I scr_deleterec_3(UJ *num)
 
 I scr_editrec_4(UJ *num)
 {
+	I i = 1;
 	NL()
 	O("\tEdit record\n");
 	O("\t-------------\n");
@@ -200,18 +334,10 @@ I scr_editrec_4(UJ *num)
 	O("enter book ID or press any letter to go back to main menu\n");
  	get_num(num);
 
- 	if (*num == -1) 
- 		R 0;
- 
- 	if (rec_display(*num)) {
- 		if (menu("this one? [y/n]  ") == 'y') {
- 			rec_edit(*num);
- 			O("[OK: Record ID %lu updated]\n", *num);
- 		}
- 	}
- 	else
- 		O("ERROR: no such record\n");
+	if (!scr_editrec_4_1(*num)) 
+		R 0;		
 
+	
  	R menu("edit another one? [y/n]  ") == 'y' ? 1 : 0;
 }
 
@@ -226,7 +352,7 @@ I scr_displayrec_5(UJ *num)
  	if (*num == -1) 
  		R 0;
 
- 	if (rec_display(*num));
+ 	if (rec_display_1(*num));
  	else
  		O("ERROR: no such record\n");
  	R menu("display another one? [y/n]  ") == 'y' ? 1 : 0;
@@ -286,17 +412,17 @@ I scr_main_0(UJ *command)
 	NL();
 	O("\tMain menu\n");
 	O("\t-------------\n");
-	MI(1, "Search record")
-	MI(2, "Add record")
-	MI(3, "Delete record")
-	MI(4, "Edit record")
-	MI(5, "Display record")
-	MI(6, "Display all records")
-	MI(7, "Database status")
-	MI(8, "Vacuum database")
-	MI(9, "Import CSV file")
+	MI(1, "Search record\n")
+	MI(2, "Add record\n")
+	MI(3, "Delete record\n")
+	MI(4, "Edit record\n")
+	MI(5, "Display record\n")
+	MI(6, "Display all records\n")
+	MI(7, "Database status\n")
+	MI(8, "Vacuum database\n")
+	MI(9, "Import CSV file\n")
 	NL()
-	MI(0, "Exit program")
+	MI(0, "Exit program\n")
 	NL()
 
 	input(command, 9, "select command:  ");
@@ -324,6 +450,23 @@ I scr_main_0(UJ *command)
 I main()
 {
 	UJ command;
+	note1.book_id = 0;
+	note1.pages = 423;
+	note1.year = 1996;
+	strcpy(note1.publisher, "EKSMO");
+	strcpy(note1.title, "CHAPAEV AND VOID");
+	strcpy(note1.author, "Pelevin V. O.");
+	strcpy(note1.subject, "Pyotr Pustota is a poet who has fled from Saint Petersburg to Moscow and who takes up the identity of a Soviet political commissar and meets a strange man named Vasily Chapayev who is some sort of an army commander. He spends his days drinking samogon, taking drugs and talking about the meaning of life with Chapayev.");
+	
+	note2.book_id = 1;
+	note2.pages = 543;
+	note2.year = 1992;
+	strcpy(note2.publisher, "EKSMO");
+	strcpy(note2.title, "OMON RA");
+	strcpy(note2.author, "Pelevin V. O.");
+	strcpy(note2.subject, "The protagonist is Omon Krivomazov, who was born in Moscow post-World War II. The plot traces his life from early childhood. In his teenage years, the realization strikes him that he must break free of Earth's gravity to free himself of the demands of the Soviet society and the rigid ideological confines of the state.");
+
+
 	NL();
 	banner();
 	while (scr_main_0(&command));
