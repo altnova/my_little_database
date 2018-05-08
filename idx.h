@@ -6,20 +6,22 @@ typedef struct idx {
 	UJ pos;
 } Idx;
 
+extern C db_file[], idx_file[];
+extern Arr *book_index;
+
 extern V db_init(S db_file, S idx_file);
 
 extern UJ next_id();
 
-extern UJ rec_get(Book *dest, UJ book_id);
-extern UJ rec_create(Book *b);
-extern UJ rec_update(Book *b);
-extern UJ rec_delete(UJ book_id);
-
-extern V rec_set(V*b, I fld, V* val);
-
 extern V idx_rebuild();
 extern V idx_save();
 extern V idx_load();
+
+extern V idx_add(UJ book_id, UJ pos);
+extern UJ idx_shift(UJ pos);
+extern UJ idx_update_pos(UJ book_id, UJ new_pos);
+
+extern C cmp_binsearch(V*a, V*b, size_t t);
 
 extern V idx_close();	//< don't forget!
 

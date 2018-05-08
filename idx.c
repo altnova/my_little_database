@@ -1,33 +1,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include "books.h"
-#include "trace.h"
 #include "dynarray.h"
 #include "binsearch.h"
-#include "index.h"
+#include "idx.h"
+#include "rec.h"
+#include "trc.h"
+#include "io.h"
 
-Z Arr *book_index = 0;
-Z C db_file[MAX_FNAME_LEN+1];
-Z C idx_file[MAX_FNAME_LEN+1];
-
-#if WIN32||_WIN64
-Z J zseek(I d,J j,I f){UI h=(UI)(j>>32),l=SetFilePointer((HANDLE)d,(UI)j,&h,f);R((J)h<<32)+l;}
-I ftrunc(FILE*d,UJ n){R zseek((I)d,n,0),SetEndOfFile((HANDLE)d)-1;}
-#else
-#include <sys/types.h>
-#include <unistd.h>
-Z J zseek(FILE*d,J j,I f){R fseek(d,j,f);}
-I ftrunc(FILE*d,UJ n){R zseek(d,n,0),ftruncate(fileno(d),n);}
-#endif
-
-//! filesize utility
-Z UJ fsize(FILE *fp) {
-	UJ prev = ftell(fp);
-	zseek(fp, 0L, SEEK_END);
-	UJ sz = ftell(fp);
-	zseek(fp, prev, SEEK_SET);
-	R sz;
-}
+Arr *book_index = 0;
+C db_file[MAX_FNAME_LEN+1];
+C idx_file[MAX_FNAME_LEN+1];
 
 //! create db file if not exists \returns number of records
 Z UJ db_touch(S fname) {
@@ -45,7 +28,7 @@ Z J _c(const V*a, const V*b) {
 }
 
 //! comparator for binfn()
-Z C cmp_binsearch(V*a, V*b, size_t t) {
+C cmp_binsearch(V*a, V*b, size_t t) {
 	J r = _c(a,b);
 	T(TRACE, "cmp_binsearch: r=%ld\n", r);
 	R !r?r:r<0?-1:1;
@@ -56,37 +39,6 @@ Z I cmp_qsort(const V*a, const V*b) {
 	J r = _c(a,b);
 	T(TRACE, "cmp_qsort %ld\n", r);
 	R r;
-}
-
-//! find index position by book_id
-Z UJ rec_get_idx_pos(Arr* idx, UJ book_id) {
-	R binfn(idx->data, &book_id, Idx, idx->used, (BIN_CMP_FN)&cmp_binsearch);
-}
-
-//! find database position by book_id
-Z UJ rec_get_db_pos(UJ book_id) {
-	UJ idx_pos = rec_get_idx_pos(book_index, book_id);
-	if(idx_pos==NONE)R NONE; //< no such book
-	Idx *e = arr_at(book_index, idx_pos, Idx);
-	T(TRACE, "rec_get_db_pos: { book_id=%lu, idx_pos=%lu, db_pos=%lu }\n", e->book_id, idx_pos, e->pos);
-	R e->pos;
-}
-
-//! debug print
-Z V rec_print(Book *b) {
-	T(TEST, "rec:\tid=(%lu)\tpages=(%d)\ttitle=(%s)\n", b->book_id, b->pages, b->title);
-}
-
-//! load record by book_id
-UJ rec_get(Book *dest, UJ book_id) {
-	UJ db_pos = rec_get_db_pos(book_id);
-	T(TRACE, "rec_get: { book_id=%lu, db_pos=%lu }\n", book_id, db_pos);
-	if(db_pos==NONE)R NONE; //< no such book
-	FILE *db = fopen("books.dat", "r");
-	zseek(db, (db_pos)*SZ(Book), SEEK_SET);
-	fread(dest, SZ(Book), 1, db);
-	fclose(db);
-	R db_pos;
 }
 
 //! sort index by book_id
@@ -128,7 +80,7 @@ V idx_close() {
 }
 
 //! zap index entry at pos
-Z UJ idx_shift(UJ pos) {
+UJ idx_shift(UJ pos) {
 	Idx*s = arr_at(book_index, pos, Idx);
 	UJ to_move = book_index->used-pos-1;
 	memcpy(s, s+1, SZ(Idx)*to_move);
@@ -176,7 +128,7 @@ UJ next_id() {
 }
 
 //! patch record's pos pointer and store it on disk
-Z UJ idx_update_pos(UJ book_id, UJ new_pos) {
+UJ idx_update_pos(UJ book_id, UJ new_pos) {
 	UJ idx_pos = rec_get_idx_pos(book_index, book_id);
 	if(idx_pos==NONE)R NONE; //< no such book
 	Idx *i = arr_at(book_index, idx_pos, Idx);
@@ -189,37 +141,7 @@ Z UJ idx_update_pos(UJ book_id, UJ new_pos) {
 	R new_pos;
 }
 
-//! delete record from db and index
-UJ rec_delete(UJ book_id) {
-	UJ db_pos = rec_get_db_pos(book_id);
-	if(db_pos==NONE)R NONE; //< no such book
-	T(DEBUG, "rec_delete: { book_id=%lu, db_pos=%lu }\n", book_id, db_pos);	
-	
-	FILE *db = fopen(db_file, "r+");
-
-	if (book_index->used > 1){
-		Book b;
-		UJ last_pos = book_index->used-1;
-		J offset = SZ(Book)*last_pos;
-		zseek(db, offset, SEEK_SET);
-		fread(&b, SZ(Book), 1, db);	//< read last record
-		T(TRACE, "rec_delete: loaded tail record { book_id=%lu, pos=%lu, offset=%ld }\n", b.book_id, last_pos, offset);
-		zseek(db, db_pos*SZ(Book), SEEK_SET);
-		fwrite(&b, SZ(Book), 1, db); //< overwrite deleted record
-		idx_update_pos(b.book_id, db_pos);
-		idx_update_pos(book_id, NONE);
-		T(TRACE, "rec_delete: overwritten record { book_id=%lu, db_pos=%lu }\n", book_id, db_pos);
-	}
-
-	UJ new_size = idx_shift(db_pos);
-	ftrunc(db, SZ(Book)*new_size);
-	T(TRACE, "rec_delete: db file truncated\n");
-	fclose(db);
-
-	R db_pos;
-}
-
-Z V idx_add(UJ book_id, UJ pos) {
+V idx_add(UJ book_id, UJ pos) {
 	Idx e;
 	e.book_id = book_id;
 	e.pos = pos;
@@ -228,37 +150,13 @@ Z V idx_add(UJ book_id, UJ pos) {
 	idx_save();
 }
 
-UJ rec_create(Book *b) {
-	b->book_id = next_id();
-	FILE *db = fopen(db_file, "a");
-	UJ db_pos = fsize(db)/SZ(Book);
-	fwrite(b, SZ(Book), 1, db);
-	fclose(db);
-	T(DEBUG, "rec_create: { book_id=%lu, pos=%lu }\n", b->book_id, db_pos);
-	idx_add(b->book_id, db_pos);
-	R db_pos;
-}
-
-//! update record
-UJ rec_update(Book *b) {
-	UJ db_pos = rec_get_db_pos(b->book_id);
-	if(db_pos==NONE)R NONE; //< no such book
-	FILE *db = fopen(db_file, "r+");
-	J offset = SZ(Book)*db_pos;
-	zseek(db, offset, SEEK_SET);
-	fwrite(b, SZ(Book), 1, db); //< overwrite old data
-	fclose(db);
-	T(DEBUG, "rec_update: book_id=%lu updated\n", b->book_id);
-	R db_pos;
-}
-
 //! perform sample index lookup
 Z UJ idx_peek(UJ book_id){
 	Book b;
 	UJ pos = rec_get(&b, book_id);
 	if (pos==NONE)R NONE;
 	T(TRACE, "idx_peek book_id=%lu pos=%ld\n", book_id, pos);
-	rec_print(&b);
+	rec_print_dbg(&b);
 	R pos;
 }
 
@@ -279,16 +177,8 @@ Z V db_dump() {
 	Book buf[BUFSIZE];
 	UJ rcnt;
 	while((rcnt = fread(buf, SZ(Book), BUFSIZE, in)))
-		DO(rcnt, rec_print(&buf[i]);)
+		DO(rcnt, rec_print_dbg(&buf[i]);)
 	fclose(in);
-}
-
-//! update field
-V rec_set(V*b, I fld, V* val) {
-	I offset = rec_field_offsets[fld];
-	I len = fld<3?SZ(H)-1:MIN(csv_max_field_widths[fld],strlen(val));
-	memcpy(b+offset, val, len+1);
-	T(TRACE, "rec_set: fld=%d, len=%d\n", fld, len);
 }
 
 //! create or rebuild index if necessary
@@ -331,13 +221,13 @@ I test() {
 	//db_dump(); idx_dump(0);
 
 	rec_get(&b, 5); //< load from disk
-	T(TEST, "\nbefore update: "); rec_print(&b);
+	T(TEST, "\nbefore update: "); rec_print_dbg(&b);
 	H pages = 666;
 	rec_set(&b, fld_pages, &pages);
 	rec_set(&b, fld_title, "WINNIE THE POOH");
 	rec_update(&b);
 	rec_get(&b, 5); //< reload from disk
-	T(TEST, "after update: "); rec_print(&b); T(TEST, "\n");
+	T(TEST, "after update: "); rec_print_dbg(&b); T(TEST, "\n");
 
 	//db_dump(); idx_dump(0);
 	DO(3, rec_create(&b);)

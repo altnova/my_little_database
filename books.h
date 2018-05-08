@@ -1,7 +1,9 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#define DEBUG_LEVEL WARN
+//! global debug level (WARN|INFO|TEST|DEBUG|TRACE)
+enum loglevels { WARN, INFO, TEST, DEBUG, TRACE };
+#define DEBUG_LEVEL TEST
 
 typedef char C;
 typedef char* S;
