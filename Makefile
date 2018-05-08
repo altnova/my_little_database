@@ -3,8 +3,8 @@ csv:
 	./csv
 
 index:
-	gcc -g -o index trace.c dynarray.c binsearch.c index.c
-	./index
+	gcc -g -o idx dynarray.c binsearch.c rec.c io.c trc.c idx.c
+	./idx
 
 menu:
 	rm -f menu
