@@ -1,9 +1,4 @@
 
-typedef struct idx {
-	ID rec_id;
-	UJ pos;
-} Pair;
-
 extern C db_file[], idx_file[];
 
 extern V db_init(S db_file, S idx_file);

@@ -22,6 +22,11 @@
 
 typedef UJ ID;				//< rec_id type alias
 
+typedef struct idx_entries {
+	ID rec_id;
+	UJ pos;
+} Pair;
+
 typedef struct records {
 	ID rec_id;
 	H pages;
