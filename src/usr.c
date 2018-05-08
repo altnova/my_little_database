@@ -10,7 +10,7 @@ I input_number(I *num, S prompt, S errmsg){
 
 I main(V){
 	I n;
-    input_number(&n);
+    input_number(&n, "say 42", "try again");
 	O("%d\n", n);
 } 
 
