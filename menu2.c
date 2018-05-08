@@ -9,26 +9,24 @@
 
 Book note1, note2;
 
-V rec_print_1(Book note)
+/////////////////////////////////////////////////////////////////////////////////////////
+//									PRINTS											   //
+/////////////////////////////////////////////////////////////////////////////////////////
+
+V rec_print_1(Book *b)
 {
-	O("\t(%d)\t%s\t\t%s\t%d\t%s\t%dpp\n", note.book_id, note.title, note.author, note.year, note.publisher, note.pages);
+	O("\t(%d)\t%s\t\t%s\t%d\t%s\t%dpp\n", b->book_id, b->title, b->author, b->year, b->publisher, b->pages);
 }
 
-V rec_print_2(Book note)
+V rec_print_2(Book *b)
 {
 	NL()
-	MI(1, "TITLE:\t"); 			
-	O("%s\n", note.title);
-	MI(2, "AUTHOR:\t"); 		
-	O("%s\n", note.author);
-	MI(3, "YEAR:\t"); 			
-	O("%d\n", note.year);
-	MI(4, "PUBLISHER:\t"); 		
-	O("%s\n", note.publisher);
-	MI(5, "PAGES:\t"); 			
-	O("%d\n", note.pages);
-	MI(6, "SUBJECT:\t");		
-	O("%s\n\n", note.subject);
+	MI(1, "TITLE:\t"); 		O("%s\n", b->title);
+	MI(2, "AUTHOR:\t"); 	O("%s\n", b->author);
+	MI(3, "YEAR:\t"); 		O("%d\n", b->year);
+	MI(4, "PUBLISHER:\t"); 	O("%s\n", b->publisher);
+	MI(5, "PAGES:\t"); 		O("%d\n", b->pages);
+	MI(6, "SUBJECT:\t");	O("%s\n\n", b->subject);
 	MI(0, "Done\n");
 }
 
@@ -38,17 +36,21 @@ V banner()
 	O("\t_____________________________\n");
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+//										RYBY										   //
+/////////////////////////////////////////////////////////////////////////////////////////
+
+
 /*	asks user to tap something */
-C menu(const C *hint) 
+C get_yn(const C *hint) 
 {
     C c;
-    O("%s", hint);
+    O("%s [y/n] ", hint);
     c = getchar();
     getchar();
-    R c;
+    R c == 'y' ? 1 : 0;
 }
 
-/*	returns number from input or error (-1)	*/
 V get_num(UJ *num)
 {
 	C c = '1';
@@ -89,7 +91,6 @@ V get_line(C buf[], I length)
 		scanf("%c", &c);
 		buf[i] = c;
 	}
-
 	if (i == length) 
 		while (c != '\n' && !feof(stdin))
 			scanf("%c", &c);
@@ -113,23 +114,24 @@ I rec_add()
 
 V rec_search(I fld, S string)
 {
-	rec_print_1(note1);
-	rec_print_1(note2);
+	rec_print_1(&note1);
+	rec_print_1(&note2);
 }
 
 V rec_sort(I fld)
 {
-	rec_print_1(note1);
-	rec_print_1(note2);
+	rec_print_1(&note1);
+	rec_print_1(&note2);
 }
 
-I next_id()
+UJ next_id()
 {
 	R 2;
 }
 
-Book rec_get(I id) {
-	R note1;
+Book* rec_get(UJ id) {
+
+	R &note1;
 }
 
 
@@ -154,14 +156,14 @@ I rec_display_1(UJ id)
 {
 	if (id > 1)
 		R 0;
-	rec_print_1(note1);
+	rec_print_1(&note1);
 }
 
 I rec_display_2(UJ id)
 {
 	if (id > 1)
 		R 0;
-	rec_print_1(note1);
+	rec_print_1(&note1);
 }
 
 
@@ -201,7 +203,7 @@ V scr_editrec_4_2(I fld, Book *note, Book *origin)
 
 I scr_editrec_4_1(UJ id)
 {
-	Book note, origin;
+	Book note, *origin;
 	UJ num;
 
 	if (id == -1) 
@@ -221,8 +223,8 @@ I scr_editrec_4_1(UJ id)
 					CS(2, scr_editrec_4_2(fld_author, &note, origin););
 					CS(3, scr_editrec_4_2(fld_year, &note, origin););
 					CS(4, scr_editrec_4_2(fld_publisher, &note, origin););
-					CS(5, scr_editrec_4_2(fld_pages, &note, enter););
-					CS(6, scr_editrec_4_2(fld_subject, &note, enter););
+					CS(5, scr_editrec_4_2(fld_pages, &note, origin););
+					CS(6, scr_editrec_4_2(fld_subject, &note, origin););
 				}
 		 	}
 	 	}
@@ -258,7 +260,7 @@ I scr_search_1(UJ *command)
 		CD:O("\nERR: unknown command\n\n");
 	}
 
-	R menu("search by another field? [y/n] ") == 'y' ? 1 : 0;
+	R get_yn("search by another filed?");
 }
 
 I scr_addrec_2(UJ *command)
@@ -297,7 +299,7 @@ I scr_addrec_2(UJ *command)
 	rec_add(str);
 
 	O("[OK: record created with ID %lu]\n", str.book_id);
-	R menu("create another one? [y/n]  ") == 'y' ? 1 : 0;
+	R get_yn("create another one?");
 }
 
 I scr_deleterec_3(UJ *num)
@@ -313,7 +315,7 @@ I scr_deleterec_3(UJ *num)
  		R 0;
  
  	if (rec_display_1(*num)) {
- 		if (menu("this one? [y/n]  ") == 'y') {
+ 		if (get_yn("this one?")) {
  			rec_delete(*num);
  			O("record ID %lu deleted\n", *num);
  		}
@@ -321,7 +323,7 @@ I scr_deleterec_3(UJ *num)
  	else 
  		O("ERROR: no such record\n");
 
-	R menu("delete another one? [y/n]  ") == 'y' ? 1 : 0;
+	R get_yn("delete another one?");
 }
 
 I scr_editrec_4(UJ *num)
@@ -338,7 +340,7 @@ I scr_editrec_4(UJ *num)
 		R 0;		
 
 	
- 	R menu("edit another one? [y/n]  ") == 'y' ? 1 : 0;
+ 	R get_yn("edit another one?");
 }
 
 I scr_displayrec_5(UJ *num)
@@ -355,7 +357,7 @@ I scr_displayrec_5(UJ *num)
  	if (rec_display_1(*num));
  	else
  		O("ERROR: no such record\n");
- 	R menu("display another one? [y/n]  ") == 'y' ? 1 : 0;
+ 	R get_yn("display another one?");
 }
 
 I scr_displayall_6(UJ *num)
@@ -381,7 +383,7 @@ I scr_displayall_6(UJ *num)
 		CS(4, scr_displayall_6_1(fld_author));
 	}
 
-	R menu("sort by another field? [y/n]  ") == 'y' ? 1 : 0;
+	R get_yn("sort by another field?");
 }
 
 V scr_dbstat_7()
@@ -443,7 +445,7 @@ I scr_main_0(UJ *command)
 */
 	}
 
-	// R menu("MAIN MENU: do anything else? [y/n]  ") == 'y' ? 1 : 0;
+	// R get_yn("MAIN MENU: do anything else?");
 }
 
 
