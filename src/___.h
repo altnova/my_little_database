@@ -1,8 +1,6 @@
 #include <stddef.h>
 #include <stdio.h>
 
-enum loglevels { L_WARN, L_INFO, L_TEST, L_DEBUG, L_TRACE };
-
 //! type system
 typedef char C;
 typedef char* S;

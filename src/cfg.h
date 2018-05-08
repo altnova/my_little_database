@@ -7,7 +7,7 @@
 #define CSV_FILE "csv/sample.csv"
 #else
 //! debug level (L_WARN|L_INFO|L_TEST|L_DEBUG|L_TRACE)
-#define LOGLEVEL L_WARN		//< min verbosity
+#define LOGLEVEL L_INFO		//< min verbosity
 #define CSV_FILE "csv/books.csv"
 #endif
 

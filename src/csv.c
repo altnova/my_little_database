@@ -16,28 +16,26 @@ I recbufpos = 0;
 ID last_id = 0;
 bufRec recbuf;
 
-V rec_print(Rec b, C force) {
-	if (force||CSVDEBUG)
-		T(TEST, "record: id=(%lu) pages=(%d) year=(%d) title=(%s) author=(%s)\n", b->rec_id, b->pages, b->year, b->title, b->author);
+V rec_print(Rec b) {
+	LOG("rec_print");
+	T(TEST, "id=(%lu) pages=(%d) year=(%d) title=(%s) author=(%s)", b->rec_id, b->pages, b->year, b->title, b->author);
 }
 
 V recbuf_flush() {
+	LOG("recbuf_flush");
 	fwrite(recbuf, SZ_REC, recbufpos, outfile);	//< flush current buffer to outfile
-	O("[+] %d records\n", recbufpos);
-	recbufpos = 0;									//< rewind buffer
+	T(INFO, "loaded %d records", recbufpos);
+	recbufpos = 0; //< rewind buffer
 }
 
 ID next_id() {
 	R last_id++;
 }
 
-V add_field(I fld, S val) {
-
-	if (fld >= COLS) {
-		O("too many columns: line=(%lu) fld=(%d) val=(%s)\n", currline, fld, val);
-		rec_print(&recbuf[recbufpos-1], 1);
-		//die("too many columns\n", currline);
-	}
+I add_field(I fld, S val) {
+	LOG("add_field");
+	if (fld >= COLS)
+		R T(WARN, "too many columns, skipping: line=(%lu) fld=(%d) val=(%s)", currline, fld, val);
 
 	V *r = (V*)&recbuf[recbufpos];			//< void ptr to current record
 	I offset = rec_field_offsets[fld];		//< offset of current field
@@ -52,18 +50,21 @@ V add_field(I fld, S val) {
 	if (fld == COLS-1) {					//< reached last field
 		ID id = next_id();					//< allocate rec_id
 		memcpy(r, &id, SZ(ID));				//< populate rec_id
-		rec_print(&recbuf[recbufpos++], 0);	//< debug print
+		rec_print(&recbuf[recbufpos++]);	//< debug print
 	}
 
 	if (recbufpos == RECBUFLEN)				//< record buffer is full...
 		recbuf_flush();						//< ...flush it to disk.
+
+	R 0;
 }
 
-V csv_load(S fname) {
+I csv_load(S fname) {
+	LOG("csv_load");
 	FILE *csv = fopen(fname, "r+");
 
 	if (csv == NULL)
-        die("cannot open infile", 0);
+		R T(WARN, "cannot open infile: %s", fname);
 
     currline = 1;
 	I bytesRead, fld=-1, fldpos=0;
@@ -132,30 +133,24 @@ V csv_load(S fname) {
 	}
 	fclose(csv);
 	recbuf_flush();						//< flush remaining buffer to disk
-}
-
-V die(S err, UJ line) {
-	if (line)
-		O("line %lu: %s\n", line, err);
-	else
-		O("%s\n", err);
-	exit(EXIT_FAILURE);
-}
-
-Z I test() {
-
-	outfile = fopen(DAT_FILE, "w+");
-
-	if (outfile == NULL)
-		die("cannot open outfile", 0);
-
-	csv_load(CSV_FILE);
-	
-	fclose(outfile);
 
 	R 0;
 }
 
-I main() { R test(); }
+Z I csv_test() {
+	LOG("csv_test");
+	outfile = fopen(DAT_FILE, "w+");
+
+	if (outfile == NULL)
+		R T(WARN, "cannot open outfile: %s", DAT_FILE);
+
+	I res = csv_load(CSV_FILE);
+	
+	fclose(outfile);
+
+	R res;
+}
+
+I main() { R csv_test(); }
 
 //:~
