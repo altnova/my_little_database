@@ -1,6 +1,6 @@
-books.csv
-books.dat
-books.idx
+csv/books.csv
+dat/books.dat
+dat/books.idx
 .DS_Store
 *.dSYM
 menu
