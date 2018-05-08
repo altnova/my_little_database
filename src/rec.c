@@ -14,9 +14,9 @@ V rec_print_dbg(Rec r) {
 	T(TEST, "id=(%lu) pages=(%d) title=(%s)", r->rec_id, r->pages, r->title);
 }
 
-//! find index position by rec_id
+//! binary search for index position of rec_id
 UJ rec_get_idx_pos(ID rec_id) {
-	R binfn(idx_data(), &rec_id, Pair, idx_size(), (BIN_CMP_FN)&cmp_binsearch);
+	R binfn(idx_data(), &rec_id, Pair, idx_size(), &cmp_binsearch);
 }
 
 //! substring search in given field

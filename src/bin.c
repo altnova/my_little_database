@@ -5,7 +5,7 @@
 
 typedef I BINTYPE; //< type for test array
 
-C _cmp(V*a, V*b, size_t t){
+C _cmp(V*a, V*b, size_t t){ //< TODO rewrite using SW/CS
 	J r;
 	r=							 //< compare:
 		t==0 ?scmp(a,b):		 //< strings
@@ -24,13 +24,13 @@ UJ _binfn(V*haystack, V*needle, size_t t, size_t len, BIN_CMP_FN cmpfn){
  //O("l=%lu i=%lu h=%lu needle=%d hay(%lu)=%d r=%d\n", l, i, h, *((I*)needle), i, *((I*)(haystack+i*t)), r); //< debug
  R r?NONE:i;}
 
-UJ _bin(V*haystack, V*needle, size_t t, size_t len){
-	R _binfn(haystack, needle, t, len, (BIN_CMP_FN)&_cmp);
+UJ _bin(V*haystack, V*needle, size_t type, size_t len){
+	R _binfn(haystack, needle, type, len, (BIN_CMP_FN)&_cmp);
 }
 
-BINTYPE arr[11] = { 0, 2, 8, 10, 14, 75, 100, 101, 120, 9999, 10000 };
-BINTYPE edge_cases[4] = { -1, 1, 9998, 10001 };
-BINTYPE needle;
+Z BINTYPE arr[11] = { 0, 2, 8, 10, 14, 75, 100, 101, 120, 9999, 10000 };
+Z BINTYPE edge_cases[4] = { -1, 1, 9998, 10001 };
+Z BINTYPE needle;
 
 Z I bin_test() {
 	J a = 1, b = 2; UJ r;
