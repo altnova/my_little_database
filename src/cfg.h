@@ -18,8 +18,10 @@
 #define RECBUFLEN 2048		//< db write buffer
 #define CSVDEBUG 0			//< debug output
 
-#define MAX_FNAME_LEN 200		//< db and idx files
-typedef UJ ID;
+#define MAX_FNAME_LEN 200	//< db and idx files
+
+typedef UJ ID;				//< rec_id type alias
+
 typedef struct records {
 	ID rec_id;
 	H pages;
