@@ -1,4 +1,4 @@
-csv:
+csvp:
 	gcc -g -o csvp src/csv.c
 	./csvp
 
