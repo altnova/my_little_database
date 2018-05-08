@@ -11,20 +11,17 @@
 //! debug print
 V rec_print_dbg(Rec r) {
 	LOG("rec_print_dbg");
-	T(TEST, "id=(%lu) pages=(%d) title=(%s)", r->rec_id, r->pages, r->title);
-}
+	T(TEST, "id=(%lu) pages=(%d) title=(%s)", r->rec_id, r->pages, r->title);}
 
 //! binary search for index position of rec_id
 //! returns NONE if nothing found
 UJ rec_get_idx_pos(ID rec_id) {
-	R binfn(idx_data(), &rec_id, Pair, idx_size(), &cmp_binsearch);
-}
+	R binfn(idx_data(), &rec_id, Pair, idx_size(), &cmp_binsearch);}
 
 //! substring search in given field
 C rec_search_txt_field(V*rec, I fld, S needle) {
 	S haystack = (S)rec+rec_field_offsets[fld];
-	R !!strcasestr(haystack, needle);
-}
+	R !!strcasestr(haystack, needle);}
 
 //! find database position by rec_id
 UJ rec_get_db_pos(ID rec_id) {
@@ -33,8 +30,7 @@ UJ rec_get_db_pos(ID rec_id) {
 	BAIL_IF(idx_pos, NONE);
 	Pair *e = idx_get_entry(idx_pos);
 	T(TRACE, "rec_get_db_pos: { rec_id=%lu, idx_pos=%lu, db_pos=%lu }\n", e->rec_id, idx_pos, e->pos);
-	R e->pos;
-}
+	R e->pos;}
 
 //! load record into dest by rec_id
 UJ rec_get(Rec dest, UJ rec_id) {
@@ -46,8 +42,7 @@ UJ rec_get(Rec dest, UJ rec_id) {
 	zseek(db, db_pos*SZ_REC, SEEK_SET);
 	fread(dest, SZ_REC, 1, db);
 	fclose(db);
-	R db_pos;
-}
+	R db_pos;}
 
 //! delete record from db and index
 UJ rec_delete(UJ rec_id) {
@@ -74,9 +69,9 @@ UJ rec_delete(UJ rec_id) {
 	UJ new_size = idx_shift(db_pos);
 	ftrunc(db, SZ_REC*new_size);
 	T(TRACE, "rec_delete: db file truncated\n");
+	
 	fclose(db);
-	R db_pos;
-}
+	R db_pos;}
 
 //! create record
 UJ rec_create(Rec r) {
@@ -88,8 +83,7 @@ UJ rec_create(Rec r) {
 	fclose(db);
 	T(DEBUG, "rec_create: { rec_id=%lu, pos=%lu }\n", r->rec_id, db_pos);
 	idx_add(r->rec_id, db_pos);
-	R db_pos;
-}
+	R db_pos;}
 
 //! update record
 UJ rec_update(Rec r) {
@@ -102,8 +96,7 @@ UJ rec_update(Rec r) {
 	fwrite(r, SZ_REC, 1, db); //< overwrite old data
 	fclose(db);
 	T(DEBUG, "rec_update: { rec_id=%lu }\n", r->rec_id);
-	R db_pos;
-}
+	R db_pos;}
 
 //! update field
 V rec_set(Rec r, I fld, V*val) {
@@ -111,8 +104,7 @@ V rec_set(Rec r, I fld, V*val) {
 	I offset = rec_field_offsets[fld];
 	I len = fld<3?SZ(H)-1:MIN(csv_max_field_widths[fld],strlen(val));
 	memcpy(((V*)r)+offset, val, len+1);
-	T(TRACE, "rec_set: { rec_id=%lu, fld=%d, len=%d }\n", r->rec_id, fld, len);
-}
+	T(TRACE, "rec_set: { rec_id=%lu, fld=%d, len=%d }\n", r->rec_id, fld, len);}
 
 
 //:~

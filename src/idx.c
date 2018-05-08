@@ -83,10 +83,10 @@ V idx_rebuild() {
 	LOG("idx_rebuild");
 	FILE *in = fopen(db_file, "r");
 	UJ rcnt, pos=0;
+	Pair e; //< new index entry
 
 	while((rcnt = fread(buf, SZ_REC, RECBUFLEN, in))) {
 		T(DEBUG, "read %lu records", rcnt);
-		Pair e; //< index entry
 		DO(rcnt,
 			Rec b = &buf[i];
 			e.rec_id = b->rec_id;
