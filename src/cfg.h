@@ -1,6 +1,6 @@
 //! application-specific settings
 
-#define DEBUG_LEVEL TEST
+#define DEBUG_LEVEL INFO
 
 //! csv parser config
 #define COLS 6				//< csv column count

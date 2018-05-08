@@ -147,9 +147,9 @@ Z I test() {
 	outfile = fopen("dat/books.dat", "w+");
 
 	if (outfile == NULL)
-        die("cannot open outfile", 0);
+		die("cannot open outfile", 0);
 
-	csv_load("csv/sample.csv");
+	csv_load("csv/books.csv");
 	
 	fclose(outfile);
 

@@ -53,20 +53,18 @@ UJ rec_delete(UJ rec_id) {
 	
 	FILE *db = fopen(db_file, "r+");
 
-	if (idx_size() > 1){
-		Rec b = malloc(SZ_REC);
-		UJ last_pos = idx_size()-1;
-		J offset = SZ_REC*last_pos;
-		zseek(db, offset, SEEK_SET);
-		fread(b, SZ_REC, 1, db);	//< read last record
-		T(TRACE, "rec_delete: loaded tail record { rec_id=%lu, pos=%lu, offset=%ld }\n", b->rec_id, last_pos, offset);
-		zseek(db, db_pos*SZ_REC, SEEK_SET);
-		fwrite(b, SZ_REC, 1, db); //< overwrite deleted record
-		idx_update_pos(b->rec_id, db_pos);
-		idx_update_pos(rec_id, NONE);
-		T(TRACE, "rec_delete: overwritten record { rec_id=%lu, db_pos=%lu }\n", rec_id, db_pos);
-		free(b);
-	}
+	Rec b = malloc(SZ_REC);
+	UJ last_pos = idx_size()-1;
+	J offset = SZ_REC*last_pos;
+	zseek(db, offset, SEEK_SET);
+	fread(b, SZ_REC, 1, db);	//< read last record
+	T(TRACE, "rec_delete: loaded tail record { rec_id=%lu, pos=%lu, offset=%ld }\n", b->rec_id, last_pos, offset);
+	zseek(db, db_pos*SZ_REC, SEEK_SET);
+	fwrite(b, SZ_REC, 1, db); //< overwrite deleted record
+	idx_update_pos(b->rec_id, db_pos);
+	idx_update_pos(rec_id, NONE);
+	T(TRACE, "rec_delete: overwritten record { rec_id=%lu, db_pos=%lu }\n", rec_id, db_pos);
+	free(b);
 
 	UJ new_size = idx_shift(db_pos);
 	ftrunc(db, SZ_REC*new_size);
