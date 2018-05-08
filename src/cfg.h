@@ -1,6 +1,6 @@
 //! application-specific settings
 
-#define TEST_MODE
+//#define TEST_MODE
 
 #ifdef TEST_MODE
 #define LOGLEVEL L_TEST
