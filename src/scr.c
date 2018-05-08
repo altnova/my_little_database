@@ -442,8 +442,8 @@ I scr_main_0(UJ *command)
 {
 	NL();
 	O("\tMain menu\n");
-	O("\t-------------\n");
-	MI(1, "Search record\n")
+	O("\t-----------------------------\n");
+	MI(1, "Search records\n")
 	MI(2, "Add record\n")
 	MI(3, "Delete record\n")
 	MI(4, "Edit record\n")
@@ -456,11 +456,10 @@ I scr_main_0(UJ *command)
 	MI(0, "Exit program\n")
 	NL()
 
-	input(command, 9, "select command:  ");
+	input(command, 9, "select command: ");
 
 			// 	each case iterates only if iterating function sends a request 
 	SW(*command) {
-
 		CS(0, R 0);	 											// 	exit program
 		CS(1, while(scr_search_1(command)); 	R 1;);			//	search record
 		CS(2, while(scr_addrec_2(command)); 	R 1;);			// 	add record
