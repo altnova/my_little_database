@@ -3,7 +3,7 @@
 #include "books.h"
 #include "dynarray.h"
 
-typedef J T;	//< array type in main()
+typedef J TYPE;	//< array type in main()
 
 Arr* _arr_init(size_t initialSize, size_t elSize) {
 	Arr *a = (Arr*)malloc(SZ(Arr) + initialSize * elSize);
@@ -40,9 +40,9 @@ Z I arr_test() {
 	J i;
 	I t = 100; //< test iterations
 
-	Arr *a = arr_init(5, T);	//< initially 5 elements
+	Arr *a = arr_init(5, TYPE);	//< initially 5 elements
 	DO(t,arr_add(a, i)) //< will grow as necessary
-	DO(t, O("%ld %ld|", i, *arr_at(a, i, T)))
+	DO(t, O("%ld %ld|", i, *arr_at(a, i, TYPE)))
 	O("\ntotal: %lu\n", a->used); //< print number of elements
 	arr_free(a); //< don't forget!
 

@@ -1,6 +1,8 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#define DEBUG_LEVEL WARN
+
 typedef char C;
 typedef char* S;
 typedef int I;
@@ -62,6 +64,5 @@ Z I rec_field_offsets[] = {
 	offsetof(Book, pages), offsetof(Book, year), offsetof(Book, publisher),
 	offsetof(Book, title), offsetof(Book, author), offsetof(Book, subject)
 };
-
 
 //:~
