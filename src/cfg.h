@@ -1,5 +1,6 @@
 //! application-specific settings
 
+//! debug level (WARN|INFO|TEST|DEBUG|TRACE)
 #define DEBUG_LEVEL INFO
 
 #define DAT_FILE "dat/books.dat"

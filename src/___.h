@@ -1,7 +1,6 @@
 #include <stddef.h>
 #include <stdio.h>
 
-//! global debug level (WARN|INFO|TEST|DEBUG|TRACE)
 enum loglevels { WARN, INFO, TEST, DEBUG, TRACE };
 
 typedef char C;
