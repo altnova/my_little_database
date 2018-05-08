@@ -9,12 +9,12 @@
 
 Book note1, note2;
 
-void rec_print_1(Book note)
+V rec_print_1(Book note)
 {
 	O("\t(%d)\t%s\t\t%s\t%d\t%s\t%dpp\n", note.book_id, note.title, note.author, note.year, note.publisher, note.pages);
 }
 
-void rec_print_2(Book note)
+V rec_print_2(Book note)
 {
 	NL()
 	MI(1, "TITLE:\t"); 			
@@ -32,7 +32,7 @@ void rec_print_2(Book note)
 	MI(0, "Done\n");
 }
 
-void banner() 
+V banner() 
 {
 	O("\tAmazon Kindle Database v%s\n", VER);
 	O("\t_____________________________\n");
@@ -45,11 +45,11 @@ C menu(const C *hint)
     O("%s", hint);
     c = getchar();
     getchar();
-    return c;
+    R c;
 }
 
 /*	returns number from input or error (-1)	*/
-void get_num(UJ *num)
+V get_num(UJ *num)
 {
 	C c = '1';
 	for (*num = 0; c != '\n'; ) {
@@ -68,7 +68,7 @@ void get_num(UJ *num)
 	}
 }
 
-void input(UJ *command, I num, const S request)
+V input(UJ *command, I num, const S request)
 {
 	O(request);
 	get_num(command);
@@ -81,7 +81,7 @@ void input(UJ *command, I num, const S request)
 }
 
 /* 	gets one line from a file */
-void get_line(C buf[], I length)
+V get_line(C buf[], I length)
 {
 	C c;
 	I i;
@@ -98,7 +98,7 @@ void get_line(C buf[], I length)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-void csv_9() {}
+V csv_9() {}
 /////////////////////////////////////////////////////////////////////////////////////////
 I rec_delete(I num)
 { 
@@ -133,7 +133,7 @@ Book rec_get(I id) {
 }
 
 
-void scr_search_1_1(I fld) 
+V scr_search_1_1(I fld) 
 {	
 	C string[200];
 	UJ num;
@@ -145,7 +145,7 @@ void scr_search_1_1(I fld)
 	NL();
 }
 
-void scr_displayall_6_1(I fld)
+V scr_displayall_6_1(I fld)
 {
 	rec_sort(fld);
 }
@@ -165,13 +165,13 @@ I rec_display_2(UJ id)
 }
 
 
-V 	db_stat()
+V db_stat()
 {
 	O("\nData file:\t~/arina/books.dat\t(800 bytes)\nIndex file:\t~/arina/books.idx\t(64 bytes)\n");
 	O("Records\t\t2\nDeleted\t\t0\nLast ID:\t1\n\n");
 }
 
-V 	db_vacuum()
+V db_vacuum()
 {
 	O("[OK: Successfuly purged 2 deleted records.]\n\n");
 }
@@ -180,7 +180,7 @@ V 	db_vacuum()
 /////////////////////////////////////////////////////////////////////////////////////////
 //									SCREENS											   //
 /////////////////////////////////////////////////////////////////////////////////////////
-void scr_editrec_4_2(I fld, Book *note, Book *origin) 
+V scr_editrec_4_2(I fld, Book *note, Book *origin) 
 {
 	UJ num;
 	if (fld != fld_year && fld != fld_pages) {
