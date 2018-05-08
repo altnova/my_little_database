@@ -1,15 +1,19 @@
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 #include "___.h"
 #include "cfg.h"
 #include "trc.h"
 
 //! trace
-V T(I lvl, S format, ...) {
+V T(I lvl, S fn, S file, I line, S format, ...) {
 	va_list args;
 	va_start(args, format);
-	if(lvl <= DEBUG_LEVEL)
-		vprintf(format, args);
+	if(lvl <= LOGLEVEL) {
+		C buf[strlen(fn)+strlen(format)+strlen(file)+30];
+		snprintf(buf, sizeof buf, "%s:%d [%s] %s\n", file, line, fn, format);
+		vprintf(buf, args);
+	}
 	va_end(args);
 }
 

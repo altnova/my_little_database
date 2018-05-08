@@ -1,11 +1,18 @@
 //! application-specific settings
 
-//! debug level (WARN|INFO|TEST|DEBUG|TRACE)
-#define DEBUG_LEVEL INFO
+#define TEST_MODE
+
+#ifdef TEST_MODE
+#define LOGLEVEL L_TEST
+#define CSV_FILE "csv/sample.csv"
+#else
+//! debug level (L_WARN|L_INFO|L_TEST|L_DEBUG|L_TRACE)
+#define LOGLEVEL L_WARN		//< min verbosity
+#define CSV_FILE "csv/books.csv"
+#endif
 
 #define DAT_FILE "dat/books.dat"
 #define IDX_FILE "dat/books.idx"
-#define CSV_FILE "csv/books.csv"
 
 //! csv parser config
 #define COLS 6				//< csv column count
