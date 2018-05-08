@@ -2,11 +2,11 @@
 #include <string.h>
 #include "___.h"
 #include "cfg.h"
+#include "trc.h"
 #include "arr.h"
 #include "bin.h"
 #include "idx.h"
 #include "rec.h"
-#include "trc.h"
 #include "fio.h"
 
 Z Arr *idx; //< in-memory instance of the index
