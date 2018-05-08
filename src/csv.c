@@ -145,7 +145,7 @@ V die(S err, UJ line) {
 
 Z I test() {
 
-	outfile = fopen("books.dat", "w+");
+	outfile = fopen("dat/books.dat", "w+");
 
 	if (outfile == NULL)
         die("cannot open outfile", 0);

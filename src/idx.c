@@ -211,7 +211,7 @@ V db_init(S d, S i) {
 I test() {
 	Book b;
 
-	db_init("books.dat", "books.idx");
+	db_init("dat/books.dat", "dat/books.idx");
 
 	DO(3, next_id())
 

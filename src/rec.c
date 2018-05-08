@@ -31,7 +31,7 @@ UJ rec_get(Book *dest, UJ book_id) {
 	UJ db_pos = rec_get_db_pos(book_id);
 	T(TRACE, "rec_get: { book_id=%lu, db_pos=%lu }\n", book_id, db_pos);
 	if(db_pos==NONE)R NONE; //< no such book
-	FILE *db = fopen("books.dat", "r");
+	FILE *db = fopen(db_file, "r");
 	zseek(db, (db_pos)*SZ(Book), SEEK_SET);
 	fread(dest, SZ(Book), 1, db);
 	fclose(db);
