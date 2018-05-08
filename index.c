@@ -3,15 +3,17 @@
 #include "books.h"
 #include "dynarray.h"
 #include "binsearch.h"
+#include "index.h"
 
-#define BUFSIZE 1024			//< read BUFSIZE records at a time
+Z Arr *book_index;
 
-typedef struct idx {
-	UJ book_id;
-	UJ pos;
-} Idx;
-
-Arr *book_index;
+Z UJ fsize(FILE *fp){
+	UJ prev = ftell(fp);
+	fseek(fp, 0L, SEEK_END);
+	UJ sz = ftell(fp);
+	fseek(fp, prev, SEEK_SET);
+	R sz;
+}
 
 Z J _c(const V*a, const V*b) {
 	UJ x = ((Idx*)a)->book_id;
@@ -19,13 +21,13 @@ Z J _c(const V*a, const V*b) {
 	R (x-y);
 }
 
-C index_cmp(V*a, V*b, size_t t){
+Z C index_cmp(V*a, V*b, size_t t){
 	J r = _c(a,b);
 	//O("index_cmp %lu %lu r=%ld\n", x, y, r);
 	R !r?r:r<0?-1:1;
 }
 
-I qsort_cmp(const V*a, const V*b) {
+Z I qsort_cmp(const V*a, const V*b) {
 	J r = _c(a,b);
 	//O("cmp %lu %lu", x, y);
 	R r;
@@ -35,7 +37,7 @@ J rec_get_pos(Arr* idx, UJ book_id) {
 	R binfn(idx->data, &book_id, Idx, idx->used, (BIN_CMP_FN)&index_cmp);
 }
 
-V rec_print(Book *b) {
+Z V rec_print(Book *b) {
 	O("record: id=(%lu) pages=(%d) year=(%d) title=(%s) author=(%s)\n", b->book_id, b->pages, b->year, b->title, b->author);
 }
 
@@ -51,7 +53,7 @@ J rec_get(Book *dest, UJ book_id) {
 	R pos;
 }
 
-Z V idx_print() {
+Z V rec_print_idx() {
 	Idx e;
 	DO(book_index->used,
 		e = arr_at(book_index, i, Idx);
@@ -59,7 +61,7 @@ Z V idx_print() {
 	)
 }
 
-V rec_build_idx(S fname) {
+V rec_rebuild_idx(S fname) {
 	FILE *in = fopen(fname, "r");
 
 	book_index = arr_init(BUFSIZE, Idx);
@@ -90,12 +92,43 @@ V rec_destroy_idx() {
 	arr_free(book_index);
 }
 
-I main() {
-	rec_build_idx("books.dat");
+V rec_save_idx(S fname) {
+	FILE *out = fopen(fname, "w+");
+	fwrite(book_index, SZ(Arr)+book_index->size, 1, out);
+	J size = fsize(out);
+	fclose(out);
+	O("index saved, %lu bytes\n", size);
+}
 
-	//idx_print();
+V rec_load_idx(S fname) {
+	FILE *in = fopen(fname, "r");
+	//rec_destroy_idx();
+	J size = fsize(in);
+	Arr**idx = &book_index;
+	*idx = (Arr*)realloc(book_index, size);
+	fread(book_index, size, 1, in);
+	fclose(in);
+	O("loaded record index: %lu entries\n", book_index->used);
+	//rec_print_idx();
+}
 
+V rec_peek(UJ book_id){
 	Book b;
-	J res = rec_get(&b, 99965);
+	J res = rec_get(&b, book_id);
 	rec_print(&b);
+}
+
+I main() {
+	rec_rebuild_idx("books.dat");
+	rec_save_idx("books.idx");
+
+	rec_peek(66666);
+
+	rec_load_idx("books.idx");
+
+	//rec_print_idx();	//< debug
+
+	rec_peek(66666);
+
+	rec_destroy_idx();
 }

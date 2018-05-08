@@ -28,7 +28,7 @@ V* _arr_at(Arr*a, J idx) {
 }
 
 V arr_free(Arr *a) {
-	free(a);
+	if (a)free(a);
 }
 
 Z I arr_test() {
