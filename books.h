@@ -43,6 +43,9 @@ typedef struct books {
 #define RECBUFLEN 2048		//< db write buffer
 #define CSVDEBUG 0			//< debug output
 
+#define MIN(x,y) ((y)>(x)?(x):(y))
+#define MAX(x,y) ((y)>(x)?(y):(x))
+
 // string manipulation
 #define scnt(x)   (UJ)strlen((S)(x))			//!< string length \param str
 #define scmp(x,y) strcmp((S)(x),(S)(y))     //!< compare two strings \param x str \param y str

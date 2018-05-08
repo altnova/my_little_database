@@ -1,4 +1,5 @@
 #define BUFSIZE 1024			//< read BUFSIZE records at a time
+#define MAX_FNAME_LEN 200		//< db and idx files
 
 typedef struct idx {
 	UJ book_id;
@@ -7,13 +8,19 @@ typedef struct idx {
 
 extern UJ next_id();
 
-extern UJ rec_get_pos(Arr* idx, UJ book_id);
+extern V db_init(S db_file, S idx_file);
+
 extern UJ rec_get(Book *dest, UJ book_id);
+extern UJ rec_create(Book *b);
+extern UJ rec_update(Book *b);
 extern UJ rec_delete(UJ book_id);
 
-extern V idx_rebuild(S fname);
-extern V idx_save(S fname);
-extern V idx_load(S fname);
+extern V rec_set_num(Book *b, I fld, H val);
+extern V rec_set_str(Book *b, I fld, S val);
+
+extern V idx_rebuild();
+extern V idx_save();
+extern V idx_load();
 
 extern V idx_close();	//< don't forget!
 
