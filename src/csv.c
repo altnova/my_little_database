@@ -1,4 +1,4 @@
-#define _GNU_SOURCE
+//!\file csv.c \brief fast csv parser
 
 #include <stdio.h>
 #include <string.h>
@@ -7,39 +7,34 @@
 #include "cfg.h"
 #include "trc.h"
 
-V die(S,UJ);
+Z FILE * outfile;
+Z ID last_id = 0;
+ZI recbufpos = 0;
+Z bufRec recbuf;
+Z UJ currline;
 
-FILE * outfile;
-
-UJ currline;
-I recbufpos = 0;
-ID last_id = 0;
-bufRec recbuf;
-
-V rec_print(Rec b) {
+ZV rec_print(Rec r){
 	LOG("rec_print");
-	T(TEST, "id=(%lu) pages=(%d) year=(%d) title=(%s) author=(%s)", b->rec_id, b->pages, b->year, b->title, b->author);
-}
+	T(TEST, "id=(%lu) pages=(%d) year=(%d) title=(%s) author=(%s)",
+		r->rec_id, r->pages, r->year, r->title, r->author);}
 
-V recbuf_flush() {
+ZV recbuf_flush(){
 	LOG("recbuf_flush");
 	fwrite(recbuf, SZ_REC, recbufpos, outfile);	//< flush current buffer to outfile
-	T(INFO, "loaded %d records", recbufpos);
+	T(INFO, "flushed %d records", recbufpos);
 	recbufpos = 0; //< rewind buffer
-}
+	R;}
 
-ID next_id() {
-	R last_id++;
-}
+ID next_id(){R last_id++;}
 
-I add_field(I fld, S val) {
+ZI add_field(I fld, S val){
 	LOG("add_field");
 	if (fld >= COLS)
 		R T(WARN, "too many columns, skipping: line=(%lu) fld=(%d) val=(%s)", currline, fld, val);
 
-	V *r = (V*)&recbuf[recbufpos];			//< void ptr to current record
+	V* r = (V*)&recbuf[recbufpos];			//< void ptr to current record
 	I offset = rec_field_offsets[fld];		//< offset of current field
-	V *f = r+offset;						//< void pointer to field
+	V* f = r+offset;						//< void pointer to field
 
 	if (fld < 2) {							//< pages and year are shorts
 		H i = (H)atoi(val);					//< parse integer
@@ -59,24 +54,25 @@ I add_field(I fld, S val) {
 	R 0;
 }
 
-I csv_load(S fname) {
+UJ csv_load(S fname){
 	LOG("csv_load");
+
 	FILE *csv = fopen(fname, "r+");
 
-	if (csv == NULL)
-		R T(WARN, "cannot open infile: %s", fname);
+	X(csv==NULL,
+		T(WARN, "cannot open infile: %s", fname););
 
     currline = 1;
 	I bytesRead, fld=-1, fldpos=0;
 	C buf[BUF], is_line_end, is_fld_end, in_skip, in_field, in_quotes, curr, prev, fldbuf[FLDMAX+1];
 	
-	while((bytesRead = fread(buf, 1, BUF, csv)) > 0) {
+	W((bytesRead = fread(buf, 1, BUF, csv)) > 0) {
 		DO(bytesRead,
 			curr = buf[i];				//< current byte
-			is_line_end = curr == LF; 
+			is_line_end = curr==LF;		//< line end flag
 			is_fld_end = is_line_end
-				|| in_quotes && prev == QUO && curr == DELIM
-				|| !in_quotes && curr == DELIM; //< field end flag
+				|| in_quotes && prev==QUO && curr==DELIM
+				|| !in_quotes && curr==DELIM; //< field end flag
 
 			//O("fld=%d maxw=%d\n", fld+1, csv_max_field_widths[fld+1]);
 			if (fldpos == csv_max_field_widths[fld+1]) //< field is longer than max length, enter skip state
@@ -96,10 +92,8 @@ I csv_load(S fname) {
 			if (is_line_end) {			//< reached line end
 				fld++;
 				FLUSH:					//< catch-all field flush routine
-				prev = fldbuf[fldpos-(prev==QUO)] = NUL; //< insert string terminator
-
-				if (CSVDEBUG)
-					O("field fld=%d len=%d buf=%s\n", fld, (I)strlen(fldbuf), fldbuf);
+				prev = fldbuf[fldpos-(prev==QUO)] = NUL; //< terminate string
+				T(TRACE, "field fld=%d len=%d buf=%s", fld, (I)strlen(fldbuf), fldbuf);
 
 				add_field(fld, fldbuf);
 
@@ -133,24 +127,35 @@ I csv_load(S fname) {
 	}
 	fclose(csv);
 	recbuf_flush();						//< flush remaining buffer to disk
+	R 0;}
 
-	R 0;
-}
-
-Z I csv_test() {
-	LOG("csv_test");
+UJ csv_init(S csv_file, S db_file){
+	LOG("csv_init");
 	outfile = fopen(DAT_FILE, "w+");
+	X(outfile==NULL,
+		T(WARN, "cannot open outfile: %s", DAT_FILE);)
+	R 0;}
 
-	if (outfile == NULL)
-		R T(WARN, "cannot open outfile: %s", DAT_FILE);
-
-	I res = csv_load(CSV_FILE);
-	
+V csv_close(){
+	LOG("csv_close");
 	fclose(outfile);
+	T(TRACE, "csv parser is shut down");}
 
-	R res;
-}
+Z UJ csv_test() {
+	LOG("csv_test");
 
-I main() { R csv_test(); }
+	X(csv_init(CSV_FILE, DAT_FILE),
+		T(WARN, "csv_init failed"););
+
+	UJ res = csv_load(CSV_FILE);
+	R res;}
+
+#ifdef RUN_TESTS
+I main(){
+	LOG("csv_main");
+	X(csv_test()==NIL,
+		T(WARN, "csv parser failed");R 1;)
+	R 0;}
+#endif
 
 //:~

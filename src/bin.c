@@ -1,3 +1,5 @@
+//!\file bin.c \brief binary search implementation
+
 #include <stdlib.h>
 #include <string.h>
 #include "___.h"

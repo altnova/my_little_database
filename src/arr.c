@@ -21,7 +21,7 @@ V* arr_last_(Arr a){
 V arr_free(Arr a){
 	if(a)free(a),a=NULL;}
 
-UJ arr_sz(Arr a){
+sz arr_sz(Arr a){
 	R a->used;}
 
 Z C arr_full(Arr a){

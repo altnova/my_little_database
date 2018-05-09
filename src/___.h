@@ -1,3 +1,7 @@
+//!\file ___.h \brief core macros
+
+#define _GNU_SOURCE
+
 #include <stddef.h>
 #include <stdio.h>
 
@@ -22,12 +26,14 @@ typedef size_t sz;
 #define Z static
 #define ext extern
 
-//! more clutter
+//! remove more
 #define SW switch
 #define CD default
 #define CS(n,x)	case n:x;break;	//< never forget break again
 
-#define P(x,y)	{if(x)R(y);}	//< fail fast
+//! fail fast
+#define P(x,y) {if(x)R(y);}	//< panic
+#define X(ex,catch) {P(ex,(({catch}),NIL));} //< throw
 
 //! no stinking loops
 #define DO(n,x) {UJ i=0,_i=(n);for(;i<_i;++i){x;}}
@@ -51,8 +57,6 @@ typedef size_t sz;
 #define ZV Z V          //!< static void
 #define ZI Z I          //!< static int
 
-
-//! 
 
 
 //:~

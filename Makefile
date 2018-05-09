@@ -1,5 +1,5 @@
 csv: clean nodatafiles
-	gcc -g -o bin/csv src/trc.c src/csv.c
+	gcc -DRUN_TESTS -g -o bin/csv src/trc.c src/csv.c
 	./bin/csv
 
 idx: clean

@@ -1,13 +1,13 @@
-//! application-specific settings
+//!\file cfg.c \brief application-specific settings
 
 //#define TEST_MODE
 
+//! debug levels L_WARN|L_INFO|L_TEST|L_DEBUG|L_TRACE
 #ifdef TEST_MODE
 #define LOGLEVEL L_TEST
 #define CSV_FILE "csv/sample.csv"
 #else
-//! debug level (L_WARN|L_INFO|L_TEST|L_DEBUG|L_TRACE)
-#define LOGLEVEL L_INFO		//< min verbosity
+#define LOGLEVEL L_INFO	//< set to WARN in prod builds
 #define CSV_FILE "csv/books.csv"
 #endif
 
@@ -22,18 +22,19 @@
 #define NUL '\0'			//< null char
 #define LF '\n'				//< newline char
 #define FLDMAX 2000			//< longest field len
-#define RECBUFLEN 4048		//< db write buffer
-#define CSVDEBUG 0			//< debug output
+#define RECBUFLEN 4096		//< record r/w buffer
 
 #define MAX_FNAME_LEN 200	//< db and idx files
 
 typedef UJ ID;				//< rec_id type alias
 
+//! index entry
 typedef struct idx_entry {
-	ID rec_id;
-	UJ pos;
+	ID rec_id;	//< record id
+	UJ pos;		//< file position
 } Pair;
 
+//! database record
 typedef struct record {
 	ID rec_id;
 	H pages;
@@ -45,7 +46,7 @@ typedef struct record {
 } pRec;
 
 typedef pRec bufRec[RECBUFLEN];
-typedef pRec* Rec;
+typedef pRec* Rec; //< use this one
 
 #define SZ_REC SZ(pRec)
 
