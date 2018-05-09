@@ -1,7 +1,6 @@
 //!\file ___.h \brief core macros
 
 #define _GNU_SOURCE
-
 #include <stddef.h>
 #include <stdio.h>
 
@@ -26,14 +25,14 @@ typedef size_t sz;
 #define Z static
 #define ext extern
 
-//! remove more
+//! fix switch
 #define SW switch
 #define CD default
-#define CS(n,x)	case n:x;break;	//< never forget break again
+#define CS(n,x)	case n:x;break;	//< never forget a break again
 
 //! fail fast
-#define P(x,y) {if(x)R(y);}	//< panic
-#define X(ex,catch) {P(ex,(({catch}),NIL));} //< throw
+#define P(x,y) {if(x)R(y);}	//< panic early
+#define X(x,y,z) {if(x){y;R(z);}} //< clean up and throw nil
 
 //! no stinking loops
 #define DO(n,x) {UJ i=0,_i=(n);for(;i<_i;++i){x;}}
@@ -43,20 +42,19 @@ typedef size_t sz;
 #define MAX(x,y) ((y)>(x)?(y):(x))
 #define IN(l,x,r) ((l)<=(x)&&(x)<=(r))
 
-//! secure copy max n bytes from y into x \param x dststr \param y srcstr \param n limit
-#define scpy_s(x,y,n) (S)memcpy((S)(x),(S)(y),MIN(scnt((S)y),n))
+//! secure strcpy
 
 //! usual suspects
 #define scnt(x)   (UJ)strlen((S)(x))		//!< string length \param str
 #define scmp(x,y) strcmp((S)(x),(S)(y))     //!< compare two strings \param x str \param y str
-#define scpy(x,y) (S)strcpy((S)(x),(S)(y))  //!< copy x into y \param x srcstr \param y deststr
-#define schr(x,y) (S)strchr((S)(x),y)       //!< pointer to the first occurrence of y in x
-#define rchr(x,y) (S)strrchr((S)(x),y)      //!< pointer to the last occurrence of y in x
+#define schr(h,n) (S)strchr((S)(h),n)       //!< first occurrence of needle in haystack
+#define rchr(h,n) (S)strrchr((S)(h),n)      //!< last occurrence of needle in haystack
+#define scpy(d,s,n) (S)memcpy((S)(d),(S)(s),MIN(scnt((S)s),n)) //!< \param d dest \param s source \param n
+//#define scpy(d,s) (S)strcpy((S)(d),(S)(s))  //!< free buffer overflows \param d dest \param s source
 
 //! zap spaces
 #define ZV Z V          //!< static void
 #define ZI Z I          //!< static int
-
 
 
 //:~

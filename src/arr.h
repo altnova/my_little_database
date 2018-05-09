@@ -21,7 +21,7 @@ ext V    arr_free(Arr);		//< never forget
 
 //! underlying implementation
 ext Arr  arr_init_(sz n, sz t);
-ext V    arr_add_(Arr*a, V*el);
+ext I    arr_add_(Arr*a, V*el);
 ext V*   arr_at_(Arr a, UJ i);
 ext V*   arr_last_(Arr a);
 

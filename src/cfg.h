@@ -1,8 +1,8 @@
 //!\file cfg.c \brief application-specific settings
 
-//#define TEST_MODE
+#define TEST_MODE
 
-//! debug levels L_WARN|L_INFO|L_TEST|L_DEBUG|L_TRACE
+//! L_WARN|L_INFO|L_TEST|L_DEBUG|L_TRACE
 #ifdef TEST_MODE
 #define LOGLEVEL L_TEST
 #define CSV_FILE "csv/sample.csv"
@@ -58,3 +58,6 @@ Z I rec_field_offsets[] = {
 	offsetof(pRec, pages), offsetof(pRec, year), offsetof(pRec, publisher),
 	offsetof(pRec, title), offsetof(pRec, author), offsetof(pRec, subject)
 };
+
+
+//:~

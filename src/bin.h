@@ -11,7 +11,7 @@ typedef struct string {C s[0];} SS; //< dummy type for passing strings to cmp()
 //! \return (UJ)pos or NIL if nothing found
 #define bin(h,n,t,l) bin_((t*)h, (t*)n, SZ(t), l)
 
-//! perform binary search using custom comparator that 
+//! perform binary search using custom comparator 
 //! \param h haystack \param \n needle \param t type \param l items \param fn
 //! \return (UJ)pos or NIL if nothing found
 #define binx(h,n,t,l,f) binx_((t*)h, (t*)n, SZ(t), l, (CMP)f)

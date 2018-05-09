@@ -16,16 +16,18 @@ Z UJ currline;
 ZV rec_print(Rec r){
 	LOG("rec_print");
 	T(TEST, "id=(%lu) pages=(%d) year=(%d) title=(%s) author=(%s)",
-		r->rec_id, r->pages, r->year, r->title, r->author);}
+		r->rec_id, r->pages, r->year, r->title, r->author);
+}
 
 ZV recbuf_flush(){
 	LOG("recbuf_flush");
 	fwrite(recbuf, SZ_REC, recbufpos, outfile);	//< flush current buffer to outfile
 	T(INFO, "flushed %d records", recbufpos);
 	recbufpos = 0; //< rewind buffer
-	R;}
+	R;
+}
 
-ID next_id(){R last_id++;}
+Z ID next_id(){R last_id++;}
 
 ZI add_field(I fld, S val){
 	LOG("add_field");
@@ -58,9 +60,8 @@ UJ csv_load(S fname){
 	LOG("csv_load");
 
 	FILE *csv = fopen(fname, "r+");
-
 	X(csv==NULL,
-		T(WARN, "cannot open infile: %s", fname););
+		T(WARN, "cannot open infile: %s", fname), NIL)
 
     currline = 1;
 	I bytesRead, fld=-1, fldpos=0;
@@ -127,35 +128,42 @@ UJ csv_load(S fname){
 	}
 	fclose(csv);
 	recbuf_flush();						//< flush remaining buffer to disk
-	R 0;}
+	R currline-1; //< lines parsed
+}
 
-UJ csv_init(S csv_file, S db_file){
+UJ csv_init(S db_fname){
 	LOG("csv_init");
-	outfile = fopen(DAT_FILE, "w+");
+	outfile = fopen(db_fname, "w+");
 	X(outfile==NULL,
-		T(WARN, "cannot open outfile: %s", DAT_FILE);)
-	R 0;}
+		T(WARN, "cannot open outfile: %s", db_fname), NIL)
+	R 0;
+}
 
 V csv_close(){
 	LOG("csv_close");
 	fclose(outfile);
-	T(TRACE, "csv parser is shut down");}
+	T(TRACE, "csv parser is shut down");
+}
 
 Z UJ csv_test() {
 	LOG("csv_test");
-
-	X(csv_init(CSV_FILE, DAT_FILE),
-		T(WARN, "csv_init failed"););
-
-	UJ res = csv_load(CSV_FILE);
-	R res;}
+	X(csv_init(DAT_FILE),
+		T(WARN, "csv_init failed"), NIL)
+	R csv_load(CSV_FILE);
+}
 
 #ifdef RUN_TESTS
+
 I main(){
 	LOG("csv_main");
-	X(csv_test()==NIL,
-		T(WARN, "csv parser failed");R 1;)
-	R 0;}
+	UJ res;
+	X((res=csv_test())==NIL,
+		T(WARN, "csv parser test failed"), 1)
+
+	T(INFO, "loaded %d records", res);
+	R 0;
+}
+
 #endif
 
 //:~

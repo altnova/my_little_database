@@ -9,15 +9,15 @@
 #include "rec.h"
 #include "fio.h"
 
-Z Arr *idx; //< in-memory instance of the index
-Z bufRec buf; //< readbuffer RECBUFLEN records
+Z Arr idx;		//< in-memory instance of the index
+Z bufRec buf;	//< readbuffer RECBUFLEN records
 
 C db_file[MAX_FNAME_LEN+1];
 C idx_file[MAX_FNAME_LEN+1];
 
 //! current idx size
 UJ idx_size() {
-	R idx->used;
+	R arr_sz(idx);
 }
 
 //! returns specific index entry
@@ -31,7 +31,8 @@ Pair* idx_data() {
 }
 //! create db file if not exists \returns number of records
 Z UJ db_touch(S fname) {
-	FILE*f = fopen(fname, "a");
+	LOG("db_touch");
+	xfopen(f, fname, "a", NIL);
 	UJ sz = fsize(f)/SZ_REC;
 	fclose(f);
 	R sz;
@@ -71,18 +72,21 @@ Z V idx_sort() {
 Z V idx_dump(UJ head) {
 	LOG("idx_dump");
 	Pair *e;
-	T(TEST, "{ last_id=%lu, used=%lu } =>", idx->hdr, idx->used);
-	DO(head?head:idx->used,
+	T(TEST, "{ last_id=%lu, used=%lu } =>", idx->hdr, idx_size());
+	DO(head?head:idx_size(),
 		e = arr_at(idx, i, Pair);
 		T(TEST, "%lu -> %lu", e->rec_id, e->pos);
 	)
 }
 
 //! rebuild index from scratch
-V idx_rebuild() {
+//! \return # recs loaded, NONE on error
+UJ idx_rebuild() {
 	LOG("idx_rebuild");
-	FILE *in = fopen(db_file, "r");
-	UJ rcnt, pos=0;
+	xfopen(in, db_file, "r", NIL);
+
+	UJ rcnt;
+	UJ pos=0;
 	Pair e; //< new index entry
 
 	while((rcnt = fread(buf, SZ_REC, RECBUFLEN, in))) {
@@ -102,6 +106,7 @@ V idx_rebuild() {
 	idx->hdr = last->rec_id; 	//< use Arr header field for last_id
 
 	T(INFO, "rebuilt, entries=%lu, last_id=%lu", idx->used, idx->hdr);
+	R idx_size();
 }
 
 //! free memory
@@ -109,45 +114,52 @@ V idx_close() {
 	arr_free(idx);
 }
 
-//! zap index entry at pos
+//! squash index entry at given pos
+//! \return NONE on error, new index size on success
 UJ idx_shift(UJ pos) {
 	LOG("idx_shift");
 	Pair *s = arr_at(idx, pos, Pair);
 	UJ to_move = idx->used-pos-1;
 	memcpy(s, s+1, SZ(Pair)*to_move);
 	T(DEBUG, "shifted %lu entries, squashed db_pos=%lu", to_move, pos);
+
 	idx->used--;
-	idx_save();
-	R idx->used;
+	UJ b_written = idx_save();
+	X(b_written==NIL, T(WARN, "idx_save failed"), NIL);
+
+	R idx_size();
 } 
 
 //! persist index in a file
-V idx_save() {
+//! \return NONE on error, index bytesize on success
+UJ idx_save() {
 	LOG("idx_save");
-	FILE *out = fopen(idx_file, "w+");
-	fwrite(idx, SZ(Arr)+idx->size*SZ(Pair), 1, out);
-	J size = fsize(out);
+	xfopen(out, idx_file, "w+", NIL);
+	fwrite(idx, SZ(Arr)+idx->size*SZ(Pair), 1, out); //< TODO check error
+	UJ size = fsize(out);
 	fclose(out);
-	T(TRACE, "%lu bytes", size);
+	T(TRACE, "saved %lu bytes", size);
+	R size;
 }
 
 //! load index from a file
-V idx_load() {
+UJ idx_load() {
 	LOG("idx_load");
-	FILE *in = fopen(idx_file, "r");
+	xfopen(in, idx_file, "r", NIL);
 	idx_close();
 	J size = fsize(in);
 	Arr**tmp = &idx; //< replace pointer
-	*tmp = arr_init((size-SZ(Arr))/SZ(Pair), Pair);
-	fread(idx, size, 1, in);
+	*tmp = arr_init((size-SZ(Arr))/SZ(Pair), Pair); //< reinit idx
+	fread(idx, size, 1, in); //< TODO check error
 	fclose(in);
 	T(INFO, "%lu bytes, %lu entries, capacity=%lu, last_id=%lu", size, idx->used, idx->size, idx->hdr);
+	R idx_size();
 }
 
 //! update index header on disk
-V idx_update_hdr() {
+UJ idx_update_hdr() {
 	LOG("idx_update_hdr");
-	FILE *out = fopen(idx_file, "r+");
+	xfopen(out, idx_file, "r+", NIL);
 	zseek(out, 0L, SEEK_SET);
 	fwrite(idx, SZ(Arr), 1, out);
 	fclose(out);
@@ -165,10 +177,11 @@ UJ next_id() {
 UJ idx_update_pos(UJ rec_id, UJ new_pos) {
 	LOG("idx_update_pos");
 	UJ idx_pos = rec_get_idx_pos(rec_id);
-	BAIL_IF(idx_pos, NONE); //< no such record
+	X(idx_pos==NIL, T(WARN, "rec_get_idx_pos failed"), NIL); //< no such record
 	Pair *i = arr_at(idx, idx_pos, Pair);
 	i->pos = new_pos;
-	FILE *out = fopen(idx_file, "r+");
+
+	xfopen(out, idx_file, "r+", NIL);
 	zseek(out, SZ(Arr)+SZ(Pair)*(idx_pos-1), SEEK_SET);
 	fwrite(i, SZ(Pair), 1, out);
 	fclose(out);
@@ -177,14 +190,14 @@ UJ idx_update_pos(UJ rec_id, UJ new_pos) {
 }
 
 //! add new index element and save
-V idx_add(ID rec_id, UJ pos) {
+UJ idx_add(ID rec_id, UJ db_pos) {
 	LOG("idx_add");
 	Pair e;
 	e.rec_id = rec_id;
-	e.pos = pos;
+	e.pos = db_pos;
 	arr_add(idx, e);
-	T(DEBUG, "rec_id=%lu, pos=%lu", rec_id, pos);
-	idx_save(); //< TODO append single item instead of full rewrite
+	T(DEBUG, "rec_id=%lu, pos=%lu", rec_id, db_pos);
+	R idx_save(); //< TODO append single item instead of full rewrite
 }
 
 //! perform sample index lookup
@@ -192,16 +205,16 @@ Z UJ idx_peek(ID rec_id){
 	LOG("idx_peek");
 	Rec b;
 	UJ pos = rec_get(b, rec_id);
-	BAIL_IF(pos, NONE); //< no such record
+	X(pos==NIL, T(WARN,"rec_get failed"), NIL); //< no such record
 	T(TRACE, "rec_id=%lu pos=%ld", rec_id, pos);
 	rec_print_dbg(b);
 	R pos;
 }
 
 //! dump db to stdout
-Z V db_dump() {
+Z UJ db_dump() {
 	LOG("db_dump");
-	FILE *in = fopen(db_file, "r");
+	xfopen(in, db_file, "r", NIL);
 	UJ rcnt;
 	while((rcnt = fread(buf, SZ_REC, RECBUFLEN, in))) {
 		T(DEBUG, "read %lu records", rcnt);
@@ -210,44 +223,58 @@ Z V db_dump() {
 	fclose(in);
 }
 
-//! create or rebuild index if necessary
-Z V idx_touch() {
+//! check the environment and create/rebuild index if necessary
+//! \return NIL if error, record count on success
+Z UJ idx_touch() {
 	LOG("idx_touch");
 	UJ db_size = db_touch(db_file);
-	FILE*f = fopen(idx_file, "w+");
-	UJ idx_fsize = fsize(f);
+	X(db_size==NIL, T(WARN, "db_touch reports error"), NIL);
+
+	xfopen(in, idx_file, "w+", NIL);
+
+	UJ idx_fsize = fsize(in);
+	X(idx_fsize==NIL, T(WARN, "fsize reports error"), NIL);
+	fclose(in);
+
 	idx = arr_init(RECBUFLEN, Pair);
-	if (!idx_fsize) {
-		idx_save();
-		idx_load();
+	X(idx==NULL,T(WARN, "arr_init returned null ptr"), NIL);
+	if (!idx_fsize) { //! empty index
+		UJ b_written = idx_save();
+		X(b_written==NIL, T(WARN, "idx_save reports error"), NIL);
+		UJ recs_loaded = idx_load();
+		X(recs_loaded==NIL, T(WARN, "idx_load reports error"), NIL);
 		T(INFO, "initialized empty index file");
 	}
-	if (idx->used != db_size) { //< out of sync
-		idx_rebuild();
-		idx_save();
+	if (idx_size() != db_size) { //< index out of sync
+		UJ idx_size = idx_rebuild();
+		X(idx_size==NIL, T(WARN, "idx_rebuild reports error"), NIL);
+		UJ b_written = idx_save();
+		X(b_written==NIL, T(WARN,"idx_save reports error"), NIL);
 		T(INFO, "synchronized index file");
 	}
-	fclose(f);
+
+	R idx_size();
 }
 
-V db_init(S d, S i) {
+UJ db_init(S d, S i) {
 	LOG("db_init");
-	scpy_s(db_file, d, MAX_FNAME_LEN);
-	scpy_s(idx_file, i, MAX_FNAME_LEN);
-	idx_touch();
+	scpy(db_file, d, MAX_FNAME_LEN);
+	scpy(idx_file, i, MAX_FNAME_LEN);
+	UJ idx_size = idx_touch();
 	T(INFO, "database initialized");
+	R idx_size;
 }
 
-Z I idx_test() {
+ZI idx_test() {
 	LOG("idx_test");
-	Rec b = malloc(SZ_REC);
+	Rec b=malloc(SZ_REC);chk(b,1);
 
 	db_init(DAT_FILE, IDX_FILE);
 
 	DO(3, next_id())
 
 	ID delete_test = 10;
-	if(rec_delete(delete_test) == NONE)
+	if(rec_delete(delete_test) == NIL)
 		T(WARN, "no such record=%lu", delete_test);
 
 	rec_get(b, 5); //< load from disk
@@ -268,9 +295,7 @@ Z I idx_test() {
 	//db_dump(); idx_dump(0);
 
 	idx_close();
-
 	free(b);
-
 	R 0;
 }
 

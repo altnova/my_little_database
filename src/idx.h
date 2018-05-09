@@ -1,15 +1,17 @@
 
 extern C db_file[], idx_file[];
 
-extern V db_init(S db_file, S idx_file);
+//! expect bad stuff to happen
+//! if you forget to call db_init() first
+extern UJ db_init(S db_file, S idx_file);
 
 extern ID next_id();
 
-extern V idx_rebuild();
-extern V idx_save();
-extern V idx_load();
+extern UJ idx_rebuild();
+extern UJ idx_save();
+extern UJ idx_load();
 
-extern V idx_add(ID rec_id, UJ pos);
+extern UJ idx_add(ID rec_id, UJ pos);
 extern UJ idx_shift(UJ pos);
 extern UJ idx_update_pos(ID rec_id, UJ new_pos);
 extern Pair* idx_data();
@@ -18,6 +20,7 @@ extern UJ idx_size();
 
 extern C cmp_binsearch(V*a, V*b, size_t t);
 
-extern V idx_close();	//< don't forget!
+//! don't forget to call this one, too
+extern V idx_close();
 
 //:~

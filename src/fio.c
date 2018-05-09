@@ -1,4 +1,6 @@
+#include <errno.h>
 #include "___.h"
+#include "trc.h"
 
 #if WIN32||_WIN64
 J zseek(I d,J j,I f){UI h=(UI)(j>>32),l=SetFilePointer((HANDLE)d,(UI)j,&h,f);R((J)h<<32)+l;}
@@ -12,7 +14,8 @@ I ftrunc(FILE*d,UJ n){R zseek(d,n,0),ftruncate(fileno(d),n);}
 
 //! filesize
 UJ fsize(FILE *fp) {
-	X(fp==NULL, T(WARN, "got empty fd"););
+	LOG("fsize");
+	X(!fp, T(WARN, "got empty fd"), NIL);
 	UJ prev = ftell(fp);
 	zseek(fp, 0L, SEEK_END);
 	UJ sz = ftell(fp);
