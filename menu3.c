@@ -19,9 +19,10 @@ V scr_search_1_1(I fld)
 	UJ *num;
 
 	O("please, enter keyword:  ");
-	get_line(string, 30);
-	//^^^^^^^^^^^^^^^^^^^^^^^			//						//				//				//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-	if (fld == fld_year || fld == fld_pages) {  
+
+	get_line(string, 30);										//<		asks for a keyword
+
+	if (fld == fld_year || fld == fld_pages) {  				//<	 	if it should be a number, requires for a number
 
 		get_num(num, string);
 
@@ -49,26 +50,26 @@ V scr_editrec_4_2(I fld, Rec origin)
 
 	O("old value:  ");
 
-	if (fld == fld_year || fld == fld_pages)
+	if (fld == fld_year || fld == fld_pages)					//<		field branching because of different printing formats
 		printf("%hi\n", *(origin + rec_field_offsets[fld]));
-	// rec_filed_get(origin, fld);		
+	
 	else
-		printf("%s\n", origin + rec_field_offsets[fld]);										//<<<<<<<<<<<<<
+		printf("%s\n", origin + rec_field_offsets[fld]);										
 
 	O("new value:  ");
-	get_line(buf, csv_max_field_widths[fld]);
+	get_line(buf, csv_max_field_widths[fld]);					//<		asks for a word
 
-	if (fld == fld_year || fld == fld_pages) {
+	if (fld == fld_year || fld == fld_pages) {					//<	 	if it should be a number, requires for a number
 		get_num(&num, buf);
 		while (num == -1) {
 			O("not a number. enter again  ");
 			get_line(buf, csv_max_field_widths[fld]);
 			get_num(&num, buf);
 		}
-		// *(origin + rec_field_offsets[fld]);							//<<<<<<<<<<<<<
+		// *(origin + rec_field_offsets[fld]);							
 	}
 	// else 
-		// rec_field_insert(origin, fld, buf);							//<<<<<<<<<<<<<
+		// rec_field_insert(origin, fld, buf);							
 
 }
 //////////////////////////////////////////
@@ -82,12 +83,14 @@ I scr_editrec_4_1(UJ id)
 	if (id == -1) 
  		R 0;
 
-	if ((rec_display_fotmated(id))) {
+	if ((rec_display_fotmated(id))) {									// 	if this record exists
 		origin = rec_get(id);
 		while(1) { 
 			input(&num, 6, "\tSelect field to edit:  ");
-			if (num == 0) 
-					R 0;
+
+			if (num == 0) 												// 	iteration stops only if there was an exit request
+					R 0;		
+
 			num = 	num == 1 	? fld_title 	:
 					num == 2 	? fld_author 	:
 					num == 3	? fld_year		:
@@ -104,7 +107,7 @@ I scr_editrec_4_1(UJ id)
 	R 1;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////
 I scr_search_1(UJ *command)
 {	
 	NL()
@@ -134,7 +137,7 @@ I scr_search_1(UJ *command)
 	R get_yn("search by another filed?  ");
 }
 
-I scr_addrec_2(UJ *command)
+I scr_addrec_2()
 {
 	Rec str;
 
@@ -142,6 +145,8 @@ I scr_addrec_2(UJ *command)
 	O("\tAdd record\n");
 	O("\t-------------\n");
 	NL();
+
+	////////			COLLAPSE		////////////
 
 	O("TITLE:  ");
 	get_line((S)&(str->title), csv_max_field_widths[fld_title]);
@@ -165,25 +170,28 @@ I scr_addrec_2(UJ *command)
 
 	str->rec_id = next_id();
 
+	////////		END OF COLLAPSE		////////////
+
 	rec_add(str);
 
 	O("[OK: record created with ID %lu]\n", str->rec_id);
 	R get_yn("create another one?");
 }
 
-I scr_editrec_4(UJ *num)
+I scr_editrec_4(UJ *id)
 {
 	C buf[15];
-	I i = 1;
+
 	NL()
 	O("\tEdit record\n");
 	O("\t-------------\n");
 	NL();
 	O("enter book ID or press any letter to go back to main menu  ");
-	get_line(buf, 15);
- 	get_num(num, buf);
 
-	if (!scr_editrec_4_1(*num)) 
+	get_line(buf, 15);
+ 	get_num(id, buf);
+
+	if (!scr_editrec_4_1(*id)) 
 		R 0;		
 
  	R get_yn("edit another one?");
@@ -215,20 +223,21 @@ I scr_main_0(UJ *command)
 	// 	each case iterates only if iterating function sends a request 
 	SW(*command) {
 
-		CS(0, R 0);	 												// 	exit program
+		CS(0, R 0;);	 												// 	exit program
 		CS(1, while(scr_search_1(command) != 0); 	break;);			//	search record
-		CS(2, while(scr_addrec_2(command)); 	break;);			// 	add record
-		CS(3, while(scr_deleterec_3(command)); 	break;);			//	delete record
-		CS(4, while(scr_editrec_4(command)); 	break;);			//	edit record 
-		CS(5, while(scr_displayrec_5(command)); break;);			//	display record by id
-		CS(6, while(scr_displayall_6(command)); break;);			//	display all records
-		CS(7, scr_dbstat_7(); break);									//	database stat
-		CS(8, scr_dbvacuum_8(); break);								//	vacuum database
-		CS(9, scr_csv_9());										//	import csv file
+		CS(2, while(scr_addrec_2()); 				break;);			// 	add record
+		CS(3, while(scr_deleterec_3(command)); 		break;);			//	delete record
+		CS(4, while(scr_editrec_4(command)); 		break;);			//	edit record 
+		CS(5, while(scr_displayrec_5(command)); 	break;);			//	display record by id
+		CS(6, while(scr_displayall_6(command)); 	break;);			//	display all records
+		CS(7, scr_dbstat_7(); 						break;);			//	database stat
+		CS(8, scr_dbvacuum_8(); 					break;);			//	vacuum database
+		CS(9, scr_csv_9());												//	import csv file
 
 	}
 	// R 1;
-	 R get_yn("MAIN MENU: do anything else?");
+	R get_yn("MAIN MENU: do anything else?");							//<		whitout this thing it's going into infinite loop
+																		//		don't know why					
 }
 
 
