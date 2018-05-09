@@ -11,7 +11,7 @@ menu: clean
 	./bin/menu
 
 bin: clean
-	gcc -DRUN_TESTS -g -o bin/binsearch src/bin.c 
+	gcc -DRUN_TESTS -g -o bin/binsearch src/trc.c src/bin.c 
 	./bin/binsearch
 
 arr: clean
@@ -20,7 +20,7 @@ arr: clean
 
 clean:
 	mkdir -p bin
-	rm -rf *.dSYM
+	rm -rf *.dSYM bin/*.dSYM
 
 nodatafiles:
 	rm -f dat/books.*

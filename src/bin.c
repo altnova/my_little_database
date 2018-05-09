@@ -1,68 +1,76 @@
 #include <stdlib.h>
 #include <string.h>
 #include "___.h"
+#include "trc.h"
 #include "bin.h"
 
-typedef I BINTYPE; //< type for test array
+#define val(x,t) *((t*)x) 
+#define diff(t) val(x,t)-val(y,t)
+#define DBG 	T(TRACE, "l=%lu m=%lu h=%lu needle=%d hay(%lu)=%d r=%d\n", \
+					l, m, h, val(ndl,I), m, val(hst+m*t,I), r)
+//! compare
+C cmp_(V*x, V*y, sz t){		//< sw/cs?
+	J r =					//< compare:
+		t==0 ?scmp(x,y):	//< strs
+		t==1 ?diff(C): 		//< chars
+		t==2 ?diff(H): 		//< shorts
+		t==4 ?diff(I): 		//< ints
+		t==8 ?diff(J): 		//< longs
+			 memcmp(x,y,t);	//< everything
+	R!r?r:r<0?-1:1;}		//< (le,eq,ge)
 
-C _cmp(V*a, V*b, size_t t){ //< TODO rewrite using SW/CS
-	J r;
-	r=							 //< compare:
-		t==0 ?scmp(a,b):		 //< strings
-		t==1 ?*((G*)a)-*((G*)b): //< bytes and chars
-		t==2 ?*((H*)a)-*((H*)b): //< shorts
-		t==4 ?*((I*)a)-*((I*)b): //< ints
-		t==8 ?*((J*)a)-*((J*)b): //< longs
-			 memcmp(a,b,t);		 //< everything else
-	R !r?r:r<0?-1:1;}			 //< -1,0,1 le,eq,ge 
+//! haystack, needle, type, length, comparator
+UJ binx_(V*hst, V*ndl, sz t, sz n, BIN_CMP_FN cfn){
+	LOG("binx");P(!n,NIL);P(n==1,cfn(hst,ndl,t)?NIL:0);	//< fail fast
+	P(cfn(hst,ndl,t)>0||cfn(hst+n*t-t,ndl,t)<0,NIL);  //< check range
+	UJ l=0,h=n,m;C r=1; //< lo,hi,mi
+	for(;(l<h)&r;)if(m=(l+h)/2,r=cfn(hst+m*t,ndl,t),r>=0)h=m;else l=m+1;
+	R r?NIL:m;}
 
-UJ _binfn(V*haystack, V*needle, size_t t, size_t len, BIN_CMP_FN cmpfn){
- if(len<1)R NONE;if(len==1)R cmpfn(haystack,needle,t)?NONE:0;	//< len<2
- if(cmpfn(haystack,needle,t)>0||cmpfn(haystack+(len-1)*t,needle,t)<0)R NONE; //< out of range
- UJ l=0,h=len,i; C r=1; //< lo, hi, mid
- for(;(l<h)&r;)if(i=(l+h)/2,r=cmpfn(haystack+i*t,needle,t),r>=0)h=i;else l=i+1;
- //O("l=%lu i=%lu h=%lu needle=%d hay(%lu)=%d r=%d\n", l, i, h, *((I*)needle), i, *((I*)(haystack+i*t)), r); //< debug
- R r?NONE:i;}
+UJ bin_(V*hst,V*ndl,sz t,sz l){
+	R binx_(hst,ndl,t,l,&cmp_);}
 
-UJ _bin(V*haystack, V*needle, size_t type, size_t len){
-	R _binfn(haystack, needle, type, len, (BIN_CMP_FN)&_cmp);
-}
+//! test
+typedef J TT; //< type
+Z TT hst[11] = { 0, 2, 8, 10, 14, 75, 100, 101, 120, 9999, 10000 }; //< haystack
+Z TT edge_cases[4] = { -1, 1, 9998, 10001 }; //< negatives
+Z TT ndl; //< needle
 
-Z BINTYPE arr[11] = { 0, 2, 8, 10, 14, 75, 100, 101, 120, 9999, 10000 };
-Z BINTYPE edge_cases[4] = { -1, 1, 9998, 10001 };
-Z BINTYPE needle;
+ZI bin_test() {
+	LOG("bin_test");
 
-Z I bin_test() {
 	J a = 1, b = 2; UJ r;
 
-	//! test cmp function
-	O("S %d\n", cmp("abc", "abcd", SS));
-	O("C %d\n", cmp(&a, &b, C));
-	O("H %d\n", cmp(&a, &b, H));
-	O("I %d\n", cmp(&a, &b, I));
-	O("J %d\n", cmp(&a, &b, J));
+	//! test cmp fn
+	T(DEBUG, "S %d", cmp("abc", "abcd", SS));
+	T(DEBUG, "C %d", cmp(&a, &b, C));
+	T(DEBUG, "H %d", cmp(&a, &b, H));
+	T(DEBUG, "I %d", cmp(&a, &b, I));
+	T(DEBUG, "J %d", cmp(&a, &b, J));
 
 	DO(11, //< hits
-		needle = arr[i];
-		r=bin(&arr, &needle, BINTYPE, 11);
-		O("bin[%lu] = %d, expect %d (%s)\n", r, arr[r], needle, arr[r]==needle?"OK":"FAIL");
+		ndl = hst[i];
+		r=bin(&hst, &ndl, TT, 11);
+		T(INFO, "%s   ->   bin[%ld]=%lu, expect %d", hst[r]==ndl?"OK":"FAIL", r, hst[r], ndl);
 	)
 
 	DO(1, //< degraded
-		needle = arr[i];
-		r=bin(&arr, &needle, BINTYPE, 1);
-		O("bin[%lu] = %d, expect %d (%s)\n", r, arr[r], needle, arr[r]==needle?"OK":"FAIL");
+		ndl = hst[i];
+		r=bin(&hst, &ndl, TT, 1);
+		T(INFO, "%s   ->   bin[%ld]=%lu, expect %d", hst[r]==ndl?"OK":"FAIL", r, hst[r], ndl);
 	)
 
 	DO(4, //< misses
-		needle = edge_cases[i];
-		r=bin(&arr, &needle, BINTYPE, 11);
-		O("bin[%d] = %lu, expect %d (%s)\n", needle, r, -1, r==-1?"OK":"FAIL");
+		ndl = edge_cases[i];
+		r=bin(&hst, &ndl, TT, 11);
+		T(INFO, "%s   ->   bin[%ld]=%lu, expect %d", r==-1?"OK":"FAIL", r, hst[r], -1);
 	)
 
 	R 0;
 }
 
-//I main() {R bin_test();}
+#ifdef RUN_TESTS
+I main(){R bin_test();}
+#endif
 
 //:~
