@@ -10,14 +10,14 @@ J zseek(FILE*d,J j,I f){R fseek(d,j,f);}
 I ftrunc(FILE*d,UJ n){R zseek(d,n,0),ftruncate(fileno(d),n);}
 #endif
 
-//! filesize utility
+//! filesize
 UJ fsize(FILE *fp) {
+	X(fp==NULL, T(WARN, "got empty fd"););
 	UJ prev = ftell(fp);
 	zseek(fp, 0L, SEEK_END);
 	UJ sz = ftell(fp);
 	zseek(fp, prev, SEEK_SET);
 	R sz;
 }
-
 
 //:~
