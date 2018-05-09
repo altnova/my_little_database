@@ -17,14 +17,14 @@ C cmp_(V*x, V*y, sz t){		//< sw/cs?
 		t==4 ?diff(I): 		//< ints
 		t==8 ?diff(J): 		//< longs
 			 memcmp(x,y,t);	//< everything
-	R!r?r:r<0?-1:1;}		//< (le,eq,ge)
+	R!r?r:r<0?-1:1;}		//< (lt,eq,gt)
 
 //! haystack, needle, type, length, comparator
-UJ binx_(V*hst, V*ndl, sz t, sz n, BIN_CMP_FN cfn){
+UJ binx_(V*hst, V*ndl, sz t, sz n, CMP cfn){
 	LOG("binx");P(!n,NIL);P(n==1,cfn(hst,ndl,t)?NIL:0);	//< fail fast
 	P(cfn(hst,ndl,t)>0||cfn(hst+n*t-t,ndl,t)<0,NIL);  //< check range
 	UJ l=0,h=n,m;C r=1; //< lo,hi,mi
-	for(;(l<h)&r;)if(m=(l+h)/2,r=cfn(hst+m*t,ndl,t),r>=0)h=m;else l=m+1;
+	W((l<h)&r)if(m=(l+h)/2,r=cfn(hst+m*t,ndl,t),r>=0)h=m;else l=m+1;
 	R r?NIL:m;}
 
 UJ bin_(V*hst,V*ndl,sz t,sz l){
