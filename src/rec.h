@@ -1,7 +1,7 @@
 //!\file rec.h \brief database record api
 
 //! basic CRUD operations on records
-//! \return NONE in case of failure
+//! \return NIL in case of failure
 extern UJ rec_get(Rec dest, ID rec_id);
 extern UJ rec_create(Rec src);
 extern UJ rec_update(Rec src);

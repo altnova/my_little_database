@@ -85,7 +85,7 @@ Z V idx_dump(UJ head) {
 }
 
 //! rebuild index from scratch
-//! \return # recs loaded, NONE on error
+//! \return # recs loaded, NIL on error
 UJ idx_rebuild() {
 	LOG("idx_rebuild");
 	FILE*in;
@@ -120,7 +120,7 @@ V idx_close() {
 }
 
 //! squash index entry at given pos
-//! \return NONE on error, new index size on success
+//! \return NIL on error, new index size on success
 UJ idx_shift(UJ pos) {
 	LOG("idx_shift");
 	Pair *s = arr_at(idx, pos, Pair);
@@ -136,7 +136,7 @@ UJ idx_shift(UJ pos) {
 } 
 
 //! persist index in a file
-//! \return NONE on error, index bytesize on success
+//! \return NIL on error, index bytesize on success
 UJ idx_save() {
 	LOG("idx_save");
 	FILE*out;
@@ -149,6 +149,7 @@ UJ idx_save() {
 }
 
 //! load index from a file
+//! \return number of entries, NIL on error
 UJ idx_load() {
 	LOG("idx_load");
 	FILE*in;

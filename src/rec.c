@@ -17,7 +17,7 @@ V rec_print_dbg(Rec r) {
 }
 
 //! binary search for index position of rec_id
-//! returns NONE if nothing found
+//! \return NIL if nothing found
 UJ rec_get_idx_pos(ID rec_id) {
 	R binx(idx_data(), &rec_id, Pair, idx_size(), &cmp_binsearch);
 }
