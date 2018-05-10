@@ -1,3 +1,5 @@
+//!\file fio.c \brief file utilities and macros
+
 #include <errno.h>
 
 #if WIN32||_WIN64
@@ -11,7 +13,9 @@ extern I ftrunc(FILE*d,UJ n);
 #endif
 
 #define errnoargs errno,strerror(errno)
-#define xfopen(fd,fname,mode,throws) FILE*fd=fopen(fname,mode);X(fd==NULL,T(WARN, "cannot open file=%s: %d %s", fname, errnoargs), throws)
+#define xfopen(fd,fname,mode,throws) \
+	fd=fopen(fname,mode); \
+	X(fd==NULL,T(WARN, "cannot open file=%s: %d %s", fname, errnoargs), throws)
 
 extern UJ fsize(FILE *fp);
 

@@ -11,14 +11,14 @@
 #define DBG 	T(TRACE, "l=%lu m=%lu h=%lu needle=%d hay(%lu)=%d r=%d\n", \
 					l, m, h, val(ndl,I), m, val(hst+m*t,I), r)
 //! compare
-C cmp_(V*x, V*y, sz t){		//< sw/cs?
-	J r =					//< compare:
-		t==0 ?scmp(x,y):	//< strs
-		t==1 ?diff(C): 		//< chars
-		t==2 ?diff(H): 		//< shorts
-		t==4 ?diff(I): 		//< ints
-		t==8 ?diff(J): 		//< longs
-			 memcmp(x,y,t);	//< everything
+C cmp_(V*x, V*y, sz t){				 //< sw/cs?
+	J r =							 //< compare:
+		t==SZ(SS) ?scmp(x,y):		 //< strs
+		t==SZ(C)  ?diff(C): 		 //< chars
+		t==SZ(H)  ?diff(H): 		 //< shorts
+		t==SZ(I)  ?diff(I): 		 //< ints
+		t==SZ(J)  ?diff(J): 		 //< longs
+				   memcmp(x,y,t); //< everything
 	R!r?r:r<0?-1:1;}		//< (lt,eq,gt)
 
 //! haystack, needle, type, length, comparator
@@ -29,6 +29,7 @@ UJ binx_(V*hst, V*ndl, sz t, sz n, CMP cfn){
 	W((l<h)&r)if(m=(l+h)/2,r=cfn(hst+m*t,ndl,t),r>=0)h=m;else l=m+1;
 	R r?NIL:m;}
 
+//! use native comparator
 UJ bin_(V*hst,V*ndl,sz t,sz l){
 	R binx_(hst,ndl,t,l,&cmp_);}
 

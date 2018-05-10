@@ -1,3 +1,5 @@
+//!\file rec.c \brief database record operations
+
 #include <stdlib.h>
 #include <string.h>
 #include "___.h"
@@ -45,6 +47,7 @@ UJ rec_get(Rec dest, ID rec_id) {
 	X(db_pos==NIL, T(WARN, "rec_get_db_pos returned nil"), NIL);
 	T(TRACE, "{ rec_id=%lu, db_pos=%lu }", rec_id, db_pos);
 
+	FILE*db;
 	xfopen(db, db_file, "r", NIL);
 	zseek(db, db_pos*SZ_REC, SEEK_SET);
 	fread(dest, SZ_REC, 1, db);
@@ -61,6 +64,7 @@ UJ rec_delete(ID rec_id) {
 
 	T(DEBUG, "deleting { rec_id=%lu, db_pos=%lu }", rec_id, db_pos);	
 	
+	FILE*db;
 	xfopen(db, db_file, "r+", NIL);
 	Rec b = malloc(SZ_REC); chk(b,NIL);
 	
@@ -88,6 +92,7 @@ UJ rec_create(Rec r) {
 	LOG("rec_create");
 	r->rec_id = next_id();
 
+	FILE*db;
 	xfopen(db, db_file, "a", NIL);
 	UJ db_pos = fsize(db)/SZ_REC;
 	fwrite(r, SZ_REC, 1, db);
@@ -105,6 +110,7 @@ UJ rec_update(Rec r) {
 
 	X(db_pos==NIL, T(WARN, "rec_get_db_pos reports error"), NIL)
 
+	FILE*db;
 	xfopen(db, db_file, "r+", NIL);
 	UJ offset = SZ_REC*db_pos;
 	zseek(db, offset, SEEK_SET);

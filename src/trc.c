@@ -1,3 +1,5 @@
+//!\file trc.c \brief logging system
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>

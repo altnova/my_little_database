@@ -1,4 +1,4 @@
-
+//!\file trc.h \brief logging system api
 
 enum loglevels { L_FATAL, L_WARN, L_INFO, L_TEST, L_DEBUG, L_TRACE };
 

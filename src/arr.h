@@ -3,7 +3,7 @@
 typedef struct dynarray {
 	UJ hdr;			//< reserved
 	sz used;		//< occupied
-	sz size;		//< allocated
+	sz size;		//< current capacity
 	sz el_size;		//< element size
 	G data[0];		//< struct hack
 } pArr;
@@ -12,8 +12,9 @@ typedef pArr* Arr;
 #define SZ_HDR SZ(pArr) //< array header size
 
 //! public api
+//! a array, el element, t type, n elements, i index
 #define  arr_init(n,t)		({arr_init_(n,SZ(t));})
-#define  arr_add(a,el)		({typeof(el)e=el;arr_add_(&a,&el);})
+#define  arr_add(a,el)		({typeof(el)_e=el;arr_add_(&a,&_e);})
 #define  arr_at(a,i,t)		({(t*)arr_at_(a,i);})
 #define  arr_last(a,t)		({(t*)arr_last_(a);})
 ext sz   arr_sz(Arr a);

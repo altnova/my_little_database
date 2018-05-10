@@ -1,3 +1,5 @@
+//!\file idx.c \brief index file operations
+
 #include <stdlib.h>
 #include <string.h>
 #include "___.h"
@@ -32,6 +34,7 @@ Pair* idx_data() {
 //! create db file if not exists \returns number of records
 Z UJ db_touch(S fname) {
 	LOG("db_touch");
+	FILE*f;
 	xfopen(f, fname, "a", NIL);
 	UJ sz = fsize(f)/SZ_REC;
 	fclose(f);
@@ -83,13 +86,13 @@ Z V idx_dump(UJ head) {
 //! \return # recs loaded, NONE on error
 UJ idx_rebuild() {
 	LOG("idx_rebuild");
+	FILE*in;
 	xfopen(in, db_file, "r", NIL);
 
-	UJ rcnt;
-	UJ pos=0;
-	Pair e; //< new index entry
+	UJ rcnt, pos=0;
+	Pair e;
 
-	while((rcnt = fread(buf, SZ_REC, RECBUFLEN, in))) {
+	W((rcnt = fread(buf, SZ_REC, RECBUFLEN, in))) {
 		T(DEBUG, "read %lu records", rcnt);
 		DO(rcnt,
 			Rec b = &buf[i];
@@ -102,8 +105,8 @@ UJ idx_rebuild() {
 	fclose(in);
 	idx_sort();
 
-	Pair *last = arr_last(idx, Pair);
-	idx->hdr = last->rec_id; 	//< use Arr header field for last_id
+	Pair last = e;
+	idx->hdr = last.rec_id; 	//< use Arr header field to store last_id
 
 	T(INFO, "rebuilt, entries=%lu, last_id=%lu", idx->used, idx->hdr);
 	R idx_size();
@@ -134,6 +137,7 @@ UJ idx_shift(UJ pos) {
 //! \return NONE on error, index bytesize on success
 UJ idx_save() {
 	LOG("idx_save");
+	FILE*out;
 	xfopen(out, idx_file, "w+", NIL);
 	fwrite(idx, SZ(Arr)+idx->size*SZ(Pair), 1, out); //< TODO check error
 	UJ size = fsize(out);
@@ -145,11 +149,12 @@ UJ idx_save() {
 //! load index from a file
 UJ idx_load() {
 	LOG("idx_load");
+	FILE*in;
 	xfopen(in, idx_file, "r", NIL);
 	idx_close();
 	J size = fsize(in);
-	Arr**tmp = &idx; //< replace pointer
-	*tmp = arr_init((size-SZ(Arr))/SZ(Pair), Pair); //< reinit idx
+	Arr*tmp = &idx; //< replace pointer
+	*tmp = arr_init((size-SZ_HDR)/SZ(Pair), Pair); //< reinit idx
 	fread(idx, size, 1, in); //< TODO check error
 	fclose(in);
 	T(INFO, "%lu bytes, %lu entries, capacity=%lu, last_id=%lu", size, idx->used, idx->size, idx->hdr);
@@ -159,11 +164,13 @@ UJ idx_load() {
 //! update index header on disk
 UJ idx_update_hdr() {
 	LOG("idx_update_hdr");
+	FILE*out;
 	xfopen(out, idx_file, "r+", NIL);
 	zseek(out, 0L, SEEK_SET);
 	fwrite(idx, SZ(Arr), 1, out);
 	fclose(out);
 	T(DEBUG, "idx header updated");
+	R 0;
 }
 
 //! get next available id and store it on disk
@@ -181,6 +188,7 @@ UJ idx_update_pos(UJ rec_id, UJ new_pos) {
 	Pair *i = arr_at(idx, idx_pos, Pair);
 	i->pos = new_pos;
 
+	FILE*out;
 	xfopen(out, idx_file, "r+", NIL);
 	zseek(out, SZ(Arr)+SZ(Pair)*(idx_pos-1), SEEK_SET);
 	fwrite(i, SZ(Pair), 1, out);
@@ -192,7 +200,7 @@ UJ idx_update_pos(UJ rec_id, UJ new_pos) {
 //! add new index element and save
 UJ idx_add(ID rec_id, UJ db_pos) {
 	LOG("idx_add");
-	Pair e;
+	Pair e = (Pair){0,0};
 	e.rec_id = rec_id;
 	e.pos = db_pos;
 	arr_add(idx, e);
@@ -214,6 +222,7 @@ Z UJ idx_peek(ID rec_id){
 //! dump db to stdout
 Z UJ db_dump() {
 	LOG("db_dump");
+	FILE*in;
 	xfopen(in, db_file, "r", NIL);
 	UJ rcnt;
 	while((rcnt = fread(buf, SZ_REC, RECBUFLEN, in))) {
@@ -221,6 +230,7 @@ Z UJ db_dump() {
 		DO(rcnt, rec_print_dbg(&buf[i]);)
 	}
 	fclose(in);
+	R 0;
 }
 
 //! check the environment and create/rebuild index if necessary
@@ -230,6 +240,7 @@ Z UJ idx_touch() {
 	UJ db_size = db_touch(db_file);
 	X(db_size==NIL, T(WARN, "db_touch reports error"), NIL);
 
+	FILE*in;
 	xfopen(in, idx_file, "w+", NIL);
 
 	UJ idx_fsize = fsize(in);
@@ -237,7 +248,7 @@ Z UJ idx_touch() {
 	fclose(in);
 
 	idx = arr_init(RECBUFLEN, Pair);
-	X(idx==NULL,T(WARN, "arr_init returned null ptr"), NIL);
+	X(idx==NULL, T(WARN, "arr_init returned null ptr"), NIL);
 	if (!idx_fsize) { //! empty index
 		UJ b_written = idx_save();
 		X(b_written==NIL, T(WARN, "idx_save reports error"), NIL);

@@ -1,3 +1,5 @@
+//!\file fio.h \brief useful file utilities
+
 #include <errno.h>
 #include "___.h"
 #include "trc.h"

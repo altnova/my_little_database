@@ -1,3 +1,4 @@
+//!\file idx.h \brief index file api
 
 extern C db_file[], idx_file[];
 

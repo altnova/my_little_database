@@ -1,3 +1,5 @@
+//!\file usr.c \brief user input utilities
+
 #include <stdio.h>
 #include "___.h"
 

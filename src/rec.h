@@ -1,3 +1,4 @@
+//!\file rec.h \brief database record api
 
 //! basic CRUD operations on records
 //! \return NONE in case of failure

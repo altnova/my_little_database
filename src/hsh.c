@@ -1,10 +1,18 @@
+//!\file hsh.c \brief simple hash table with separate chaining
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "___.h"
 #include "trc.h"
 
-typedef struct bucket{I h,n;struct bucket *next;I usage;C s[];} *bkt;
+typedef struct bucket{
+	I h,n;					//< hash and length of payload
+	struct bucket *next;	//< pointer to next 
+	I usage;				//< reserved
+	C s[];					//< payload
+} *bkt;
+
 Z sz SZ_BKT = SZ(struct bucket); //< struct header size
 ZI split, level=2;
 Z bkt* buckets;

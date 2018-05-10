@@ -6,8 +6,9 @@
 #include "___.h"
 #include "cfg.h"
 #include "trc.h"
+#include "fio.h"
 
-Z FILE * outfile;
+Z FILE*outfile;
 Z ID last_id = 0;
 ZI recbufpos = 0;
 Z bufRec recbuf;
@@ -59,9 +60,8 @@ ZI add_field(I fld, S val){
 UJ csv_load(S fname){
 	LOG("csv_load");
 
-	FILE *csv = fopen(fname, "r+");
-	X(csv==NULL,
-		T(WARN, "cannot open infile: %s", fname), NIL)
+	FILE *csv;
+	xfopen(csv, fname, "r+", NIL);
 
     currline = 1;
 	I bytesRead, fld=-1, fldpos=0;
@@ -76,7 +76,7 @@ UJ csv_load(S fname){
 				|| !in_quotes && curr==DELIM; //< field end flag
 
 			//O("fld=%d maxw=%d\n", fld+1, csv_max_field_widths[fld+1]);
-			if (fldpos == csv_max_field_widths[fld+1]) //< field is longer than max length, enter skip state
+			if (fldpos==csv_max_field_widths[fld+1]) //< field is longer than max length, enter skip state
 				in_skip=1;
 
 			if (in_skip) {				//< while in skip state
@@ -108,12 +108,12 @@ UJ csv_load(S fname){
 
 			if (!in_field) {			//< reached field start
 				in_field=1;				//< enter in-field state
-				if (curr == QUO)		//< if first char is quote...
+				if (curr==QUO)			//< if first char is quote...
 					in_quotes=1;		//< ..enter quoted state
 				else					
 					goto STORECHAR;
 			} else {
-				if (in_quotes && prev == QUO && curr == QUO) { //< escape sequence
+				if (in_quotes && prev==QUO && curr==QUO) { //< escape sequence
 					prev = NUL;			//< discard
 					continue;
 				}
@@ -133,9 +133,7 @@ UJ csv_load(S fname){
 
 UJ csv_init(S db_fname){
 	LOG("csv_init");
-	outfile = fopen(db_fname, "w+");
-	X(outfile==NULL,
-		T(WARN, "cannot open outfile: %s", db_fname), NIL)
+	xfopen(outfile, db_fname, "w+", NIL);
 	R 0;
 }
 

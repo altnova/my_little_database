@@ -1,4 +1,4 @@
-//!\file cfg.c \brief application-specific settings
+//!\file cfg.c \brief database settings
 
 #define TEST_MODE
 
