@@ -43,34 +43,38 @@ V scr_search_1_1(I fld)
 //	gets editing filed and a pointer to origin struct
 V scr_editrec_4_2(I fld, Rec origin) 
 {
-	UJ num;
-	C buf[csv_max_field_widths[fld]];
-
+	H *num;
+	S buf = malloc(SZ(C) * csv_max_field_widths[fld]);
+	// C buf[csv_max_field_widths[fld]];
+	// O("%d \n", rec_field_offsets[fld]);
 	// O("fld %d; fld_year %d; fld_pages %d\n", fld, fld_year,fld_pages);
+	// O("%d\n", csv_max_field_widths[fld]);
 
 	O("old value:  ");
 
 	if (fld == fld_year || fld == fld_pages)					//<		field branching because of different printing formats
-		printf("%hi\n", *(origin + rec_field_offsets[fld]));
+		O("%hi\n", *(origin + rec_field_offsets[fld]));
 	
-	else
-		printf("%s\n", origin + rec_field_offsets[fld]);										
+	else {
+		strcmp(buf, (S)(origin + rec_field_offsets[fld]));
+		// O("%s\n", (S)(origin + rec_field_offsets[fld]));										
+	}
 
 	O("new value:  ");
 	get_line(buf, csv_max_field_widths[fld]);					//<		asks for a word
 
 	if (fld == fld_year || fld == fld_pages) {					//<	 	if it should be a number, requires for a number
-		get_num(&num, buf);
-		while (num == -1) {
+		get_num((UJ*)&num, buf);
+		while (*num == -1) {
 			O("not a number. enter again  ");
 			get_line(buf, csv_max_field_widths[fld]);
-			get_num(&num, buf);
+			get_num((UJ*)&num, buf);
 		}
-		// *(origin + rec_field_offsets[fld]);							
+		*(H*)(origin + rec_field_offsets[fld]) = (H)*num;						
 	}
-	// else 
-		// rec_field_insert(origin, fld, buf);							
-
+	else 
+		strcmp((S)(origin + rec_field_offsets[fld]), buf );
+	free(buf);
 }
 //////////////////////////////////////////
 
