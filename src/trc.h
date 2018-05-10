@@ -4,6 +4,7 @@ enum loglevels { L_FATAL, L_WARN, L_INFO, L_TEST, L_DEBUG, L_TRACE };
 
 //! register function for logging
 #define LOG(fn) const Z S FN=fn;
+
 #define FATAL L_FATAL,FN,__FILE__,__LINE__
 #define WARN L_WARN,FN,__FILE__,__LINE__
 #define INFO L_INFO,FN,__FILE__,__LINE__
