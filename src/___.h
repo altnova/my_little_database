@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
+//! magic value for error
 #define NIL 0xffffffffffffffff
 
 //! type system
@@ -54,6 +55,6 @@ typedef size_t sz;
 //! zap spaces
 #define ZV Z V          //!< static void
 #define ZI Z I          //!< static int
-
+#define R0 0
 
 //:~
