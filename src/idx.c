@@ -75,11 +75,13 @@ Z V idx_sort() {
 Z V idx_dump(UJ head) {
 	LOG("idx_dump");
 	Pair *e;
+	TSTART();
 	T(TEST, "{ last_id=%lu, used=%lu } =>", idx->hdr, idx_size());
 	DO(head?head:idx_size(),
 		e = arr_at(idx, i, Pair);
-		T(TEST, "%lu -> %lu", e->rec_id, e->pos);
+		T(TEST, " (%lu -> %lu)", e->rec_id, e->pos);
 	)
+	TEND();
 }
 
 //! rebuild index from scratch
@@ -235,34 +237,39 @@ Z UJ db_dump() {
 
 //! check the environment and create/rebuild index if necessary
 //! \return NIL if error, record count on success
-Z UJ idx_touch() {
-	LOG("idx_touch");
+Z UJ idx_open() {
+	LOG("idx_open");
 	UJ db_size = db_touch(db_file);
-	X(db_size==NIL, T(WARN, "db_touch reports error"), NIL);
+	X(db_size==NIL, T(WARN, "db_touch(%s) reports error", db_file), NIL);
 
 	FILE*in;
-	xfopen(in, idx_file, "w+", NIL);
+	xfopen(in, idx_file, "a+", NIL); //< open or create
 
 	UJ idx_fsize = fsize(in);
-	X(idx_fsize==NIL, T(WARN, "fsize reports error"), NIL);
+	X(idx_fsize==NIL, T(WARN, "fsize(%d) reports error", idx_file), NIL);
 	fclose(in);
 
 	idx = arr_init(RECBUFLEN, Pair);
-	X(idx==NULL, T(WARN, "arr_init returned null ptr"), NIL);
+	X(idx==NULL, T(WARN, "cannot initialize memory for index"), NIL);
+
 	if (!idx_fsize) { //! empty index
 		UJ b_written = idx_save();
 		X(b_written==NIL, T(WARN, "idx_save reports error"), NIL);
-		UJ recs_loaded = idx_load();
-		X(recs_loaded==NIL, T(WARN, "idx_load reports error"), NIL);
-		T(INFO, "initialized empty index file");
+		T(WARN, "initialized empty index file");
 	}
-	if (idx_size() != db_size) { //< index out of sync
-		UJ idx_size = idx_rebuild();
-		X(idx_size==NIL, T(WARN, "idx_rebuild reports error"), NIL);
+
+	UJ idx_count = idx_load();
+	X(idx_count==NIL, T(WARN, "idx_load reports error"), NIL);
+
+	if (idx_count != db_size) { //< index out of sync
+		T(WARN,"index file out of sync idx_size=%lu, db_size=%lu", idx_count, db_size);
+		idx_count = idx_rebuild();
+		X(idx_count==NIL, T(WARN, "idx_rebuild reports error"), NIL);
 		UJ b_written = idx_save();
 		X(b_written==NIL, T(WARN,"idx_save reports error"), NIL);
-		T(INFO, "synchronized index file");
-	}
+		T(WARN, "synchronized index file");
+	} else
+		T(WARN, "loaded existing index, idx_size=%lu", idx_count);
 
 	R idx_size();
 }
@@ -271,7 +278,7 @@ UJ db_init(S d, S i) {
 	LOG("db_init");
 	scpy(db_file, d, MAX_FNAME_LEN);
 	scpy(idx_file, i, MAX_FNAME_LEN);
-	UJ idx_size = idx_touch();
+	UJ idx_size = idx_open();
 	T(INFO, "database initialized");
 	R idx_size;
 }

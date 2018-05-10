@@ -12,10 +12,10 @@ extern J zseek(FILE*d,J j,I f);
 extern I ftrunc(FILE*d,UJ n);
 #endif
 
-#define errnoargs errno,strerror(errno)
+#define errnoargs strerror(errno),errno
 #define xfopen(fd,fname,mode,throws) \
 	fd=fopen(fname,mode); \
-	X(fd==NULL,T(WARN, "cannot open file=%s: %d %s", fname, errnoargs), throws)
+	X(fd==NULL,T(WARN, "fopen(%s) %s (%d)", fname, errnoargs), throws)
 
 extern UJ fsize(FILE *fp);
 

@@ -11,8 +11,11 @@ enum loglevels { L_FATAL, L_WARN, L_INFO, L_TEST, L_DEBUG, L_TRACE };
 #define DEBUG L_DEBUG,FN,__FILE__,__LINE__
 #define TRACE L_TRACE,FN,__FILE__,__LINE__
 
+Z S loglevel_names[] = {"FATAL", "WARN", "INFO", "TEST", "DEBUG", "TRACE"};
+
 //! trace
 extern I T(I lvl, S fn, S file, I line, S format, ...);
+extern V TSTART(), TEND();
 
 //! check malloc ptr
 #define chk(a,retval) X(!a,T(FATAL,"out of memory"),retval);
