@@ -1,6 +1,6 @@
 csv: clean nodatafiles
 	gcc -DRUN_TESTS -g -o bin/csv src/trc.c src/csv.c
-	./bin/csv csv/sample.csv
+	./bin/csv csv/sample.csv dat/books.dat
 
 hsh: clean
 	gcc -DRUN_TESTS -g -o bin/hsh src/trc.c src/hsh.c

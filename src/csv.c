@@ -147,7 +147,7 @@ Z UJ csv_test(S csv_file, S db_file) {
 	LOG("csv_test");
 	X(csv_init(db_file),
 		T(WARN, "csv_init reports error"), NIL)
-	R csv_load(db_file);
+	R csv_load(csv_file);
 }
 
 #ifdef RUN_TESTS
