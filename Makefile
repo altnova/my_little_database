@@ -1,6 +1,6 @@
 csv: clean nodatafiles
 	gcc -DRUN_TESTS -g -o bin/csv src/trc.c src/csv.c
-	./bin/csv
+	./bin/csv csv/sample.csv
 
 hsh: clean
 	gcc -DRUN_TESTS -g -o bin/hsh src/trc.c src/hsh.c
@@ -21,6 +21,10 @@ bin: clean
 arr: clean
 	gcc -DRUN_TESTS -g -o bin/dynarray src/trc.c src/arr.c 
 	./bin/dynarray
+
+fio:
+	gcc -DRUN_TESTS -g -o bin/fio src/trc.c src/fio.c 
+	./bin/fio
 
 clean:
 	mkdir -p bin

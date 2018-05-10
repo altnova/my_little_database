@@ -143,19 +143,19 @@ V csv_close(){
 	T(TRACE, "csv parser is shut down");
 }
 
-Z UJ csv_test() {
+Z UJ csv_test(S csv_file, S db_file) {
 	LOG("csv_test");
-	X(csv_init(DAT_FILE),
-		T(WARN, "csv_init failed"), NIL)
-	R csv_load(CSV_FILE);
+	X(csv_init(db_file),
+		T(WARN, "csv_init reports error"), NIL)
+	R csv_load(db_file);
 }
 
 #ifdef RUN_TESTS
 
-I main(){
+I main(I argc, S*argv){
 	LOG("csv_main");
 	UJ res;
-	X((res=csv_test())==NIL,
+	X((res=csv_test(argv[1], argv[2]))==NIL,
 		T(WARN, "csv parser test failed"), 1)
 
 	T(INFO, "loaded %d records", res);

@@ -18,5 +18,6 @@ extern I ftrunc(FILE*d,UJ n);
 	X(fd==NULL,T(WARN, "fopen(%s) %s (%d)", fname, errnoargs), throws)
 
 extern UJ fsize(FILE *fp);
+extern C  fexist(S fname);
 
 //:~
