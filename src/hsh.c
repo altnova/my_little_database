@@ -29,7 +29,7 @@ I hsh_print(bkt b) {
 }
 
 //! lookup str in the hash table \param s str
-//! \see https://svn.process-one.net/ejabberd/tags/ejabberd-2.0.5/src/tls/tls_drv.c
+//! \see https://github.com/twonds/ejabberd/blob/master/apps/ejabberd/c_src/tls_drv.c
 //! \return ptr to permanent address
 S hsh_get(S s){
 	LOG("hsh_get");

@@ -3,13 +3,4 @@ dat/books.dat
 dat/books.idx
 .DS_Store
 *.dSYM
-menu
-menu2
-search
-csvp
-readint
-hashtable
-dynarray
-binsearch
-index
-idx
+bin/*
