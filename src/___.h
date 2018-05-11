@@ -45,7 +45,7 @@ typedef size_t sz;
 #define IN(l,x,r) ((l)<=(x)&&(x)<=(r))
 
 //! usual suspects
-#define scnt(x)   (UJ)strlen((S)(x))		//!< string length \param str
+#define scnt(x) (UJ)strlen((S)(x))			//!< string length \param str
 #define scmp(x,y) strcmp((S)(x),(S)(y))     //!< compare two strings \param x str \param y str
 #define schr(h,n) (S)strchr((S)(h),n)       //!< first occurrence of needle in haystack
 #define rchr(h,n) (S)strrchr((S)(h),n)      //!< last occurrence of needle in haystack

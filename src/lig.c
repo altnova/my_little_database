@@ -41,9 +41,8 @@ V* ligtest() {
 	x->asdf; // accessors!
 
 	if(x==y||x!=y||x&&y||x>=y||x<=y){} //< comparison
-	++x; --x; x++; x--; !!x; !x; ~x;	//< good idea to highlight these guys
+	x++; x--; !!x; !x; ~x;	//< good idea to highlight these guys
 	x^y;
-	x||y;
 	x%y;
 	x&y;
 	x?1:2;

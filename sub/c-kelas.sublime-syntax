@@ -204,9 +204,9 @@ contexts:
       scope: punctuation.accessor.c
     - match: \-\-|\+\+
       scope: keyword.operator.increment.c
-    - match: \+\=|-\=|\*\=|/\=|%\=|&\=|\|\=|\^\=|>>\=|<<\=
+    - match: \+\=|-\=|\*\=|/\=|%\=|&\=|\|\=|\^\=
       scope: keyword.operator.assignment.c
-    - match: \%|\^|~|&
+    - match: \%|\^|~|&|>>\=|<<\=
       scope: keyword.operator.arithmetic.c
     - match: \|\|  
       scope: keyword.operator.comparison.or.c
