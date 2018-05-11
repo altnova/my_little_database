@@ -25,19 +25,18 @@ ZV recbuf_flush(){
 	fwrite(recbuf, SZ_REC, recbufpos, outfile);	//< flush current buffer to outfile
 	T(INFO, "flushed %d records", recbufpos);
 	recbufpos = 0; //< rewind buffer
-	R;
 }
 
 Z ID next_id(){R last_id++;}
 
 ZI add_field(I fld, S val){
 	LOG("add_field");
-	if (fld >= COLS)
+	if (fld>=COLS)
 		R T(WARN, "too many columns, skipping: line=(%lu) fld=(%d) val=(%s)", currline, fld, val);
 
-	V* r = (V*)&recbuf[recbufpos];			//< void ptr to current record
+	V*r = (V*)&recbuf[recbufpos];			//< void ptr to current record
 	I offset = rec_field_offsets[fld];		//< offset of current field
-	V* f = r+offset;						//< void pointer to field
+	V*f = r+offset;							//< void pointer to field
 
 	if (fld < 2) {							//< pages and year are shorts
 		H i = (H)atoi(val);					//< parse integer
@@ -45,16 +44,16 @@ ZI add_field(I fld, S val){
 	} else									//< all other fields are strings
 		strcpy(f, val);						//< populate string field
 
-	if (fld == COLS-1) {					//< reached last field
+	if (fld==COLS-1) {						//< reached last field
 		ID id = next_id();					//< allocate rec_id
 		memcpy(r, &id, SZ(ID));				//< populate rec_id
 		rec_print(&recbuf[recbufpos++]);	//< debug print
 	}
 
-	if (recbufpos == RECBUFLEN)				//< record buffer is full...
+	if (recbufpos==RECBUFLEN)				//< record buffer is full...
 		recbuf_flush();						//< ...flush it to disk.
 
-	R 0;
+	R0;
 }
 
 UJ csv_load(S fname){
