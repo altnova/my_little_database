@@ -27,7 +27,6 @@ S syntext() {
 	x * y+z; x * (y+z);			//< ...always do that instead!
 
 	L:goto L;					//< power <=> responsibility
-
 }
 
 //! \brief test Fira ligatures
