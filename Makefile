@@ -1,3 +1,6 @@
+all: clean bin arr fio hsh csv idx
+	echo "done"
+
 csv: clean nodatafiles
 	gcc -DRUN_TESTS -g -o bin/csv src/trc.c src/csv.c
 	./bin/csv csv/sample.csv dat/books.dat
