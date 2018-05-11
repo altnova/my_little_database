@@ -47,9 +47,9 @@ ZI fio_test(){
 		T(TEST, "OK -> %s does not exist", f2);
 	
 	xfopen(fp,f,"r",1);
-	UJ fszize = fsize(fp);
-	P(fsz==NIL, T(FATAL, "fsize(%s) failed", f)) //< returns 1
-	T(TEST, "OK -> %s fsize=%lu", f, fsz);
+	UJ file_size = fsize(fp);
+	P(file_size==NIL, T(FATAL, "fsize(%s) failed", f)) //< returns 1
+	T(TEST, "OK -> %s fsize=%lu", f, file_size);
 	R0;
 }
 

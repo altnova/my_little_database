@@ -83,7 +83,7 @@ UJ csv_load(S fname){
 					continue;
 				} else {				//< reached field end, flush first FLDMAX chars
 					fld++;
-					prev = NULL;			//< if long field was quoted, discard closing quote
+					prev = NUL;			//< if long field was quoted, discard closing quote
 					goto FLUSH;
 				}
 			}
@@ -91,7 +91,7 @@ UJ csv_load(S fname){
 			if (is_line_end) {			//< reached line end
 				fld++;
 				FLUSH:					//< catch-all field flush routine
-				prev = fldbuf[fldpos-(prev==QUO)] = NULL; //< terminate string
+				prev = fldbuf[fldpos-(prev==QUO)] = NUL; //< terminate string
 				T(TRACE, "field fld=%d len=%d buf=%s", fld, (I)strlen(fldbuf), fldbuf);
 
 				add_field(fld, fldbuf);

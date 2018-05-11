@@ -25,8 +25,7 @@ S dsn(V* d, V* s, UJ n){R(S)memcpy(d,s,n)+n;}
 
 Z UJ mem, cnt;		//< hashtable bytesize and element counters
 
-I hsh_print(bkt b) {
-	P(!b,NULL);
+V hsh_print(bkt b) {
 	//if(!b){O("empty\n");R;
 	O("================================================\n");
 	O("s    -> %s\n",   b->s);
