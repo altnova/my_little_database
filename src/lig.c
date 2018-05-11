@@ -2,24 +2,25 @@
 
 //! \brief test pointer highlighting
 S syntext() {
-	fn(*(*a),*a,(V*)a);			//< ptrs in function args
 	*a;							//< deref
 	**a;						//< double indirection
-	*(a+b);						//< group deref	
+	*(a+b);						//< group deref
+	fn(*(*a),*a,(V*)a);			//< ptrs in function args	
+	*fn(a,b);&fn(a,b);			//< ref/deref function call
+	typedef V(*FN)(I*a);		//< function typedef
 	a,*a;*a;()*a;				//< ptrs after punctuation
 	a,&a;&a;()&a;				//< ref after punctuation
 	a,**a;()**a;				//< double indirection after punctuation
 	I* a; I *a;					//< ptrs to abbreviated types
 	char *x; FILE *f;			//< ptrs to basic types
 	(I*)a;(int*)a;(V*)a;		//< casts to pointers
-	(V*)(asdf);					//< void ptr
-	bucket*a;					//< compressed notation
+	bucket*a=NULL;				//< compressed notation
 	a[&a][*a];					//< ref/deref in brackets
 	*(*(*(*asdf)));				//< deref in nested groups
 	&(&(&(&asdf)));				//< ref in nested groups
 	x*(y+z);					//< confusing!
 	x * (y+z);					//< ...do that instead
-	asdf&asdf;					//< \c AND
+	asdf&asdf;					//< \c bitwise-and
 	x * y;						//< \c multiplication
 }
 
@@ -42,14 +43,14 @@ V* ligtest(V*a,V*b) {
 	}
 }
 
-/*! \brief test doxygen
+/*! \brief test doxygen tags highlighting
  *  @param[out] dest  memory area to copy to
  *  @param[in]  src   memory area to copy from
  *  @param[in]  n     number of bytes to copy
  *  \param      x,y,z position in \e 3D space
  *  \return	   		  TRUE||FALSE
  *
- *  TODO			  fix bugs!
+ *  TODO			  fix more bugs!
  */
 
 //:~

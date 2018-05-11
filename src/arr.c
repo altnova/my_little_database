@@ -53,7 +53,7 @@ typedef J TT; //< type
 ZI arr_test(){
 	LOG("arr_test");
 	UJ t = 100; //< test iterations
-	Arr a = arr_init(10,TT);	//< initially 5 elements
+	Arr a = arr_init(10,TT);	//< initially 10 elements
 	X(!a,T(FATAL, "arr_init failed"),1)
 	DO(t,arr_add(a,i)) //< will grow as necessary
 	TSTART();

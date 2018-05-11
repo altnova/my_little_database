@@ -221,15 +221,15 @@ contexts:
       scope: constant.numeric.c
 
   operators:
-    - match: '\s({{pointer_ops2}})[A-Za-z]'
+    - match: '\s({{pointer_ops2}})(?={{identifier}}\s*[^(])'
       captures:
         1: punctuation.pointer.c
 
-    - match: '^({{pointer_ops2}})[A-Za-z]'
+    - match: '^({{pointer_ops2}})(?={{identifier}}\s*[^(])'
       captures:
         1: punctuation.pointer.c
 
-    - match: '[;,]({{pointer_ops2}})[A-Za-z]'
+    - match: '[;,]({{pointer_ops2}})(?={{identifier}}\s*[^(])'
       captures:
         1: punctuation.pointer.c
 
@@ -359,7 +359,7 @@ contexts:
     - include: early-expressions
     - include: late-expressions
 
-  early-expressions:
+  early-expressions:  
     - include: preprocessor-expressions
     - include: comments
     - include: case-default
@@ -709,6 +709,11 @@ contexts:
         - match: ({{identifier}})?\s*(?=;)
           captures:
             1: entity.name.type.typedef.c
+        - match: \((\*)({{identifier}})\)
+          captures:
+            1: punctuation.pointer.c
+            2: entity.name.type.typedef.c
+
           pop: true
         - match: \b(struct)\s+({{identifier}})
           captures:
@@ -716,7 +721,9 @@ contexts:
         - include: expressions
 
   function-call:
-    - match: (?={{identifier}}\s*\()
+    - match: ([{{pointer_ops2}}])?(?={{identifier}}\s*\()
+      captures:
+        1: punctuation.pointer.c
       push:
         - meta_content_scope: meta.function-call.c
         - include: c99
