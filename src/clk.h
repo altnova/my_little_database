@@ -1,4 +1,4 @@
-//!\file clk.h \brief clock
+//! \file clk.h \brief clock
 
 //! start timer
 extern V clk_start();
