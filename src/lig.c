@@ -27,9 +27,9 @@ V* ligtest() {
 	*(asdf+asdf);
 	(*asdf);
 	asdf[*asdf];
-	*(*(*(*asdf));
+	*(*(*(*asdf)));
 	&asdf;
-	&(asdf)
+	&(asdf);
 	[&asdf];
 	asdf&asdf;
 
@@ -39,7 +39,7 @@ V* ligtest() {
 	/* hinted comment tags */ 
 	// compressed double slash
 	if(x==y||x!=y||x&&y||x>=y||x<=y){} //< comparison
-	x++;x--;!!x;!x;~x;	//< good idea to highlight these guys
+	++x; --x; x++; x--; !!x; !x; ~x;	//< good idea to highlight these guys
 	x^y;
 	x||y;
 	x%y;
