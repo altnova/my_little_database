@@ -5,7 +5,7 @@
 
 I input_number(I *num, S prompt, S errmsg){
     C line[4096];
-    W(O("%s: ", prompt)>0&&fgets(line, SZ(line), stdin)!=0)
+    W(O("%s: ", prompt)>0 && fgets(line, SZ(line), stdin)!=0)
         if(sscanf(line, "%d", num)==1)R0;else O("%s\n", errmsg);
     R EOF;
 }

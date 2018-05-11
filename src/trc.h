@@ -15,7 +15,7 @@ enum loglevels { L_FATAL, L_WARN, L_INFO, L_TEST, L_DEBUG, L_TRACE };
 ZS loglevel_names[] = {"FATAL", "WARN", "INFO", "TEST", "DEBUG", "TRACE"};
 
 //! trace
-extern I T(I lvl, S fn, S file, I line, S format, ...);
+extern I T(I lvl, const S fn, const S file, const I line, const S format, ...);
 extern V TSTART(), TEND();
 
 //! check malloc ptr

@@ -11,7 +11,7 @@ ZC cont = 0;
 ZC newline = 1;
 
 //! trace
-I T(I lvl, S fn, S file, I line, S fmt, ...) {
+I T(I lvl, const S fn, const S file, const I line, const S fmt, ...) {
 	if(lvl<=LOGLEVEL) {
 		va_list args;
 		va_start(args, fmt);
