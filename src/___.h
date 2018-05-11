@@ -26,7 +26,7 @@ typedef size_t sz;
 #define Z static
 #define ext extern
 
-//! fix switch
+//! better switch
 #define SW switch
 #define CD default
 #define CS(n,x)	case n:x;break;	//< never forget a break again
