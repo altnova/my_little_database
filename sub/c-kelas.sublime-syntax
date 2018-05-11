@@ -13,7 +13,7 @@ variables:
   identifier: '\b[[:alpha:]_][[:alnum:]_]*\b'
   numeric: '\b((0(x|X)[0-9a-fA-F]*(\.[0-9a-fA-F]+p-?\d+)?)|(([0-9]+\.?[0-9]*)|(\.[0-9]+))((e|E)(\+|-)?[0-9]+)?)(L|l|UL|ul|u|U|F|f|ll|LL|ull|ULL)?\b'
   doxytags: '\~|xrefitem|xmlonly|weakgroup|warning|vhdlflow|version|verbinclude|verbatim|var|until|union|typedef|tparam|todo|throws|throw|test|tableofcontents|subsubsection|subsection|subpage|struct|startuml|snippetlineno|snippetdoc|snippet|skipline|skip|since|showinitializer|short|see|section|secreflist|sa|rtfonly|retval|returns|return|result|remarks|remark|relatesalso|relates|relatedalso|related|refitem|ref|pure|publicsection|public|protocol|protectedsection|protected|property|privatesection|private|pre|post|parblock|param|paragraph|par|page|package|p|overload|note|nosubgrouping|namespace|name|n|mscfile|msc|memberof|manonly|mainpage|link|line|li|latexonly|latexinclude|invariant|internal|interface|ingroup|includelineno|includedoc|include|implements|image|ifnot|if|idlexcept|htmlonly|htmlinclude|hideinitializer|hidecallgraph|hidecallergraph|headerfile|fn|file|f\}|f\{|f\]|f\[|f\$|extends|exception|example|enum|endxmlonly|endverbatim|enduml|endsecreflist|endrtfonly|endparblock|endmsc|endmanonly|endlink|endlatexonly|endinternal|endif|endhtmlonly|enddot|enddocbookonly|endcond|endcode|em|elseif|else|e|dotfile|dot|dontinclude|docbookonly|dir|diafile|details|deprecated|defgroup|def|date|copyright|copydoc|copydetails|copybrief|cond|code|class|cite|category|callgraph|callergraph|c|bug|brief|b|authors|author|attention|arg|anchor|addtogroup|addindex|a|\||\\|\.|\"|@|>|<|::|---|--|&|%|\$|#'
-  constants: '__func__|NULL|true|false|TRUE|FALSE|NIL|EOF|SEEK_SET|SEEK_END|TODO'
+  constants: '<=>|__func__|NULL|true|false|TRUE|FALSE|NIL|EOF|SEEK_SET|SEEK_END|TODO'
   doxytags_w_args: 'class|def|enum|file|struct|typedef|union|a|b|c|e|em|p|param'
   control_keywords: 'MN|rS|rK|SZ|L0|In|V0|V1|V2|XT|XD|XX|XC|XP|X1|X2|X3|XO|XF|k0|k1|k2|k3|k4|k5|xr|xt|xu|xn|xx|xy|xk|xg|xh|xi|xj|xe|xf|xs|xB|xH|xI|xJ|xE|xF|xC|xS|xK|TX|kK|kB|kG|kH|kI|kJ|kE|kF|kC|kS|SW|O|CS|CD|HALT|META|TRACE|STACK|P|Q|SS|R|DO|U|break|case|continue|default|do|else|for|goto|if|_Pragma|return|switch|while|W|FATAL|WARN|INFO|TEST|DEBUG|TRACE|R0|R1|X|P'
   basic_types: 'asm|__asm__|auto|bool|_Bool|char|_Complex|double|float|_Imaginary|int|long|short|signed|unsigned|void'
@@ -266,6 +266,10 @@ contexts:
       captures:
         1: entity.name.label.c
         2: punctuation.separator.c
+    - match: (goto)\s+({{identifier}})
+      captures:
+        1: keyword.control.goto.c
+        2: entity.name.label.c
 
   preprocessor-disabled:
     - match: ^\s*(#\s*if(n?def)?)\b
@@ -706,14 +710,13 @@ contexts:
     - match: \btypedef\b
       scope: keyword.operator.word.c
       push:
-        - match: ({{identifier}})?\s*(?=;)
-          captures:
-            1: entity.name.type.typedef.c
         - match: \((\*)({{identifier}})\)
           captures:
             1: punctuation.pointer.c
             2: entity.name.type.typedef.c
-
+        - match: ({{identifier}})?\s*(?=;)
+          captures:
+            1: entity.name.type.typedef.c
           pop: true
         - match: \b(struct)\s+({{identifier}})
           captures:

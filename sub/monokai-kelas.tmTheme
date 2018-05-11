@@ -342,6 +342,23 @@
 				<string>#A6E22E</string>
 			</dict>
 		</dict>
+
+		<dict>
+			<key>name</key>
+			<string>Label</string>
+			<key>scope</key>
+			<string>entity.name.label.c</string>
+			<key>settings</key>
+			<dict>
+				<key>fontStyle</key>
+				<string></string>
+				<key>background</key>
+				<string>#F92672</string>
+				<key>foreground</key>
+				<string>#F8F8F0</string>
+			</dict>
+		</dict>
+
 		<dict>
 			<key>name</key>
 			<string>Inherited class</string>

@@ -7,7 +7,7 @@ S syntext() {
 	*(a+b);						//< group deref
 	fn(*(*a),*a,(V*)a);			//< ptrs in function args	
 	*fn(a,b);&fn(a,b);			//< ref/deref function call
-	typedef V(*FN)(I*a);		//< function typedef
+	typedef V(*FN)(I*);			//< function typedef
 	a,*a;*a;()*a;				//< ptrs after punctuation
 	a,&a;&a;()&a;				//< ref after punctuation
 	a,**a;()**a;				//< double ptrs after punctuation
@@ -25,6 +25,8 @@ S syntext() {
 	x * y;						//< \c multiplication
 	x*y+z; x*(y+z);				//< \c confusing for humans...
 	x * y+z; x * (y+z);			//< ...always do that instead!
+
+	L:goto L;					//< power <=> responsibility
 
 }
 
