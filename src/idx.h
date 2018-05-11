@@ -19,7 +19,7 @@ extern Pair* idx_data();
 extern Pair* idx_get_entry(UJ idx_pos);
 extern UJ idx_size();
 
-extern C cmp_binsearch(V*a, V*b, size_t t);
+extern C cmp_binsearch(V*a, V*b, sz t);
 
 //! don't forget to call this one, too
 extern V idx_close();

@@ -8,7 +8,7 @@
 
 typedef struct bucket{
 	I h,n;					//< hash and length of payload
-	struct bucket *next;	//< pointer to next 
+	struct bucket* next;		//< pointer to next 
 	I usage;				//< reserved
 	C s[];					//< payload
 } *bkt;
