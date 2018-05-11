@@ -1,7 +1,24 @@
 {
 	"color_scheme": "Packages/User/monokai-kelas.tmTheme",
+
+	//! ligatures
 	"font_face": "Fira Code Retina",
+	//"font_face": "Hasklig Medium",
+	//"font_face": "Pragmata Pro Regular",
+	//"font_face": "Inconsolata",
+
+	//! no ligatures
+	//"font_face": "Monoid",
+	//"font_face": "monofur",
+	//"font_face": "Anonymous Pro",
+	//"font_face": "Apercu",
+	//"font_face": "DejaVu Sans Mono",
+	//"font_face": "Source Code Pro",
+
 	"font_size": 19,
+
+	"caret_style": "phase",
+	"line_padding_top": 2,
 
 	"extensions":
 	[
