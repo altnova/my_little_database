@@ -29,6 +29,10 @@ fio:
 	gcc -DRUN_TESTS -g -o bin/fio src/trc.c src/fio.c 
 	./bin/fio
 
+clk:
+	gcc -DRUN_TESTS -O0 -g -o bin/clk src/trc.c src/clk.c 
+	./bin/clk
+
 clean:
 	mkdir -p bin
 	rm -rf *.dSYM bin/*.dSYM
