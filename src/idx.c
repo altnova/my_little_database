@@ -10,6 +10,7 @@
 #include "idx.h"
 #include "rec.h"
 #include "fio.h"
+#include "clk.h"
 
 Z Arr idx;		//< in-memory instance of the index
 Z bufRec buf;	//< readbuffer RECBUFLEN records
