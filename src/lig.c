@@ -1,4 +1,4 @@
-//! \file lig.c Fira ligatures, Fira-firendly C syntax and Doxygen tags
+//! \file lig.c debug Fira/Hasklig ligatures, ligature-firendly C syntax and Doxygen tags
 
 //! \brief test pointer highlighting
 S syntext() {
@@ -31,8 +31,8 @@ S syntext() {
 
 //! \brief test Fira ligatures
 V* ligtest(V*a,V*b) {
-	/* <-- hinted comment tags --> */ 
-	// <-- hinted double slash
+	/* <- hinted comment tags -> */ 
+	// <- hinted double slash
 
 	O(...) //< keyword.operator.variadic.c
 
@@ -43,7 +43,7 @@ V* ligtest(V*a,V*b) {
 		x++; x--; //< keyword.operator.increment.c
 		!!x; !x; //< keyword.operator.negation.c
 		~x; x^y; x%y; x&y, x|y; x<<=1; y>>=2; //< keyword.operator.arithmetic.c
-		x=0; x+=0; x*=1; x/=2; x%=3; //< keyword.operator.assignment.c
+		x=0; x+=0; x*=1; x/=2; x%=3; x|=4; x^=5; //< keyword.operator.assignment.c
 		x?1:2; //< keyword.operator.ternary.c
 	}
 }
@@ -57,6 +57,18 @@ V* ligtest(V*a,V*b) {
  *
  *  TODO			  fix more bugs!
  */
+
+/** ligature soup
+	!== !! !=  !!! !> #( && /=
+	#_ #{ #? #> %= %> &% &* &+ &-
+	&/ &= &&& &> $> *** *= *> ++
+	+++ += +> -- -< << -= -> ->> 
+	.. ... ..< .> .~ .= /* // /> 
+	/= /== /// /** :: := :> :=> 
+	>= <= |= \\ ~= |> <| >>> >=> 
+	~~> ~>> ~> |+| ||| |= =:= @>
+	www
+*/
 
 //:~
 
