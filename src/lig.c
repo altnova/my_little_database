@@ -10,18 +10,22 @@ S syntext() {
 	typedef V(*FN)(I*a);		//< function typedef
 	a,*a;*a;()*a;				//< ptrs after punctuation
 	a,&a;&a;()&a;				//< ref after punctuation
-	a,**a;()**a;				//< double indirection after punctuation
+	a,**a;()**a;				//< double ptrs after punctuation
 	I* a; I *a;					//< ptrs to abbreviated types
 	char *x; FILE *f;			//< ptrs to basic types
 	(I*)a;(int*)a;(V*)a;		//< casts to pointers
+	({(t*)fn(a,i);})			//< nested cast
 	bucket*a=NULL;				//< compressed notation
 	a[&a][*a];					//< ref/deref in brackets
 	*(*(*(*asdf)));				//< deref in nested groups
 	&(&(&(&asdf)));				//< ref in nested groups
-	x*(y+z);					//< confusing!
-	x * (y+z);					//< ...do that instead
-	asdf&asdf;					//< \c bitwise-and
+
+	//! non-pointers
+	a&a; a&4; 5&a;				//< \c bitwise-and
 	x * y;						//< \c multiplication
+	x*y+z; x*(y+z);				//< \c confusing for humans...
+	x * y+z; x * (y+z);			//< ...always do that instead!
+
 }
 
 //! \brief test Fira ligatures

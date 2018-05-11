@@ -37,8 +37,9 @@ ZC arr_full(Arr a){
 
 //! \return 0 -> ok, 1 -> err
 I arr_add_(Arr* aptr, V* el){
-	LOG("arr_add"); Arr a;
-	if(arr_full(a = *aptr)){
+	LOG("arr_add");
+	Arr a = *aptr;
+	if(arr_full(a)){
 		a->size *= 2;
 		*aptr = a = (Arr)realloc(a, SZ_HDR + a->el_size * a->size);
 		chk(a,1);

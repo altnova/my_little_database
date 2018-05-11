@@ -7,8 +7,8 @@
 #include "cfg.h"
 #include "trc.h"
 
-Z C cont = 0;
-Z C newline = 1;
+ZC cont = 0;
+ZC newline = 1;
 
 //! trace
 I T(I lvl, S fn, S file, I line, S fmt, ...) {

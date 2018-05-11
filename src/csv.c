@@ -107,7 +107,7 @@ UJ csv_load(S fname){
 			if (!in_field) {			//< reached field start
 				in_field = 1;			//< enter in-field state
 				if (curr==QUO)			//< if first char is quote...
-					in_quotes=1;		//< ..enter quoted state
+					in_quotes = 1;		//< ..enter quoted state
 				else					
 					goto STORECHAR;
 			} else {
@@ -120,7 +120,7 @@ UJ csv_load(S fname){
 					goto FLUSH;
 				}
 				STORECHAR:
-				fldbuf[fldpos++] = prev = curr;	//< copy current char into field bufer
+				fldbuf[fldpos++] = prev = curr;	//< copy current char into field buffer
 			}
 		)
 	}
