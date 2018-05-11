@@ -35,9 +35,11 @@ V* ligtest() {
 
 	*asdf;
 
-	// x->field field accessor
 	/* hinted comment tags */ 
 	// compressed double slash
+
+	x->asdf; // accessors!
+
 	if(x==y||x!=y||x&&y||x>=y||x<=y){} //< comparison
 	++x; --x; x++; x--; !!x; !x; ~x;	//< good idea to highlight these guys
 	x^y;
