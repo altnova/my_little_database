@@ -1,11 +1,8 @@
-//! \file ___.h \brief c programming bible
+//! \file ___.h \brief type less <=> do more
 
 #define _GNU_SOURCE
 #include <stddef.h>
 #include <stdio.h>
-
-//! magic value for error
-#define NIL 0xffffffffffffffff
 
 //! type system
 typedef char C;
@@ -46,20 +43,23 @@ typedef size_t sz;
 #define IN(l,x,r) ((l)<=(x)&&(x)<=(r))
 
 //! usual suspects
-#define scnt(x) (UJ)strlen((S)(x))			//!< string length \param str
-#define scmp(x,y) strcmp((S)(x),(S)(y))     //!< compare two strings \param x str \param y str
-#define schr(h,n) (S)strchr((S)(h),n)       //!< first occurrence of needle in haystack
-#define rchr(h,n) (S)strrchr((S)(h),n)      //!< last occurrence of needle in haystack
-#define scpy(d,s,n) (S)memcpy((S)(d),(S)(s),MIN(scnt((S)s),n)) //!< secure strcpy \param d dest \param s source \param n
-//#define scpy(d,s) (S)strcpy((S)(d),(S)(s))  //!< free buffer overflows \param d dest \param s source
+#define scnt(x) (UJ)strlen((S)(x))				//!< string length \param str
+#define scmp(x,y) strcmp((S)(x),(S)(y))     	//!< compare two strings \param x str \param y str
+#define schr(h,n) (S)strchr((S)(h),n)       	//!< first pos \param h haystack \param n needle
+#define rchr(h,n) (S)strrchr((S)(h),n)      	//!< last pos \param h haystack \param n needle
+#define mcpy(d,s,n) (S)memcpy((S)(d),(S)(s),n) 	//!< mem copy \param d dest \param s source \param n len
+#define scpy(d,s,n) mcpy(d,s,MIN(scnt((S)s),n) 	//!< better strcpy \param d dest \param s source \param n limit
 
-//! save space
+//! less is more
 #define ZV Z V          //!< static void
 #define ZI Z I          //!< static int
 #define ZC Z C          //!< static char
 #define ZS Z S          //!< static string
-#define ZJ Z J          //!< static ulong
+#define ZJ Z J          //!< static long
 #define R0 R 0
 #define R1 R 1
+
+//! error
+#define NIL 0xffffffffffffffff
 
 //:~
