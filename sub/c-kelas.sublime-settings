@@ -1,0 +1,17 @@
+{
+	"color_scheme": "Packages/User/monokai-kelas.tmTheme",
+	"font_face": "Fira Code Retina",
+	"font_size": 19,
+
+	"extensions":
+	[
+		"c",
+		"h"
+	],
+	
+	"font_options":
+	[
+		"gray_antialias",
+		"subpixel_antialias"
+	]
+}
