@@ -10,6 +10,7 @@ typedef char* S;
 typedef int I;
 typedef short H;
 typedef void V;
+typedef float E;
 typedef unsigned long UJ;
 typedef long J;
 typedef unsigned int UI;
@@ -56,6 +57,7 @@ typedef size_t sz;
 #define ZC Z C          //!< static char
 #define ZS Z S          //!< static string
 #define ZJ Z J          //!< static long
+#define ZJ Z J          //!< static float
 #define R0 R 0
 #define R1 R 1
 
