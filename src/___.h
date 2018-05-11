@@ -56,6 +56,7 @@ typedef size_t sz;
 //! save spaces
 #define ZV Z V          //!< static void
 #define ZI Z I          //!< static int
+#define ZC Z C          //!< static char
 #define ZS Z S          //!< static string
 #define R0 R 0
 #define R1 R 1

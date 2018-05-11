@@ -31,7 +31,7 @@ sz arr_sz(Arr a){
 	R a->used;
 }
 
-Z C arr_full(Arr a){
+ZC arr_full(Arr a){
 	R a->used==a->size;
 }
 
@@ -39,9 +39,10 @@ Z C arr_full(Arr a){
 I arr_add_(Arr* aptr, V* el){
 	LOG("arr_add"); Arr a;
 	if(arr_full(a = *aptr)){
-		a->size *= 2, T(TRACE,"grew to %lu", arr_sz(a));
+		a->size *= 2;
 		*aptr = a = (Arr)realloc(a, SZ_HDR + a->el_size * a->size);
 		chk(a,1);
+		T(TEST,"grew to %lu", a->size);
 	}
 	memcpy((V*)(a->data + a->el_size * a->used++), el, a->el_size);
 	R0;
@@ -52,11 +53,13 @@ typedef J TT; //< type
 ZI arr_test(){
 	LOG("arr_test");
 	UJ t = 100; //< test iterations
-	Arr a = arr_init(5,TT);	//< initially 5 elements
+	Arr a = arr_init(10,TT);	//< initially 5 elements
 	X(!a,T(FATAL, "arr_init failed"),1)
 	DO(t,arr_add(a,i)) //< will grow as necessary
-	DO(t,O("%ld %ld|", i,*arr_at(a,i,TT)))
-	O("\ntotal: %lu\n", arr_sz(a)); //< print number of elements
+	TSTART();
+	DO(t,T(TEST, "%ld->%ld ", i, *arr_at(a,i,TT)))
+	TEND();
+	T(TEST,"capacity=%lu, used=%lu", a->size, arr_sz(a)); //< print number of elements
 	arr_free(a); //< never forget
 	R0;
 }
