@@ -56,8 +56,8 @@ typedef size_t sz;
 #define ZI Z I          //!< static int
 #define ZC Z C          //!< static char
 #define ZS Z S          //!< static string
+#define ZE Z E          //!< static float
 #define ZJ Z J          //!< static long
-#define ZJ Z J          //!< static float
 #define R0 R 0
 #define R1 R 1
 
