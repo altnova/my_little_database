@@ -9,7 +9,7 @@
 #define val(x,t) *((t*)x) 
 #define diff(t) val(x,t)-val(y,t)
 #define DBG 	T(TRACE, "l=%lu m=%lu h=%lu needle=%d hay(%lu)=%d r=%d\n", \
-					l, m, h, val(ndl,I), m, val(hst+m*t,I), r)
+					l, m, h, val(ndl,I), m, val(hst+m * t,I), r)
 //! compare
 C cmp_(V*x, V*y, sz t){				 //< sw/cs?
 	J r =							 //< compare:
@@ -24,9 +24,9 @@ C cmp_(V*x, V*y, sz t){				 //< sw/cs?
 //! haystack, needle, type, length, comparator
 UJ binx_(V*hst, V*ndl, sz t, sz n, CMP cfn){
 	LOG("binx");P(!n,NIL);P(n==1,cfn(hst,ndl,t)?NIL:0);	//< fail fast
-	P(cfn(hst,ndl,t)>0||cfn(hst+n*t-t,ndl,t)<0,NIL);  //< check range
+	P(cfn(hst,ndl,t)>0||cfn((hst + n * t - t),ndl,t)<0,NIL);  //< check range
 	UJ l=0,h=n,m;C r=1; //< lo,hi,mi
-	W((l<h)&r)if(m=(l+h)/2,r=cfn(hst+m*t,ndl,t),r>=0)h=m;else l=m+1;
+	W((l<h)&r)if(m=(l+h)/2,r=cfn((hst + m * t),ndl,t),r>=0)h=m;else l=m+1;
 	R r?NIL:m;}
 
 //! use native comparator
@@ -69,7 +69,7 @@ ZI bin_test() {
 		T(INFO, "%s   ->   bin[%ld]=%lu, expect %d", r==-1?"OK":"FAIL", r, hst[r], -1);
 	)
 
-	R 0;
+	R0;
 }
 
 #ifdef RUN_TESTS
