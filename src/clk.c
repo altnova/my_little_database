@@ -30,14 +30,14 @@ Z UJ clk_test(UJ n) {
 #ifdef RUN_TESTS
 I main(){
 	LOG("clk_main");
-	UJ begin = clk_start(); //< init clock
+	UJ epoch = clk_start(); //< init clock
 
 	clk_test(1E7/2);
 	clk_test(1E7);
 	clk_test(1E8/2);
 	clk_test(1E8);
 
-	T(TEST, "total exec time\t=> %lums", clk_diff(begin, clk_start()));
+	T(TEST, "total exec time\t=> %lums", clk_diff(epoch, clk_start()));
 
 	R0;
 }
