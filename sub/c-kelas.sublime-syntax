@@ -11,6 +11,10 @@ scope: source.c
 
 variables:
   identifier: '\b[[:alpha:]_][[:alnum:]_]*\b'
+  numeric: '\b((0(x|X)[0-9a-fA-F]*(\.[0-9a-fA-F]+p-?\d+)?)|(([0-9]+\.?[0-9]*)|(\.[0-9]+))((e|E)(\+|-)?[0-9]+)?)(L|l|UL|ul|u|U|F|f|ll|LL|ull|ULL)?\b'
+  doxytags: '\~|xrefitem|xmlonly|weakgroup|warning|vhdlflow|version|verbinclude|verbatim|var|until|union|typedef|tparam|todo|throws|throw|test|tableofcontents|subsubsection|subsection|subpage|struct|startuml|snippetlineno|snippetdoc|snippet|skipline|skip|since|showinitializer|short|see|section|secreflist|sa|rtfonly|retval|returns|return|result|remarks|remark|relatesalso|relates|relatedalso|related|refitem|ref|pure|publicsection|public|protocol|protectedsection|protected|property|privatesection|private|pre|post|parblock|param|paragraph|par|page|package|p|overload|note|nosubgrouping|namespace|name|n|mscfile|msc|memberof|manonly|mainpage|link|line|li|latexonly|latexinclude|invariant|internal|interface|ingroup|includelineno|includedoc|include|implements|image|ifnot|if|idlexcept|htmlonly|htmlinclude|hideinitializer|hidecallgraph|hidecallergraph|headerfile|fn|file|f\}|f\{|f\]|f\[|f\$|extends|exception|example|enum|endxmlonly|endverbatim|enduml|endsecreflist|endrtfonly|endparblock|endmsc|endmanonly|endlink|endlatexonly|endinternal|endif|endhtmlonly|enddot|enddocbookonly|endcond|endcode|em|elseif|else|e|dotfile|dot|dontinclude|docbookonly|dir|diafile|details|deprecated|defgroup|def|date|copyright|copydoc|copydetails|copybrief|cond|code|class|cite|category|callgraph|callergraph|c|bug|brief|b|authors|author|attention|arg|anchor|addtogroup|addindex|a|\||\\|\.|\"|@|>|<|::|---|--|&|%|\$|#'
+  constants: '__func__|NULL|true|false|TRUE|FALSE|NIL|EOF|SEEK_SET|SEEK_END|TODO'
+  doxytags_w_args: 'class|def|enum|file|struct|typedef|union|a|b|c|e|em|p|param'
   control_keywords: 'MN|rS|rK|SZ|L0|In|V0|V1|V2|XT|XD|XX|XC|XP|X1|X2|X3|XO|XF|k0|k1|k2|k3|k4|k5|xr|xt|xu|xn|xx|xy|xk|xg|xh|xi|xj|xe|xf|xs|xB|xH|xI|xJ|xE|xF|xC|xS|xK|TX|kK|kB|kG|kH|kI|kJ|kE|kF|kC|kS|SW|O|CS|CD|HALT|META|TRACE|STACK|P|Q|SS|R|DO|U|break|case|continue|default|do|else|for|goto|if|_Pragma|return|switch|while|W|FATAL|WARN|INFO|TEST|DEBUG|TRACE|R0|R1|X|P'
   basic_types: 'asm|__asm__|auto|bool|_Bool|char|_Complex|double|float|_Imaginary|int|long|short|signed|unsigned|void'
   before_tag: 'struct|union|enum'
@@ -28,14 +32,8 @@ variables:
 
 contexts:
   main:
-    - match: ^(I1|K2|K1|ZI1|ZK1|ZK2|SZ)\(([[:alnum:]_]+)\)
-      captures:
-        1: support.type.microsoft.c
-        2: entity.name.function.c
-    - match: (f1|f2)\(([[:alnum:]_]+)
-      captures:
-        1: support.type.microsoft.c
-        2: entity.name.function.c
+    - match: //:~
+      scope: file.eof.c
     - include: preprocessor-global
     - include: global
 
@@ -48,11 +46,47 @@ contexts:
   # should not use the {{identifier}} variable since that is different for C++.
   #############################################################################
 
+  doxy:
+    - match: '([\\@])([\\@]{{doxytags_w_args}})(\[[^\]]*\])?\s+([A-Za-z0-9.,_-]+)'
+      captures:
+        1: comment.line.doxygen.tag.c
+        2: comment.line.doxygen.tag.c
+        3: comment.line.doxygen.tag.param.c
+        4: comment.line.doxygen.tag.arg.c
+    - match: '{{constants}}'
+      scope: comment.line.doxygen.emphasis.c
+    - match: '{{numeric}}'
+      scope: comment.line.doxygen.emphasis.c
+    - match: '[\\@]({{doxytags}})'
+      scope: comment.line.doxygen.tag.c
+
   comments:
     - match: ^/\* =(\s*.*?)\s*= \*/$\n?
       scope: comment.block.c
       captures:
         1: meta.toc-list.banner.block.c
+
+    - match: /\*\*?([<!])
+      scope: punctuation.definition.comment.c
+      captures:
+        1: comment.line.doxygen.bang.c
+      push:
+        - meta_scope: comment.line.doxygen.c        
+        - include: doxy
+        - match: \*/
+          scope: punctuation.definition.comment.c
+          pop: true
+
+    - match: //([<!])
+      scope: punctuation.definition.comment.c
+      captures:
+        1: comment.line.doxygen.bang.c
+      push:
+        - meta_scope: comment.line.doxygen.c
+        - include: doxy
+        - match: \n
+          scope: punctuation.definition.comment.c
+          pop: true
 
     - match: /\*
       scope: punctuation.definition.comment.c
@@ -62,20 +96,9 @@ contexts:
           scope: punctuation.definition.comment.c
           pop: true
 
-    - match: /\*!
-      scope: punctuation.definition.comment.c
-      push:
-        - meta_scope: comment.line.doxygen.c
-        - match: \\[A-Za-z]+
-          scope: comment.line.doxygen.tag.c
-        - match: \*/
-          scope: punctuation.definition.comment.c
-          pop: true
-
     - match: \*/(?!\*)
       scope: invalid.illegal.stray-comment-end.c
-    - match: //[<!].*$\n?
-      scope: comment.line.doxygen.c
+
     - match: //
       scope: punctuation.definition.comment.c
       push:
@@ -149,7 +172,7 @@ contexts:
       scope: variable.other.readwrite.static.mac-classic.c
 
   constants:
-    - match: \b(__func__|NULL|true|false|TRUE|FALSE|NIL|EOF|SEEK_SET|SEEK_END)\b
+    - match: \b({{constants}})\b
       scope: constant.language.c
     - match: \b(__FILE__|__FUNCTION__|__LINE__)\b
       scope: support.constant.c
@@ -160,7 +183,7 @@ contexts:
       scope: support.constant.mac-classic.c
 
   c99:
-    - match: \b(scnt|scmp|schr|rchr|scpy|zseek|ftrunc|xfopen|hypot(f|l)?|s(scanf|ystem|nprintf|ca(nf|lb(n(f|l)?|ln(f|l)?))|i(n(h(f|l)?|f|l)?|gn(al|bit))|tr(s(tr|pn)|nc(py|at|mp)|c(spn|hr|oll|py|at|mp)|to(imax|d|u(l(l)?|max)|k|f|l(d|l)?)|error|pbrk|ftime|len|rchr|xfrm)|printf|et(jmp|vbuf|locale|buf)|qrt(f|l)?|w(scanf|printf)|rand)|n(e(arbyint(f|l)?|xt(toward(f|l)?|after(f|l)?))|an(f|l)?)|c(s(in(h(f|l)?|f|l)?|qrt(f|l)?)|cos(h(f)?|f|l)?|imag(f|l)?|t(ime|an(h(f|l)?|f|l)?)|o(s(h(f|l)?|f|l)?|nj(f|l)?|pysign(f|l)?)|p(ow(f|l)?|roj(f|l)?)|e(il(f|l)?|xp(f|l)?)|l(o(ck|g(f|l)?)|earerr)|a(sin(h(f|l)?|f|l)?|cos(h(f|l)?|f|l)?|tan(h(f|l)?|f|l)?|lloc|rg(f|l)?|bs(f|l)?)|real(f|l)?|brt(f|l)?)|t(ime|o(upper|lower)|an(h(f|l)?|f|l)?|runc(f|l)?|gamma(f|l)?|mp(nam|file))|i(s(space|n(ormal|an)|cntrl|inf|digit|u(nordered|pper)|p(unct|rint)|finite|w(space|c(ntrl|type)|digit|upper|p(unct|rint)|lower|al(num|pha)|graph|xdigit|blank)|l(ower|ess(equal|greater)?)|al(num|pha)|gr(eater(equal)?|aph)|xdigit|blank)|logb(f|l)?|max(div|abs))|di(v|fftime)|_Exit|unget(c|wc)|p(ow(f|l)?|ut(s|c(har)?|wc(har)?)|error|rintf)|e(rf(c(f|l)?|f|l)?|x(it|p(2(f|l)?|f|l|m1(f|l)?)?))|v(s(scanf|nprintf|canf|printf|w(scanf|printf))|printf|f(scanf|printf|w(scanf|printf))|w(scanf|printf)|a_(start|copy|end|arg))|qsort|f(s(canf|e(tpos|ek))|close|tell|open|dim(f|l)?|p(classify|ut(s|c|w(s|c))|rintf)|e(holdexcept|set(e(nv|xceptflag)|round)|clearexcept|testexcept|of|updateenv|r(aiseexcept|ror)|get(e(nv|xceptflag)|round))|flush|w(scanf|ide|printf|rite)|loor(f|l)?|abs(f|l)?|get(s|c|pos|w(s|c))|re(open|e|ad|xp(f|l)?)|m(in(f|l)?|od(f|l)?|a(f|l|x(f|l)?)?))|l(d(iv|exp(f|l)?)|o(ngjmp|cal(time|econv)|g(1(p(f|l)?|0(f|l)?)|2(f|l)?|f|l|b(f|l)?)?)|abs|l(div|abs|r(int(f|l)?|ound(f|l)?))|r(int(f|l)?|ound(f|l)?)|gamma(f|l)?)|w(scanf|c(s(s(tr|pn)|nc(py|at|mp)|c(spn|hr|oll|py|at|mp)|to(imax|d|u(l(l)?|max)|k|f|l(d|l)?|mbs)|pbrk|ftime|len|r(chr|tombs)|xfrm)|to(b|mb)|rtomb)|printf|mem(set|c(hr|py|mp)|move))|a(s(sert|ctime|in(h(f|l)?|f|l)?)|cos(h(f|l)?|f|l)?|t(o(i|f|l(l)?)|exit|an(h(f|l)?|2(f|l)?|f|l)?)|b(s|ort))|g(et(s|c(har)?|env|wc(har)?)|mtime)|r(int(f|l)?|ound(f|l)?|e(name|alloc|wind|m(ove|quo(f|l)?|ainder(f|l)?))|a(nd|ise))|b(search|towc)|m(odf(f|l)?|em(set|c(hr|py|mp)|move)|ktime|alloc|b(s(init|towcs|rtowcs)|towc|len|r(towc|len))))\b
+    - match: \b(scnt|scmp|schr|rchr|scpy|zseek|fsize|fexist|ftrunc|xfopen|hypot(f|l)?|s(scanf|ystem|nprintf|ca(nf|lb(n(f|l)?|ln(f|l)?))|i(n(h(f|l)?|f|l)?|gn(al|bit))|tr(s(tr|pn)|nc(py|at|mp)|c(spn|hr|oll|py|at|mp)|to(imax|d|u(l(l)?|max)|k|f|l(d|l)?)|error|pbrk|ftime|len|rchr|xfrm)|printf|et(jmp|vbuf|locale|buf)|qrt(f|l)?|w(scanf|printf)|rand)|n(e(arbyint(f|l)?|xt(toward(f|l)?|after(f|l)?))|an(f|l)?)|c(s(in(h(f|l)?|f|l)?|qrt(f|l)?)|cos(h(f)?|f|l)?|imag(f|l)?|t(ime|an(h(f|l)?|f|l)?)|o(s(h(f|l)?|f|l)?|nj(f|l)?|pysign(f|l)?)|p(ow(f|l)?|roj(f|l)?)|e(il(f|l)?|xp(f|l)?)|l(o(ck|g(f|l)?)|earerr)|a(sin(h(f|l)?|f|l)?|cos(h(f|l)?|f|l)?|tan(h(f|l)?|f|l)?|lloc|rg(f|l)?|bs(f|l)?)|real(f|l)?|brt(f|l)?)|t(ime|o(upper|lower)|an(h(f|l)?|f|l)?|runc(f|l)?|gamma(f|l)?|mp(nam|file))|i(s(space|n(ormal|an)|cntrl|inf|digit|u(nordered|pper)|p(unct|rint)|finite|w(space|c(ntrl|type)|digit|upper|p(unct|rint)|lower|al(num|pha)|graph|xdigit|blank)|l(ower|ess(equal|greater)?)|al(num|pha)|gr(eater(equal)?|aph)|xdigit|blank)|logb(f|l)?|max(div|abs))|di(v|fftime)|_Exit|unget(c|wc)|p(ow(f|l)?|ut(s|c(har)?|wc(har)?)|error|rintf)|e(rf(c(f|l)?|f|l)?|x(it|p(2(f|l)?|f|l|m1(f|l)?)?))|v(s(scanf|nprintf|canf|printf|w(scanf|printf))|printf|f(scanf|printf|w(scanf|printf))|w(scanf|printf)|a_(start|copy|end|arg))|qsort|f(s(canf|e(tpos|ek))|close|tell|open|dim(f|l)?|p(classify|ut(s|c|w(s|c))|rintf)|e(holdexcept|set(e(nv|xceptflag)|round)|clearexcept|testexcept|of|updateenv|r(aiseexcept|ror)|get(e(nv|xceptflag)|round))|flush|w(scanf|ide|printf|rite)|loor(f|l)?|abs(f|l)?|get(s|c|pos|w(s|c))|re(open|e|ad|xp(f|l)?)|m(in(f|l)?|od(f|l)?|a(f|l|x(f|l)?)?))|l(d(iv|exp(f|l)?)|o(ngjmp|cal(time|econv)|g(1(p(f|l)?|0(f|l)?)|2(f|l)?|f|l|b(f|l)?)?)|abs|l(div|abs|r(int(f|l)?|ound(f|l)?))|r(int(f|l)?|ound(f|l)?)|gamma(f|l)?)|w(scanf|c(s(s(tr|pn)|nc(py|at|mp)|c(spn|hr|oll|py|at|mp)|to(imax|d|u(l(l)?|max)|k|f|l(d|l)?|mbs)|pbrk|ftime|len|r(chr|tombs)|xfrm)|to(b|mb)|rtomb)|printf|mem(set|c(hr|py|mp)|move))|a(s(sert|ctime|in(h(f|l)?|f|l)?)|cos(h(f|l)?|f|l)?|t(o(i|f|l(l)?)|exit|an(h(f|l)?|2(f|l)?|f|l)?)|b(s|ort))|g(et(s|c(har)?|env|wc(har)?)|mtime)|r(int(f|l)?|ound(f|l)?|e(name|alloc|wind|m(ove|quo(f|l)?|ainder(f|l)?))|a(nd|ise))|b(search|towc)|m(odf(f|l)?|em(set|c(hr|py|mp)|move)|ktime|alloc|b(s(init|towcs|rtowcs)|towc|len|r(towc|len))))\b
       scope: support.function.C99.c
 
   types:
@@ -188,13 +211,13 @@ contexts:
     - match: \b(AbsoluteTime|Boolean|Byte|ByteCount|ByteOffset|BytePtr|CompTimeValue|ConstLogicalAddress|ConstStrFileNameParam|ConstStringPtr|Duration|Fixed|FixedPtr|Float32|Float32Point|Float64|Float80|Float96|FourCharCode|Fract|FractPtr|Handle|ItemCount|LogicalAddress|OptionBits|OSErr|OSStatus|OSType|OSTypePtr|PhysicalAddress|ProcessSerialNumber|ProcessSerialNumberPtr|ProcHandle|Ptr|ResType|ResTypePtr|ShortFixed|ShortFixedPtr|SignedByte|SInt16|SInt32|SInt64|SInt8|Size|StrFileName|StringHandle|StringPtr|TimeBase|TimeRecord|TimeScale|TimeValue|TimeValue64|UInt16|UInt32|UInt64|UInt8|UniChar|UniCharCount|UniCharCountPtr|UniCharPtr|UnicodeScalarValue|UniversalProcHandle|UniversalProcPtr|UnsignedFixed|UnsignedFixedPtr|UnsignedWide|UTF16Char|UTF32Char|UTF8Char)\b
       scope: support.type.mac-classic.c
 
-    - match: \b([A-Za-z]+)({{pointer_ops}})
+    - match: \b([A-Za-z]+)({{pointer_ops}})[^=]
       captures:
         1: storage.type.c
         2: punctuation.pointer.c
 
   numbers:
-    - match: '\b((0(x|X)[0-9a-fA-F]*(\.[0-9a-fA-F]+p-?\d+)?)|(([0-9]+\.?[0-9]*)|(\.[0-9]+))((e|E)(\+|-)?[0-9]+)?)(L|l|UL|ul|u|U|F|f|ll|LL|ull|ULL)?\b'
+    - match: '{{numeric}}'
       scope: constant.numeric.c
 
   operators:
@@ -214,14 +237,16 @@ contexts:
       scope: punctuation.accessor.c
     - match: \-\-|\+\+
       scope: keyword.operator.increment.c
-    - match: \+\=|-\=|\*\=|/\=|%\=|&\=|\|\=|\^\=
-      scope: keyword.operator.assignment.c
-    - match: \%|\^|~|&|>>\=|<<\=
-      scope: keyword.operator.arithmetic.c
     - match: \|\|  
       scope: keyword.operator.comparison.or.c
+    - match: \+\=|-\=|\*\=|/\=|%\=|&\=|\|\=|\^\=
+      scope: keyword.operator.assignment.c
+    - match: \%|\^|~|&|>>\=|<<\=|\|
+      scope: keyword.operator.arithmetic.c
     - match: <\=|>\=|\!\=|\=\=|&&|<<|>>|<|>
       scope: keyword.operator.comparison.c
+    - match: =
+      scope: keyword.operator.assignment.c
     - match: \!\!|\!
       scope: keyword.operator.negation.c
     # Negative lookahead prevents match :: when included in C++
@@ -272,6 +297,15 @@ contexts:
   # completions from being presented to the user. Additionally, a multi-line
   # comment without a line continuation ends at the newline.
   preprocessor-comments:
+    - match: //[<!]
+      scope: punctuation.definition.comment.c
+      push:
+        - meta_scope: comment.line.doxygen.c
+        - include: doxy
+        - match: \n
+          scope: punctuation.definition.comment.c
+          pop: true
+
     - match: /\*
       scope: punctuation.definition.comment.c
       push:
@@ -661,8 +695,10 @@ contexts:
         3: punctuation.pointer.c
       push:
         - meta_content_scope: meta.group.c
-        - match: '\)'
+        - match: '\)({{pointer_ops2}})?'
           scope: meta.group.c punctuation.section.group.end.c
+          captures:
+            1: punctuation.pointer.c
           pop: true
         - include: expressions
 

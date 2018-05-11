@@ -55,6 +55,21 @@
 				<string>#75715E</string>
 			</dict>
 		</dict>
+
+		<dict>
+			<key>name</key>
+			<string>DoxygenBang</string>
+			<key>scope</key>
+			<string>comment.line.doxygen.bang.c</string>
+			<key>settings</key>
+			<dict>
+				<key>fontStyle</key>
+				<string>bold</string>				
+				<key>foreground</key>
+				<string>#AE81FF</string> <!-- #F92672 -->
+			</dict>
+		</dict>
+
 		<dict>
 			<key>name</key>
 			<string>Doxygen</string>
@@ -68,6 +83,50 @@
 				<string>#AE81FF</string>
 			</dict>
 		</dict>
+
+		<dict>
+			<key>name</key>
+			<string>DoxygenTag</string>
+			<key>scope</key>
+			<string>comment.line.doxygen.tag.c</string>
+			<key>settings</key>
+			<dict>
+				<key>fontStyle</key>
+				<string>bold</string>				
+				<key>foreground</key>
+				<string>#AE81FF</string>
+			</dict>
+		</dict>
+
+		<dict>
+			<key>name</key>
+			<string>DoxygenTag</string>
+			<key>scope</key>
+			<string>comment.line.doxygen.tag.arg.c</string>
+			<key>settings</key>
+			<dict>
+				<key>fontStyle</key>
+				<string></string>				
+				<key>foreground</key>
+				<string>#66D9EF</string>
+			</dict>
+		</dict>
+
+		<dict>
+			<key>name</key>
+			<string>DoxygenEm</string>
+			<key>scope</key>
+			<string>comment.line.doxygen.emphasis.c</string>
+			<key>settings</key>
+			<dict>
+				<key>fontStyle</key>
+				<string></string>				
+				<key>foreground</key>
+				<string>#66D9EF</string>
+			</dict>
+		</dict>
+
+
 		<dict>
 			<key>name</key>
 			<string>String</string>
@@ -180,7 +239,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#FD971F</string>
+				<string>#E6DB74</string> <!-- #FD971F -->
 			</dict>
 		</dict>
 
@@ -192,7 +251,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#FD971F</string>
+				<string>#E6DB74</string> <!-- #FD971F -->
 			</dict>
 		</dict>
 
