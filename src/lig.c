@@ -33,16 +33,31 @@ S syntext() {
 	2*2;
 }
 
+//! Test Fira ligatures and fira-friendly C syntax
+
+/*! \param a an integer argument.
+	\param s a constant character pointer.
+	\return The test results
+	\sa QTstyle_Test(), ~QTstyle_Test(), testMeToo() and publicVar()
+*/
 V* ligtest() {
 	/* hinted comment tags */ 
-	// compressed double slash
+	// hinted double slash
 
-	x->asdf; // accessors!
+	/*!
+	 * \brief doxytags
+	 * \return NULL
+	 */
+	x->asdf; //< doxy inline
 
-	if(x==y||x!=y||x&&y||x>=y||x<=y){
+	//! doxygen comments \brief doxytags \return NULL v \~ NIL 
+	//! \| ab \$ bc \f} cd \f{ de \f] df \f[ fg \f$ gh
+	//! \| a \\ b \. c \" d \@ e \> f \< g 
+	//! \:: k \--- l \-- m \& n \% x \$ y \# z
+	if(x==y||x!=y||x&&y||x>=y||x<=y){ //< visualize precedence 
 		x++; x--; !!x; !x; ~x;
 		x^y; x%y; x&y;
-		x<<=1; y>>=2;
+		x<<=1; y>>=2; /**< another doxy style */
 		x?1:2;
 	}
 }
