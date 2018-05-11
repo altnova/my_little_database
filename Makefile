@@ -10,7 +10,7 @@ hsh: clean
 	./bin/hsh
 
 idx: clean
-	gcc -g -o bin/idx src/bin.c src/arr.c src/idx.c src/fio.c src/rec.c src/trc.c
+	gcc -DRUN_TESTS_IDX -g -o bin/idx src/bin.c src/arr.c src/idx.c src/fio.c src/rec.c src/trc.c
 	./bin/idx
 
 menu: clean

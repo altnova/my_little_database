@@ -21,7 +21,7 @@ C cmp_(V*x, V*y, sz t){				 //< sw/cs?
 				   memcmp(x,y,t); //< everything
 	R!r?r:r<0?-1:1;}		//< (lt,eq,gt)
 
-//! haystack, needle, type, length, comparator
+//! \brief haystack, needle, type, length, comparator
 UJ binx_(V*hst, V*ndl, sz t, sz n, CMP cfn){
 	LOG("binx");P(!n,NIL);P(n==1,cfn(hst,ndl,t)?NIL:0);	//< fail fast
 	P(cfn(hst,ndl,t)>0||cfn((hst+(n-1) * t),ndl,t)<0,NIL); //< check range

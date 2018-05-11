@@ -36,13 +36,13 @@ Z UJ db_touch(S fname) {
 	LOG("db_touch");
 	FILE* f;
 	xfopen(f, fname, "a", NIL);
-	UJ sz = fsize(f)/SZ_REC;
+	UJ size = fsize(f)/SZ_REC;
 	fclose(f);
-	R sz;
+	R size;
 }
 
 //! comparator kernel
-Z J _c(const V*a, const V*b) {
+ZJ _c(const V*a, const V*b) {
 	ID x = ((Pair*)a)->rec_id;
 	ID y = ((Pair*)b)->rec_id;
 	R x-y;
@@ -57,7 +57,7 @@ C cmp_binsearch(V* a, V* b, sz t) {
 }
 
 //! comparator for qsort()
-Z I cmp_qsort(const V* a, const V* b) {
+ZI cmp_qsort(const V* a, const V* b) {
 	LOG("cmp_qsort");
 	J r = _c(a,b);
 	T(TRACE, "%ld\n", r);
@@ -65,14 +65,14 @@ Z I cmp_qsort(const V* a, const V* b) {
 }
 
 //! sort index by rec_id
-Z V idx_sort() {
+ZV idx_sort() {
 	LOG("idx_sort");
 	qsort(idx->data, idx->used, SZ(Pair), cmp_qsort);
 	T(DEBUG, "index sorted");
 }
 
 //! dump index to stdout
-Z V idx_dump(UJ head) {
+ZV idx_dump(UJ head) {
 	LOG("idx_dump");
 	Pair* e;
 	TSTART();
@@ -316,9 +316,11 @@ ZI idx_test() {
 
 	idx_close();
 	free(b);
-	R 0;
+	R0;
 }
 
+#ifdef RUN_TESTS_IDX
 I main() { R idx_test(); }
+#endif
 
 //:~
