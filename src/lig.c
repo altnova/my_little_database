@@ -1,63 +1,56 @@
-//! test fira code retina ligatures
-V*;
-char*;
-*asdf;
+//! \file lig.c Fira ligatures, Fira-firendly C syntax and Doxygen tags
 
+//! \brief test pointer highlighting
 S syntext() {
-	fn(*(*asdf),a);
-	**asdf;
-	a,&a;
-	a,**a;
-	(a)a;
-	asdf(*x);
-	LOG("asdf");
-
-	I* asdf; I *asdf;	
-	char *asdf; char *c;
-	int* asdf; (int*)asdf;
-	FILE *fp; FILE*fp;
-	(V*)(asdf);
-	
-	*asdf;
-	Rec*asdf;
-	(&asdf + *asdf);
-	*(asdf + asdf);
-	(*asdf);
-	&asdf[*asdf];
-	*(*(*(*asdf)));
-	&(&(&(&asdf)));
-	&asdf;
-	&(asdf+43);
-	x[&abc];
-	asdf&asdf;
-	2*2;
+	fn(*(*a),*a,(V*)a);			//< ptrs in function args
+	*a;							//< deref
+	**a;						//< double indirection
+	*(a+b);						//< group deref	
+	a,*a;*a;()*a;				//< ptrs after punctuation
+	a,&a;&a;()&a;				//< ref after punctuation
+	a,**a;()**a;				//< double indirection after punctuation
+	I* a; I *a;					//< ptrs to abbreviated types
+	char *x; FILE *f;			//< ptrs to basic types
+	(I*)a;(int*)a;(V*)a;		//< casts to pointers
+	(V*)(asdf);					//< void ptr
+	bucket*a;					//< compressed notation
+	a[&a][*a];					//< ref/deref in brackets
+	*(*(*(*asdf)));				//< deref in nested groups
+	&(&(&(&asdf)));				//< ref in nested groups
+	x*(y+z);					//< confusing!
+	x * (y+z);					//< ...do that instead
+	asdf&asdf;					//< \c AND
+	x * y;						//< \c multiplication
 }
 
-//! Test Fira ligatures and fira-friendly C syntax
+//! \brief test Fira ligatures
+V* ligtest(V*a,V*b) {
+	/* <-- hinted comment tags --> */ 
+	// <-- hinted double slash
 
-/*! \param a an integer argument.
-	\param s a constant character pointer.
-	\return The test results
-	\sa QTstyle_Test(), ~QTstyle_Test(), testMeToo() and publicVar()
-*/
-V* ligtest() {
-	/* hinted comment tags */ 
-	// hinted double slash
+	O(...) //< keyword.operator.variadic.c
 
-	/*!
-	 * \brief doxytags
-	 * \return NULL
-	 */
-	x->asdf; //< doxy inline
+	struct->field; //< punctuation.accessor.c
 
-	//! doxygen comments \brief doxytags \return NULL v \~ NIL 
-	//! \| ab \$ bc \f} cd \f{ de \f] df \f[ fg \f$ gh
-	//! \| a \\ b \. c \" d \@ e \> f \< g 
-	//! \:: k \--- l \-- m \& n \% x \$ y \# z
-	if(x==y||x!=y||x&&y||x>=y||x<=y){ //< visualize precedence 
-		x++; x--; !!x; !x; ~x;
-		x^y; x%y; x&y;
-		x<<=1; y>>=2; /**< another doxy style */
-		x?1:2;
+	//! operator soup 
+	if(x==y||x!=y||x&&y||x>=y||x<=y){ //< keyword.operator.comparison.c
+		x++; x--; //< keyword.operator.increment.c
+		!!x; !x; //< keyword.operator.negation.c
+		~x; x^y; x%y; x&y, x|y; x<<=1; y>>=2; //< keyword.operator.arithmetic.c
+		x=0; x+=0; x*=1; x/=2; x%=3; //< keyword.operator.assignment.c
+		x?1:2; //< keyword.operator.ternary.c
 	}
 }
+
+/*! \brief test doxygen
+ *  @param[out] dest  memory area to copy to
+ *  @param[in]  src   memory area to copy from
+ *  @param[in]  n     number of bytes to copy
+ *  \param      x,y,z position in \e 3D space
+ *  \return	   		  TRUE||FALSE
+ *
+ *  TODO			  fix bugs!
+ */
+
+//:~
+

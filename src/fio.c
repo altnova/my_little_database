@@ -25,7 +25,6 @@ UJ fsize(FILE* fp) {
 }
 
 //! file exists
-
 C fexist(S fpath){
 	FILE* f;
 	if((f=fopen(fpath,"r"))!=NULL)

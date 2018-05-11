@@ -24,7 +24,7 @@ V* arr_last_(Arr a){
 
 V arr_free(Arr a){
 	if(a)free(a);
-	a=NULL;
+	a = NULL;
 }
 
 sz arr_sz(Arr a){
@@ -35,10 +35,10 @@ Z C arr_full(Arr a){
 	R a->used==a->size;
 }
 
-//! \return 1 if fail, 0 ok
+//! \return 0 -> ok, 1 -> err
 I arr_add_(Arr* aptr, V* el){
 	LOG("arr_add"); Arr a;
-	if(arr_full(a = *aptr)) {
+	if(arr_full(a = *aptr)){
 		a->size *= 2, T(TRACE,"grew to %lu", arr_sz(a));
 		*aptr = a = (Arr)realloc(a, SZ_HDR + a->el_size * a->size);
 		chk(a,1);

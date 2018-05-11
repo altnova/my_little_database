@@ -1,4 +1,4 @@
-//!\file ___.h \brief core macros
+//! \file ___.h \brief core macros
 
 #define _GNU_SOURCE
 #include <stddef.h>
@@ -32,14 +32,15 @@ typedef size_t sz;
 #define CS(n,x)	case n:x;break;	//< never forget a break again
 
 //! fail fast
-#define P(x,y) {if(x)R(y);}	//< panic early
-#define X(x,y,z) {if(x){y;R(z);}} //< clean up and throw nil
+#define P(x,y) {if(x)R(y);}	//< panic
+#define X(x,y,z) {if(x){(y);R(z);}} //< clean up, then panic
 
 //! no stinking loops
 #define DO(n,x) {UJ i=0,_i=(n);for(;i<_i;++i){x;}}
 #define W(x) while((x))
 
 //! comparisons done right
+#define ABS(x) (((x)>0)?(x):-(x))
 #define MIN(x,y) ((y)>(x)?(x):(y))
 #define MAX(x,y) ((y)>(x)?(y):(x))
 #define IN(l,x,r) ((l)<=(x)&&(x)<=(r))
