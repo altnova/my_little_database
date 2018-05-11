@@ -19,9 +19,9 @@ S syntext() {
 	(V*)(asdf);
 	
 	*asdf;
-	asfd*asdf;
-	(asdf + *asdf);
-	*(asdf+asdf);
+	Rec*asdf;
+	(&asdf + *asdf);
+	*(asdf + asdf);
 	(*asdf);
 	&asdf[*asdf];
 	*(*(*(*asdf)));
