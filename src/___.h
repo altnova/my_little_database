@@ -55,6 +55,7 @@ typedef size_t sz;
 //! save spaces
 #define ZV Z V          //!< static void
 #define ZI Z I          //!< static int
-#define R0 return 0
+#define R0 R 0
+#define R1 R 1
 
 //:~

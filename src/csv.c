@@ -8,7 +8,7 @@
 #include "trc.h"
 #include "fio.h"
 
-Z FILE*outfile;
+Z FILE* outfile;
 Z ID last_id = 0;
 ZI recbufpos = 0;
 Z bufRec recbuf;
@@ -38,7 +38,7 @@ ZI add_field(I fld, S val){
 	I offset = rec_field_offsets[fld];		//< offset of current field
 	V*f = r+offset;							//< void pointer to field
 
-	if (fld < 2) {							//< pages and year are shorts
+	if (fld<2) {							//< pages and year are shorts
 		H i = (H)atoi(val);					//< parse integer
 		memcpy(f, &i, SZ(H));				//< populate short field
 	} else									//< all other fields are strings
@@ -52,14 +52,13 @@ ZI add_field(I fld, S val){
 
 	if (recbufpos==RECBUFLEN)				//< record buffer is full...
 		recbuf_flush();						//< ...flush it to disk.
-
 	R0;
 }
 
 UJ csv_load(S fname){
 	LOG("csv_load");
 
-	FILE *csv;
+	FILE* csv;
 	xfopen(csv, fname, "r+", NIL);
 
     currline = 1;
@@ -71,8 +70,8 @@ UJ csv_load(S fname){
 			curr = buf[i];				//< current byte
 			is_line_end = curr==LF;		//< line end flag
 			is_fld_end = is_line_end
-				|| in_quotes && prev==QUO && curr==DELIM
-				|| !in_quotes && curr==DELIM; //< field end flag
+				||in_quotes && prev==QUO && curr==DELIM
+				||!in_quotes && curr==DELIM; //< field end flag
 
 			//O("fld=%d maxw=%d\n", fld+1, csv_max_field_widths[fld+1]);
 			if (fldpos==csv_max_field_widths[fld+1]) //< field is longer than max length, enter skip state
@@ -84,7 +83,7 @@ UJ csv_load(S fname){
 					continue;
 				} else {				//< reached field end, flush first FLDMAX chars
 					fld++;
-					prev = NUL;			//< if long field was quoted, discard closing quote
+					prev = NULL;			//< if long field was quoted, discard closing quote
 					goto FLUSH;
 				}
 			}
@@ -92,7 +91,7 @@ UJ csv_load(S fname){
 			if (is_line_end) {			//< reached line end
 				fld++;
 				FLUSH:					//< catch-all field flush routine
-				prev = fldbuf[fldpos-(prev==QUO)] = NUL; //< terminate string
+				prev = fldbuf[fldpos-(prev==QUO)] = NULL; //< terminate string
 				T(TRACE, "field fld=%d len=%d buf=%s", fld, (I)strlen(fldbuf), fldbuf);
 
 				add_field(fld, fldbuf);
@@ -106,7 +105,7 @@ UJ csv_load(S fname){
 			}
 
 			if (!in_field) {			//< reached field start
-				in_field=1;				//< enter in-field state
+				in_field = 1;			//< enter in-field state
 				if (curr==QUO)			//< if first char is quote...
 					in_quotes=1;		//< ..enter quoted state
 				else					
@@ -133,7 +132,7 @@ UJ csv_load(S fname){
 UJ csv_init(S db_fname){
 	LOG("csv_init");
 	xfopen(outfile, db_fname, "w+", NIL);
-	R 0;
+	R0;
 }
 
 V csv_close(){
@@ -156,9 +155,8 @@ I main(I argc, S*argv){
 	UJ res;
 	X((res=csv_test(argv[1], argv[2]))==NIL,
 		T(WARN, "csv parser test failed"), 1)
-
 	T(INFO, "loaded %d records", res);
-	R 0;
+	R0;
 }
 
 #endif

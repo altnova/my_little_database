@@ -23,8 +23,8 @@ UJ rec_get_idx_pos(ID rec_id) {
 }
 
 //! case insensitive substring search in a given field \return 1 if match found
-C rec_search_txt_field(V*r, I fld, S needle) {
-	S haystack = (S)r+rec_field_offsets[fld];
+C rec_search_txt_field(V* r, I fld, S needle) {
+	S haystack = (S)r + rec_field_offsets[fld];
 	R !!strcasestr(haystack, needle);
 }
 
@@ -47,9 +47,9 @@ UJ rec_get(Rec dest, ID rec_id) {
 	X(db_pos==NIL, T(WARN, "rec_get_db_pos returned nil"), NIL);
 	T(TRACE, "{ rec_id=%lu, db_pos=%lu }", rec_id, db_pos);
 
-	FILE*db;
+	FILE* db;
 	xfopen(db, db_file, "r", NIL);
-	zseek(db, db_pos*SZ_REC, SEEK_SET);
+	zseek(db, db_pos * SZ_REC, SEEK_SET);
 	fread(dest, SZ_REC, 1, db);
 	fclose(db);
 	R db_pos;
@@ -64,16 +64,16 @@ UJ rec_delete(ID rec_id) {
 
 	T(DEBUG, "deleting { rec_id=%lu, db_pos=%lu }", rec_id, db_pos);	
 	
-	FILE*db;
+	FILE* db;
 	xfopen(db, db_file, "r+", NIL);
-	Rec b = malloc(SZ_REC); chk(b,NIL);
+	Rec b = malloc(SZ_REC); chk(b, NIL);
 	
 	UJ last_pos = idx_size()-1;
-	J offset = SZ_REC*last_pos;
+	J offset = SZ_REC * last_pos;
 	zseek(db, offset, SEEK_SET);
 	fread(b, SZ_REC, 1, db);	//< read last record
 	T(DEBUG, "loaded tail record { rec_id=%lu, pos=%lu, offset=%ld }", b->rec_id, last_pos, offset);
-	zseek(db, db_pos*SZ_REC, SEEK_SET);
+	zseek(db, db_pos * SZ_REC, SEEK_SET);
 	fwrite(b, SZ_REC, 1, db); //< overwrite deleted record
 	idx_update_pos(b->rec_id, db_pos);
 	idx_update_pos(rec_id, NIL);
@@ -81,7 +81,7 @@ UJ rec_delete(ID rec_id) {
 	free(b);
 
 	UJ new_size = idx_shift(db_pos);
-	ftrunc(db, SZ_REC*new_size);
+	ftrunc(db, SZ_REC * new_size);
 	T(TRACE, "db file truncated");
 
 	fclose(db);
@@ -92,7 +92,7 @@ UJ rec_create(Rec r) {
 	LOG("rec_create");
 	r->rec_id = next_id();
 
-	FILE*db;
+	FILE* db;
 	xfopen(db, db_file, "a", NIL);
 	UJ db_pos = fsize(db)/SZ_REC;
 	fwrite(r, SZ_REC, 1, db);
@@ -106,13 +106,13 @@ UJ rec_create(Rec r) {
 //! update record on disk
 UJ rec_update(Rec r) {
 	LOG("rec_update");
-	UJ db_pos = db_pos=rec_get_db_pos(r->rec_id);
+	UJ db_pos = rec_get_db_pos(r->rec_id);
 
 	X(db_pos==NIL, T(WARN, "rec_get_db_pos reports error"), NIL)
 
 	FILE*db;
 	xfopen(db, db_file, "r+", NIL);
-	UJ offset = SZ_REC*db_pos;
+	UJ offset = SZ_REC * db_pos;
 	zseek(db, offset, SEEK_SET);
 	fwrite(r, SZ_REC, 1, db); //< overwrite old version
 	fclose(db);
@@ -122,7 +122,7 @@ UJ rec_update(Rec r) {
 }
 
 //! update field
-V rec_set(Rec r, I fld, V*val) {
+V rec_set(Rec r, I fld, V* val) {
 	LOG("rec_set");
 	I offset = rec_field_offsets[fld];
 	I len = fld<3?SZ(H)-1:MIN(csv_max_field_widths[fld],strlen(val));

@@ -17,8 +17,8 @@ typedef struct string {C s[0];} SS; //< dummy type for passing strings to cmp()
 #define binx(h,n,t,l,f) binx_((t*)h, (t*)n, SZ(t), l, (CMP)f)
 
 //! underlying implementation
-extern UJ binx_(V*hst, V*ndl, sz t, sz len, CMP cmpfn);
-extern UJ bin_(V*hst, V*ndl, sz t, sz len);
-extern  C cmp_(V*a, V*b, sz t);
+extern UJ binx_(V* hst, V* ndl, sz t, sz len, CMP cmpfn);
+extern UJ bin_(V* hst, V* ndl, sz t, sz len);
+extern  C cmp_(V* a, V* b, sz t);
 
 //:~

@@ -12,7 +12,7 @@ enum loglevels { L_FATAL, L_WARN, L_INFO, L_TEST, L_DEBUG, L_TRACE };
 #define DEBUG L_DEBUG,FN,__FILE__,__LINE__
 #define TRACE L_TRACE,FN,__FILE__,__LINE__
 
-Z S loglevel_names[] = {"FATAL", "WARN", "INFO", "TEST", "DEBUG", "TRACE"};
+ZS loglevel_names[] = {"FATAL", "WARN", "INFO", "TEST", "DEBUG", "TRACE"};
 
 //! trace
 extern I T(I lvl, S fn, S file, I line, S format, ...);

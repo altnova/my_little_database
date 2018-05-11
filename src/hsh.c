@@ -18,10 +18,10 @@ ZI split, level=2;
 Z bkt* buckets;
 
 //! https://groups.google.com/forum/#!topic/comp.lang.c/lSKWXiuNOAk
-I djb(G*a,UI n){I h=5381;DO(n,h=33*(h^a[i]))R h;}
+I djb(G* a,UI n){I h=5381;DO(n,h=33*(h^a[i]))R h;}
 
 //! copy with seek \param d dest \param s source \param n len
-S dsn(V*d,V*s,UJ n){R(S)memcpy(d,s,n)+n;}
+S dsn(V* d, V* s, UJ n){R(S)memcpy(d,s,n)+n;}
 
 Z UJ mem, cnt;		//< hashtable bytesize and element counters
 
@@ -57,7 +57,7 @@ S hsh_get(S s){
 	}
 
 	//! lookup the string
-	B=buckets[idx];
+	B = buckets[idx];
 	I depth = 0;
 	while(B){								//< inspect the linked list from head
 		if(B->n==n){						//< if length matches...
@@ -87,36 +87,37 @@ S hsh_get(S s){
 	C rnd = 0;
 	if(B->next){
 		DO(3,
-		O("HAVE A NEXT, DOING ROUND %d\n", ++rnd);
-		bkt bp = buckets[split];
-		I newBucket = split+level;
-		W(bp){
-			if((bp->h&((level<<1)-1))==newBucket){
-				bkt tmp=bp;
-				bp=bp->next;
-				tmp->next=buckets[newBucket];
-				buckets[newBucket] = tmp;
-			} else bp=bp->next;
-		}
-		if(++split==level){
-			level <<= 1;
-			split = 0;
-			buckets=(bkt*)realloc((G*)buckets,SZ(bkt)*2*(UJ)level);
-			T(WARN,"realloc: lvl=%d buckets=%d bytes=%d", level, 2*(UJ)level, 2*level*SZ(bkt));
-			chk(buckets,NULL);
-			DO(level,buckets[level+i]=0)
-		}
-	)}
-	R B->s; //< ptr on string
+			O("HAVE A NEXT, DOING ROUND %d\n", ++rnd);
+			bkt bp = buckets[split];
+			I newBucket = split+level;
+			W(bp){
+				if((bp->h&((level<<1)-1))==newBucket){
+					bkt tmp = bp;
+					bp = bp->next;
+					tmp->next = buckets[newBucket];
+					buckets[newBucket] = tmp;
+				} else bp = bp->next;
+			}
+			if(++split==level){
+				level <<= 1;
+				split = 0;
+				buckets=(bkt*)realloc((G*)buckets, 2 * SZ(bkt) * level);
+				T(WARN,"realloc: lvl=%d buckets=%d bytes=%d", level, 2*level, 2 * SZ(bkt) * level);
+				chk(buckets,NULL);
+				DO(level, buckets[level+i]=0)
+			}
+		)
+	}
+	R B->s; //< ptr to string
 }
 
 I hsh_init() {
 	LOG("hsh_init");
 	X(buckets, T(WARN, "hash table is already initialized"), 1);
-	buckets=(bkt*)calloc(2*level,SZ(bkt)); //< initialize hash table
-	T(WARN," calloc: lvl=%d buckets=%d bktsize=%d bytes=%d", level, 2*level, SZ(bkt), 2*level*SZ(bkt));
+	buckets=(bkt*)calloc(2 * level, SZ(bkt)); //< initialize hash table
 	chk(buckets,1);
-	R 0;	
+	T(WARN," calloc: lvl=%d buckets=%d bktsize=%d bytes=%d", level, 2*level, SZ(bkt), 2 * level * SZ(bkt));
+	R0;	
 }
 
 ZI hsh_test() {
@@ -139,19 +140,19 @@ ZI hsh_test() {
 	hsh_get("fmt");
 */
 	bkt b;
-	UJ c=0;
+	UJ c = 0;
 	O("dump table, level=%d\n", level);//, level*2);
-	DO(level*2,
+	DO(level * 2,
 		b=buckets[i];
 		if(b)O("\n");
 		W(b){
 			O("%lu %s ", i, b->s);
-			b=b->next;
+			b = b->next;
 			c++;
 		}
 	);
-	O("\n=%lu\n",c);
-	R 0;
+	O("\n=%lu\n", c);
+	R0;
 }
 
 #ifdef RUN_TESTS

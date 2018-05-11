@@ -29,12 +29,12 @@ Pair* idx_get_entry(UJ idx_pos) {
 
 //! returns pointer to indexes' data section
 Pair* idx_data() {
-	R (Pair*)idx->data;
+	R(Pair*)idx->data;
 }
 //! create db file if not exists \returns number of records
 Z UJ db_touch(S fname) {
 	LOG("db_touch");
-	FILE*f;
+	FILE* f;
 	xfopen(f, fname, "a", NIL);
 	UJ sz = fsize(f)/SZ_REC;
 	fclose(f);
@@ -49,7 +49,7 @@ Z J _c(const V*a, const V*b) {
 }
 
 //! comparator for binfn()
-C cmp_binsearch(V*a, V*b, size_t t) {
+C cmp_binsearch(V* a, V* b, sz t) {
 	LOG("cmp_binsearch");
 	J r = _c(a,b);
 	T(TRACE, "r=%ld\n", r);
@@ -57,7 +57,7 @@ C cmp_binsearch(V*a, V*b, size_t t) {
 }
 
 //! comparator for qsort()
-Z I cmp_qsort(const V*a, const V*b) {
+Z I cmp_qsort(const V* a, const V* b) {
 	LOG("cmp_qsort");
 	J r = _c(a,b);
 	T(TRACE, "%ld\n", r);
@@ -74,7 +74,7 @@ Z V idx_sort() {
 //! dump index to stdout
 Z V idx_dump(UJ head) {
 	LOG("idx_dump");
-	Pair *e;
+	Pair* e;
 	TSTART();
 	T(TEST, "{ last_id=%lu, used=%lu } =>", idx->hdr, idx_size());
 	DO(head?head:idx_size(),
@@ -88,7 +88,7 @@ Z V idx_dump(UJ head) {
 //! \return # recs loaded, NIL on error
 UJ idx_rebuild() {
 	LOG("idx_rebuild");
-	FILE*in;
+	FILE* in;
 	xfopen(in, db_file, "r", NIL);
 
 	UJ rcnt, pos=0;
@@ -123,9 +123,9 @@ V idx_close() {
 //! \return NIL on error, new index size on success
 UJ idx_shift(UJ pos) {
 	LOG("idx_shift");
-	Pair *s = arr_at(idx, pos, Pair);
+	Pair* s = arr_at(idx, pos, Pair);
 	UJ to_move = idx->used-pos-1;
-	memcpy(s, s+1, SZ(Pair)*to_move);
+	memcpy(s, s+1, SZ(Pair) * to_move);
 	T(DEBUG, "shifted %lu entries, squashed db_pos=%lu", to_move, pos);
 
 	idx->used--;
@@ -142,25 +142,26 @@ UJ idx_save() {
 	FILE*out;
 	xfopen(out, idx_file, "w+", NIL);
 	fwrite(idx, SZ(Arr)+idx->size*SZ(Pair), 1, out); //< TODO check error
-	UJ size = fsize(out);
+	UJ idx_fsize = fsize(out);
 	fclose(out);
-	T(TRACE, "saved %lu bytes", size);
-	R size;
+	T(TRACE, "saved %lu bytes", idx_fsize);
+	R idx_fsize;
 }
 
 //! load index from a file
 //! \return number of entries, NIL on error
 UJ idx_load() {
 	LOG("idx_load");
-	FILE*in;
+	FILE* in;
 	xfopen(in, idx_file, "r", NIL);
 	idx_close();
 	J size = fsize(in);
-	Arr*tmp = &idx; //< replace pointer
+	Arr* tmp = &idx; //< replace pointer
 	*tmp = arr_init((size-SZ_HDR)/SZ(Pair), Pair); //< reinit idx
 	fread(idx, size, 1, in); //< TODO check error
 	fclose(in);
-	T(INFO, "%lu bytes, %lu entries, capacity=%lu, last_id=%lu", size, idx->used, idx->size, idx->hdr);
+	T(INFO, "%lu bytes, %lu entries, capacity=%lu, last_id=%lu", \
+		size, idx->used, idx->size, idx->hdr);
 	R idx_size();
 }
 

@@ -24,13 +24,13 @@ C cmp_(V*x, V*y, sz t){				 //< sw/cs?
 //! haystack, needle, type, length, comparator
 UJ binx_(V*hst, V*ndl, sz t, sz n, CMP cfn){
 	LOG("binx");P(!n,NIL);P(n==1,cfn(hst,ndl,t)?NIL:0);	//< fail fast
-	P(cfn(hst,ndl,t)>0||cfn((hst + n * t - t),ndl,t)<0,NIL);  //< check range
-	UJ l=0,h=n,m;C r=1; //< lo,hi,mi
-	W((l<h)&r)if(m=(l+h)/2,r=cfn((hst + m * t),ndl,t),r>=0)h=m;else l=m+1;
+	P(cfn(hst,ndl,t)>0||cfn((hst+(n-1) * t),ndl,t)<0,NIL); //< check range
+	UJ l=0,h=n,m;C r=1; //< lo,hi,mi,res
+	W((l<h)&r)if(m=(l+h)/2,r=cfn((hst+m * t),ndl,t),r>=0)h=m;else l=m+1;
 	R r?NIL:m;}
 
 //! use native comparator
-UJ bin_(V*hst,V*ndl,sz t,sz l){
+UJ bin_(V* hst,V* ndl,sz t,sz l){
 	R binx_(hst,ndl,t,l,&cmp_);}
 
 //! test
@@ -41,9 +41,7 @@ Z TT ndl; //< needle
 
 ZI bin_test() {
 	LOG("bin_test");
-
 	J a = 1, b = 2; UJ r;
-
 	//! test cmp fn
 	T(DEBUG, "S %d", cmp("abc", "abcd", SS));
 	T(DEBUG, "C %d", cmp(&a, &b, C));
@@ -65,10 +63,10 @@ ZI bin_test() {
 
 	DO(4, //< misses
 		ndl = edge_cases[i];
-		r=bin(&hst, &ndl, TT, 11);
+		r = bin(&hst, &ndl, TT, 11);
 		T(INFO, "%s   ->   bin[%ld]=%lu, expect %d", r==-1?"OK":"FAIL", r, hst[r], -1);
 	)
-
+	
 	R0;
 }
 

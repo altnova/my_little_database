@@ -12,7 +12,7 @@ Z C newline = 1;
 
 //! trace
 I T(I lvl, S fn, S file, I line, S fmt, ...) {
-	if(lvl <= LOGLEVEL) {
+	if(lvl<=LOGLEVEL) {
 		va_list args;
 		va_start(args, fmt);
 		C buf[strlen(fn)+strlen(fmt)+strlen(file)+30];
@@ -26,7 +26,7 @@ I T(I lvl, S fn, S file, I line, S fmt, ...) {
 		vprintf(buf, args);
 		va_end(args);
 	}
-	R 1; //< err
+	R1; //< err
 }
 
 //< line continuation flag

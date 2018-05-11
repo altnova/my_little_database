@@ -5,16 +5,16 @@
 
 #if WIN32||_WIN64
 J zseek(I d,J j,I f){UI h=(UI)(j>>32),l=SetFilePointer((HANDLE)d,(UI)j,&h,f);R((J)h<<32)+l;}
-I ftrunc(FILE*d,UJ n){R zseek((I)d,n,0),SetEndOfFile((HANDLE)d)-1;}
+I ftrunc(FILE* d,UJ n){R zseek((I)d,n,0),SetEndOfFile((HANDLE)d)-1;}
 #else
 #include <sys/types.h>
 #include <unistd.h>
-J zseek(FILE*d,J j,I f){R fseek(d,j,f);}
-I ftrunc(FILE*d,UJ n){R zseek(d,n,0),ftruncate(fileno(d),n);}
+J zseek(FILE* d,J j,I f){R fseek(d,j,f);}
+I ftrunc(FILE* d,UJ n){R zseek(d,n,0),ftruncate(fileno(d),n);}
 #endif
 
 //! filesize
-UJ fsize(FILE *fp) {
+UJ fsize(FILE* fp) {
 	LOG("fsize");
 	X(!fp, T(WARN, "got empty fd"), NIL);
 	UJ prev = ftell(fp);
@@ -27,17 +27,16 @@ UJ fsize(FILE *fp) {
 //! file exists
 
 C fexist(S fpath){
-	FILE *f;
-    if((f=fopen(fpath,"r"))!=NULL){
-    	R !fclose(f); //< returns zero if closed
-    }
-    R0; //< no file
+	FILE* f;
+	if((f=fopen(fpath,"r"))!=NULL)
+		R!fclose(f); //< returns zero if closed
+	R0; //< no file
 }
 
 //! test
 ZI fio_test(){
 	LOG("fio_test");
-	FILE*fp;
+	FILE* fp;
 	S f = "/etc/passwd";
 	S f2 = "/tmp/nosuchfile";
 
@@ -51,8 +50,8 @@ ZI fio_test(){
 	UJ fszize = fsize(fp);
 	P(fsz==NIL, T(FATAL, "fsize(%s) failed", f)) //< returns 1
 	T(TEST, "OK -> %s fsize=%lu", f, fsz);
-
-	R0;}
+	R0;
+}
 
 #ifdef RUN_TESTS
 I main(){R fio_test();}
