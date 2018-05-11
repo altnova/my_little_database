@@ -1,4 +1,4 @@
-all: clean bin arr fio csv idx
+all: clean clk bin arr fio csv idx
 	# hsh
 	echo "done"
 
