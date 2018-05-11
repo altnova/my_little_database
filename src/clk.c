@@ -4,28 +4,41 @@
 
 clock_t start,end;
 
-V clk_start() {
-	start = clock();	
+clock_t clk_start() {
+	R start = clock();	
+}
+
+Z UJ clk_diff(clock_t s, clock_t e) {
+	R(e - s) * 1E3 / CLOCKS_PER_SEC;
 }
 
 UJ clk_stop() {
 	end = clock();
-	UJ r = (end - start) * 1E3 / CLOCKS_PER_SEC;
+	UJ r = clk_diff(start,end);
 	start = end; //< allow chained clk_stop()
 	R r;
+}
 
+Z UJ clk_test(UJ n) {
+	LOG("clk_test");
+	UJ tmp = 0;
+	DO(n,tmp+=1)
+	T(TEST, "%lu rounds\t=> %lums", tmp, clk_stop());
+	R tmp;
 }
 
 #ifdef RUN_TESTS
 I main(){
-	LOG("clk_test");
-	clk_start();
-	UJ tmp = 0;
-	DO(1E7,tmp += 1)
-	T(TEST, "%lu additions\t=> %lums", tmp, clk_stop());
-	tmp = 0;
-	DO(1E8,tmp += 1)
-	T(TEST, "%lu additions\t=> %lums", tmp, clk_stop());
+	LOG("clk_main");
+	UJ begin = clk_start(); //< init clock
+
+	clk_test(1E7/2);
+	clk_test(1E7);
+	clk_test(1E8/2);
+	clk_test(1E8);
+
+	T(TEST, "total exec time\t=> %lums", clk_diff(begin, clk_start()));
+
 	R0;
 }
 #endif
