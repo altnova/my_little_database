@@ -53,7 +53,7 @@ typedef size_t sz;
 #define scpy(d,s,n) (S)memcpy((S)(d),(S)(s),MIN(scnt((S)s),n)) //!< secure strcpy \param d dest \param s source \param n
 //#define scpy(d,s) (S)strcpy((S)(d),(S)(s))  //!< free buffer overflows \param d dest \param s source
 
-//! save spaces
+//! save space
 #define ZV Z V          //!< static void
 #define ZI Z I          //!< static int
 #define ZC Z C          //!< static char
