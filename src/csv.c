@@ -148,8 +148,7 @@ Z UJ csv_test(S csv_file, S db_file) {
 	R csv_load(csv_file);
 }
 
-#ifdef RUN_TESTS
-
+#ifdef RUN_TESTS_CSV
 I main(I argc, S*argv){
 	LOG("csv_main");
 	UJ res;
@@ -158,7 +157,6 @@ I main(I argc, S*argv){
 	T(INFO, "loaded %d records", res);
 	R0;
 }
-
 #endif
 
 //:~

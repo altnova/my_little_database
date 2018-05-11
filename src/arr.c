@@ -65,7 +65,7 @@ ZI arr_test(){
 	R0;
 }
 
-#ifdef RUN_TESTS
+#ifdef RUN_TESTS_ARR
 I main(){R arr_test();}
 #endif
 

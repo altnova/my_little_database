@@ -27,7 +27,7 @@ Z UJ clk_test(UJ n) {
 	R tmp;
 }
 
-#ifdef RUN_TESTS
+#ifdef RUN_TESTS_CLK
 I main(){
 	LOG("clk_main");
 	UJ epoch = clk_start(); //< init clock

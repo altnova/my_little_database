@@ -52,7 +52,7 @@ ZI fio_test(){
 	R0;
 }
 
-#ifdef RUN_TESTS
+#ifdef RUN_TESTS_FIO
 I main(){R fio_test();}
 #endif
 

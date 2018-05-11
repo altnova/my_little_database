@@ -70,7 +70,7 @@ ZI bin_test() {
 	R0;
 }
 
-#ifdef RUN_TESTS
+#ifdef RUN_TESTS_BIN
 I main(){R bin_test();}
 #endif
 

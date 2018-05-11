@@ -1,12 +1,13 @@
-all: clean bin arr fio hsh csv idx
+all: clean bin arr fio csv idx
+	# hsh
 	echo "done"
 
 csv: clean nodatafiles
-	gcc -DRUN_TESTS -g -o bin/csv src/trc.c src/csv.c
+	gcc -DRUN_TESTS_CSV -g -o bin/csv src/trc.c src/csv.c
 	./bin/csv csv/sample.csv dat/books.dat
 
 hsh: clean
-	gcc -DRUN_TESTS -g -o bin/hsh src/trc.c src/hsh.c
+	gcc -DRUN_TESTS_TRC -g -o bin/hsh src/trc.c src/hsh.c
 	./bin/hsh
 
 idx: clean
@@ -18,19 +19,19 @@ menu: clean
 	./bin/menu
 
 bin: clean
-	gcc -DRUN_TESTS -g -o bin/binsearch src/trc.c src/bin.c 
+	gcc -DRUN_TESTS_BIN -g -o bin/binsearch src/trc.c src/bin.c 
 	./bin/binsearch
 
 arr: clean
-	gcc -DRUN_TESTS -g -o bin/dynarray src/trc.c src/arr.c 
+	gcc -DRUN_TESTS_ARR -g -o bin/dynarray src/trc.c src/arr.c 
 	./bin/dynarray
 
 fio:
-	gcc -DRUN_TESTS -g -o bin/fio src/trc.c src/fio.c 
+	gcc -DRUN_TESTS_FIO -g -o bin/fio src/trc.c src/fio.c 
 	./bin/fio
 
 clk:
-	gcc -DRUN_TESTS -O0 -g -o bin/clk src/trc.c src/clk.c 
+	gcc -DRUN_TESTS_CLK -O0 -g -o bin/clk src/trc.c src/clk.c 
 	./bin/clk
 
 clean:

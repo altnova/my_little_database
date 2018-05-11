@@ -48,7 +48,7 @@ typedef size_t sz;
 #define schr(h,n) (S)strchr((S)(h),n)       	//!< first pos \param h haystack \param n needle
 #define rchr(h,n) (S)strrchr((S)(h),n)      	//!< last pos \param h haystack \param n needle
 #define mcpy(d,s,n) (S)memcpy((S)(d),(S)(s),n) 	//!< mem copy \param d dest \param s source \param n len
-#define scpy(d,s,n) mcpy(d,s,MIN(scnt((S)s),n) 	//!< better strcpy \param d dest \param s source \param n limit
+#define scpy(d,s,n) mcpy(d,s,MIN(scnt((S)s),n)) 	//!< better strcpy \param d dest \param s source \param n limit
 
 //! less is more
 #define ZV Z V          //!< static void
