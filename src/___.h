@@ -1,4 +1,4 @@
-//! \file ___.h \brief core macros
+//! \file ___.h \brief c programming bible
 
 #define _GNU_SOURCE
 #include <stddef.h>
