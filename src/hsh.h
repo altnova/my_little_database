@@ -22,4 +22,7 @@ typedef struct hash_table {
 const Z sz SZ_HT = SZ(pHT); //< hash table header size
 typedef pHT* HT;
 
+//! total bytes occupied by hash table
+ext sz hsh_mem(HT ht);
+
 
