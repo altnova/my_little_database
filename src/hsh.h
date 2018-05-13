@@ -21,18 +21,33 @@ typedef struct hash_table {
 const Z sz SZ_HT = SZ(pHT); //< hash table header size
 typedef pHT* HT;
 
-//! \brief hash table capacity
+//! create hash table
+//! \param level initial level
+//! \return ptr to table, NULL if error
+ext HT hsh_init(I level);
+
+//! hash table capacity
 #define hsh_capacity(ht) (ht->level * 2)
 
-//! \brief lookup str in the hash table \param s str
-//! \return ptr to str, NULL if not found
-S hsh_get(HT ht, S s);
+//! insert str into the hash table
+//! \param ht,s table, str
+//! \return ptr to permanent address or NULL if error
+ext S hsh_ins(HT ht, S s);
 
+//! lookup str in the hash table
+//! \param s str
+//! \return ptr to str, NULL if not found
+ext S hsh_get(HT ht, S s);
+
+//! dump hash table contents
+ext V hsh_dump(HT ht);
 
 //! hash table load factor
-E hsh_factor(HT ht);
+ext E hsh_factor(HT ht);
 
-//! total bytes occupied by hash table
+//! total bytes
 ext sz hsh_mem(HT ht);
 
+//! release hash table
+ext V hsh_destroy(HT ht);
 

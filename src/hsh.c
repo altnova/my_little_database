@@ -13,7 +13,7 @@
 Z inline I djb(G* a,UI n){I h,r=5381;DO(n,h=33*(h^a[i])); R h;}
 
 //! copy with seek \param d dest \param s source \param n len
-S dsn(V* d, V* s, UJ n){R(S)memcpy(d,s,n)+n;}
+ZS dsn(V* d, V* s, UJ n){R(S)memcpy(d,s,n)+n;}
 
 Z inline UJ hsh_idx(HT ht, S s, I n, I*h) {
 	I hash = djb((G*)s,n); //< calculate the hash
@@ -24,12 +24,13 @@ Z inline UJ hsh_idx(HT ht, S s, I n, I*h) {
 	R idx;
 }
 
+//! print value
 V hsh_print(BKT b) {
 	LOG("hsh_print");
 	T(TEST, "idx  -> %d",   b->idx);	
 	T(TEST, "s    -> %s",   b->s);
-	T(TEST, "hsh  -> %d",   b->h);
-	T(TEST, "len  -> %d",   b->n);
+	T(TEST, "h    -> %d",   b->h);
+	T(TEST, "n    -> %d",   b->n);
 	T(TEST, "next -> %d",   (b->next)?(b->next)->idx:-1);
 }
 
@@ -43,17 +44,15 @@ S hsh_get(HT ht, S s){
 	I depth = 0;
 	W(*b){									//< inspect the linked list from head
 		if((*b)->n==n){						//< if length matches...
-	 		DO(n,if((*b)->s[i]!=s[i])goto L0)	//< compare bytes, L0 on first mismatch
+	 		DO(n,if((*b)->s[i]!=s[i])goto NEXT)	//< compare bytes, L0 on first mismatch
 	 		T(TEST, "GET <-- %s (depth=%d)", (*b)->s, depth);
 	 		//hsh_print(B);
 	 		R (*b)->s;}						//< found a match, return the ptr				
-		L0:depth++;b=&(*b)->next;}				//< move to next linked node
+		NEXT:depth++;b=&(*b)->next;}		//< move to next linked node
 
 	R NULL;
 }
 
-//! \brief insert str into the hash table \param ht,s table, str
-//! \return ptr to permanent address or NULL if error
 //! \see https://github.com/twonds/ejabberd/blob/master/apps/ejabberd/c_src/tls_drv.c
 S hsh_ins(HT ht, S s){
 	LOG("hsh_ins");
@@ -78,7 +77,7 @@ S hsh_ins(HT ht, S s){
 	*dsn(B->s,s,n)    = 0;					//< copy payload and terminate it
 	ht->buckets[idx]  = B;					//< put at the head of the list
 
-	T(TEST, "INS --> %s, has_tail=%d", B->s, !!B->next);//hsh_print(B);
+	T(TEST, "INS --> %s --> (%d)", B->s, idx);//hsh_print(B);
 	//! if inserted bucket has a tail, it is a good time to
 	//! attempt to split tails of buckets at split, split+1, split+2...
 	//! by moving linked items to the next available bucket \c new_idx
@@ -130,8 +129,8 @@ HT hsh_init(I level) {
 	sz init_size = hsh_capacity(ht);
 	ht->buckets = (BKT*)calloc(init_size, SZ(BKT)); //< initialize hash table
 	chk(ht->buckets,NULL);
-	T(TEST,"calloc: lvl=%d buckets=%d bktsize=%d bytes=%d",
-		ht->level, hsh_capacity(ht), SZ(BKT), hsh_capacity(ht) * SZ(BKT));
+	T(TEST,"calloc: level=%d capacity=%d mem=%d",
+		ht->level, hsh_capacity(ht), hsh_capacity(ht) * SZ(BKT));
 	R ht;
 }
 
@@ -157,6 +156,7 @@ V hsh_destroy(HT ht){
 V hsh_dump(HT ht) {
 	LOG("hsh_dump")
 	BKT*b;
+	O("\n");
 	DO(hsh_capacity(ht),
 		b = &ht->buckets[i];
 		if(!*b)continue;
@@ -169,8 +169,8 @@ V hsh_dump(HT ht) {
 		T(TEST, STR_EMPTY_SET);
 		TEND();
 	);
-	T(TEST, "capacity=%lu, cnt=%lu, bytes=%lu, lfactor=%.3f",
-		hsh_capacity(ht), ht->cnt, hsh_mem(ht), hsh_factor(ht));
+	T(TEST, "capacity=%lu, cnt=%lu, lfactor=%.2f, bytes=%lu\n",
+		hsh_capacity(ht), ht->cnt, hsh_factor(ht), hsh_mem(ht));
 }
 
 ZI hsh_test(sz rand_cnt, sz rand_len) {
