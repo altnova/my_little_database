@@ -6,28 +6,10 @@
 #include "___.h"
 #include "trc.h"
 #include "arr.h"
+#include "rnd.h"
 #include "hsh.h"
 
-#define hsh_capacity(ht) (ht->level * 2)
-
-//! random string
-S rndstr(sz size){
-	LOG("rndstr");
-	//const C charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-	//const H dictlen = 62;
-	const C charset[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	const H dictlen = 26;
-
-	S r = (S)malloc(size);chk(r,NULL);
-	DO(size,
-		I key = rand()%(I)(dictlen);
-		r[i] = charset[key];
-	)
-	r[size] = '\0';
-	R r;
-}
-
-//! djb for president \see http://www.burtleburtle.net/bob/hash/doobs.html
+//! djbhash \see http://www.burtleburtle.net/bob/hash/doobs.html
 Z inline I djb(G* a,UI n){I h,r=5381;DO(n,h=33*(h^a[i])); R h;}
 
 //! copy with seek \param d dest \param s source \param n len
@@ -51,8 +33,6 @@ V hsh_print(BKT b) {
 	T(TEST, "next -> %d",   (b->next)?(b->next)->idx:-1);
 }
 
-//! \brief lookup str in the hash table \param s str
-//! \return ptr to permanent address or NULL if not found
 S hsh_get(HT ht, S s){
 	LOG("hsh_get");
 	I hash;
@@ -85,13 +65,12 @@ S hsh_ins(HT ht, S s){
 		rec_len = SZ_BKT+n+1,
 		idx = hsh_idx(ht, s, n, &hash);
 
-	T(TRACE, "vcnt=%lu bucket=%d, split=%d, level=%d",
-		ht->vcnt, idx, ht->split, ht->level);
+	T(TRACE, "cnt=%lu bucket=%d, split=%d, level=%d",
+		ht->cnt, idx, ht->split, ht->level);
 
 	//! value is not in the table, insert it:
 	BKT B = malloc(rec_len);chk(B,NULL);	//< init new value
-	ht->bcnt += !ht->buckets[idx];			//< if bkt is empty, increment bcnt
-	ht->mem += rec_len;	ht->vcnt++;			//< increment odometers
+	ht->mem += rec_len;	ht->cnt++;			//< increment odometers
 	B->h              = hash;				//< set hash value
 	B->n              = n;					//< set payload length
 	B->idx            = idx;				//< set current bucket index
@@ -113,8 +92,6 @@ S hsh_ins(HT ht, S s){
 				if(((*bp)->h&((ht->level<<1)-1))==new_idx){
 					BKT moved = *bp; //< item to move
 					*bp=(*bp)->next; //< shift head of the list
-					ht->bcnt -= !*bp; //< if source is empty, decrement bcnt
-					ht->bcnt += !ht->buckets[new_idx]; //< if target is empty, increment bcnt
 					moved->next = ht->buckets[new_idx]; //< link existing list item, if any
 					ht->buckets[new_idx] = moved; //< put at the head of the list
 					T(TEST, "MOV --> %s (%lu -> %lu)", moved->s, moved->idx, new_idx);
@@ -128,7 +105,7 @@ S hsh_ins(HT ht, S s){
 				sz cap = hsh_capacity(ht);
 				ht->buckets = (BKT*)realloc((G*)ht->buckets, cap * SZ(BKT));
 				chk(ht->buckets,NULL);
-				DO(ht->level, ht->buckets[ht->level + i]=NULL) //< zero out
+				DO(ht->level, ht->buckets[ht->level + i]=NULL) //< zero new buckets
 				T(TEST, "REA -*- %d", hsh_capacity(ht));
 			}
 		)
@@ -141,22 +118,20 @@ inline sz hsh_mem(HT ht) {
 	R ht->mem + ht_size;
 }
 
-E hsh_load_factor(HT ht) {
-	return (E)ht->vcnt / hsh_capacity(ht);
+E hsh_factor(HT ht) {
+	R (E)ht->cnt / hsh_capacity(ht);
 }
 
 HT hsh_init(I level) {
 	LOG("hsh_init");
 	HT ht = (HT)malloc(SZ_HT);chk(ht,NULL);
-	ht->split = 0;
 	ht->level = level;
-	ht->bcnt = ht->vcnt = ht->mem = 0;
+	ht->split = ht->cnt = ht->mem = 0; //< init odometers
 	sz init_size = hsh_capacity(ht);
-	ht->buckets = (BKT*)malloc(init_size * SZ(BKT)); //< initialize hash table
+	ht->buckets = (BKT*)calloc(init_size, SZ(BKT)); //< initialize hash table
 	chk(ht->buckets,NULL);
-	DO(init_size, ht->buckets[i]=NULL) // zero out
-	T(WARN,"calloc: lvl=%d buckets=%d bktsize=%d bytes=%d vcnt=%lu bcnt=%lu",
-		ht->level, hsh_capacity(ht), SZ(BKT), hsh_capacity(ht) * SZ(BKT), ht->vcnt, ht->bcnt);
+	T(TEST,"calloc: lvl=%d buckets=%d bktsize=%d bytes=%d",
+		ht->level, hsh_capacity(ht), SZ(BKT), hsh_capacity(ht) * SZ(BKT));
 	R ht;
 }
 
@@ -194,11 +169,11 @@ V hsh_dump(HT ht) {
 		T(TEST, STR_EMPTY_SET);
 		TEND();
 	);
-	T(TEST, "capacity=%lu, vcnt=%lu, bcnt=%lu, bytes=%lu, lfactor=%.3f",
-		hsh_capacity(ht), ht->vcnt, ht->bcnt, hsh_mem(ht), hsh_load_factor(ht));
+	T(TEST, "capacity=%lu, cnt=%lu, bytes=%lu, lfactor=%.3f",
+		hsh_capacity(ht), ht->cnt, hsh_mem(ht), hsh_factor(ht));
 }
 
-ZI hsh_test() {
+ZI hsh_test(sz rand_cnt, sz rand_len) {
 	LOG("hsh_test");
 
 	HT ht = hsh_init(2);
@@ -207,11 +182,13 @@ ZI hsh_test() {
 
 	//! insert
 	DO(6, hsh_ins(ht, keys[i]));
-
 	//! lookup
 	DO(6, hsh_get(ht, keys[i]));
-
-	DO(0, S s = rndstr(3); hsh_ins(ht, s); free(s);)
+	//! rand
+	DO(rand_cnt,
+		S s = (S)malloc(rand_len+1);chk(s,1);
+		hsh_ins(ht, rnd_str(s,rand_len,CHARSET_AZ));
+		free(s))
 
 	hsh_dump(ht);
 
@@ -220,7 +197,7 @@ ZI hsh_test() {
 }
 
 #ifdef RUN_TESTS_HSH
-I main(){R hsh_test();}
+I main(){R hsh_test(10, 3);}
 #endif
 
 //:!~
