@@ -48,8 +48,8 @@ typedef size_t sz;
 #define scmp(x,y) strcmp((S)(x),(S)(y))     	//!< compare two strings \param x str \param y str
 #define schr(h,n) (S)strchr((S)(h),n)       	//!< first pos \param h haystack \param n needle
 #define rchr(h,n) (S)strrchr((S)(h),n)      	//!< last pos \param h haystack \param n needle
-#define mcpy(d,s,n) (S)memcpy((S)(d),(S)(s),n) 	//!< mem copy \param d dest \param s source \param n len
-#define scpy(d,s,n) mcpy(d,s,MIN(scnt((S)s),n)) //!< better strcpy \param d dest \param s source \param n limit
+#define mcpy(d,s,n) memcpy((d),(s),n) 			//!< mem copy \param d dest \param s source \param n len
+#define scpy(d,s,n) (S)mcpy((S)d,(S)s,MIN(scnt((S)s),n)) //!< better strcpy \param d dest \param s source \param n limit
 #define fill(d,n,v) DO(n,d[i]=v)				//!< fill memory \param d dest \param n len \param v val 
 //#define zero(d,n) fill(d,n,(V)NULL);			//<! zero out \param d dest \param n len
 

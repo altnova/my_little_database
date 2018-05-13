@@ -7,6 +7,7 @@ typedef struct bucket{
 	UJ n;					//< payload len
 	struct bucket* next;	//< pointer to next 
 	HTYPE idx;				//< table index
+	C packed;				//< in heap
 	C s[];					//< payload
 } pBKT;
 
@@ -16,9 +17,10 @@ typedef pBKT* BKT;
 typedef struct hash_table {
 	HTYPE	split;		//< split position
 	HTYPE	level;		//< capacity is 2^level
+	H		rounds;		//< split rounds	
 	HTYPE	cnt; 		//< total values
 	sz 		mem;		//< total byte size
-	H		rounds;		//< split rounds
+	V*		heap;		//< bucket heap pointer
 	BKT* 	buckets;	//< pointer to array of bucket pointers
 } pHT;
 
@@ -49,14 +51,19 @@ ext V hsh_dump(HT ht);
 
 //! \brief average bucket tail length
 //! better performance when closer to 1
+//! \see HT->rounds
 ext E hsh_bavg(HT ht);
 
 //! \brief load factor
-//! better performance when closer to 1
+//! better keyspace utilization when closer to 1
 ext E hsh_factor(HT ht);
 
 //! total bytes
 ext sz hsh_mem(HT ht);
+
+//! pack values into a contiguous heap to improve data locality
+//! \return 1 if ok, 0 if error
+ext C hsh_pack(HT ht);
 
 //! release hash table
 ext V hsh_destroy(HT ht);

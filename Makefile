@@ -7,7 +7,7 @@ csv: clean nodatafiles
 	./bin/csv csv/sample.csv dat/books.dat
 
 hsh: clean
-	gcc -DRUN_TESTS_HSH -g -o bin/hsh src/rnd.c src/trc.c src/hsh.c
+	gcc -DRUN_TESTS_HSH -g -o bin/hsh src/clk.c src/rnd.c src/trc.c src/hsh.c
 	./bin/hsh
 
 idx: clean
