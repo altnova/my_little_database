@@ -125,11 +125,14 @@ C get_yn(const C *hint)
 
 V get_num(UJ *num, S buf)
 {
-	C c = '1', i = 0;
+	C c = '1';
+	I i = 0;
+	*num = 0;
 
-	for (*num = 0; c != '\n'; i++) {
-		c = buf[i];
-		if (c == '\n' || c == '\0') 
+	while (c != '\n' && c != '\0') {
+		c = buf[i++];
+
+		if (c == '\n' || c == '\0') 	
 			break;
 
 		if (c < '0' || c > '9') {
@@ -149,12 +152,11 @@ V get_line(S buf, I length)
 	I i;
 	for (i = 0; c != '\n' && i < length && !feof(stdin); i++) {
 		scanf("%c", &c);
-		// printf("!%d!", c);
 		buf[i] = c;
 	}
 
 	if (i == length) 
-		while (c != '\n' && !feof(stdin))
+		while (!feof(stdin))
 			scanf("%c", &c);
 	
 	buf[--i] = '\0';
@@ -166,6 +168,7 @@ V input(UJ *command, I num, const S request)
 	C buf[300];
 	O(request);
 	get_line(buf, 300);
+	O("%s\n", buf);
 	get_num(command, buf);
 
 	while(*command == -1 || *command > num) {

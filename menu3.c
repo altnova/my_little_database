@@ -16,7 +16,8 @@
 V scr_search_1_1(I fld) 
 {	
 	C string[30];
-	UJ *num;
+	UJ *ptr, num = 0;
+	ptr = &num;
 
 	O("please, enter keyword:  ");
 
@@ -24,17 +25,19 @@ V scr_search_1_1(I fld)
 
 	if (fld == fld_year || fld == fld_pages) {  				//<	 	if it should be a number, requires for a number
 
-		get_num(num, string);
+		get_num(ptr, string);
+		printf("%d\n", *ptr);
 
-		while (*num == -1) {
+		while (*ptr == -1) {
 			O("not a number. enter again  ");
 			get_line(string, 30);
-			get_num(num, string);
+			get_num(ptr, string);
 		}
 	}
 
 	O("\n\tSearch hits:\n\n");
 	rec_search(fld, string);
+
 	NL();
 	
 }
@@ -43,46 +46,44 @@ V scr_search_1_1(I fld)
 //	gets editing filed and a pointer to origin struct
 V scr_editrec_4_2(I fld, Rec origin) 
 {
-	H *num;
-	S buf = malloc(SZ(C) * csv_max_field_widths[fld]);
-	// C buf[csv_max_field_widths[fld]];
-	// O("%d \n", rec_field_offsets[fld]);
-	// O("fld %d; fld_year %d; fld_pages %d\n", fld, fld_year,fld_pages);
-	// O("%d\n", csv_max_field_widths[fld]);
+	UJ num = 0, *ptr = &num;
 
-	O("old value:  ");
+	C buf[csv_max_field_widths[fld] + 1];
+	O("\told value:  ");
 
-	if (fld == fld_year || fld == fld_pages)					//<		field branching because of different printing formats
-		O("%hi\n", *(origin + rec_field_offsets[fld]));
+	if (fld == fld_year || fld == fld_pages) 					//<		field branching because of different printing formats
+		O("%hi\n", *(H*)((S)origin + rec_field_offsets[fld]));
 	
 	else {
-		strcmp(buf, (S)(origin + rec_field_offsets[fld]));
-		// O("%s\n", (S)(origin + rec_field_offsets[fld]));										
+		strcpy(buf, (S)((S)origin + rec_field_offsets[fld]));
+		O("%s\n", buf);										
 	}
 
-	O("new value:  ");
+	O("\tnew value:  ");
 	get_line(buf, csv_max_field_widths[fld]);					//<		asks for a word
 
+
 	if (fld == fld_year || fld == fld_pages) {					//<	 	if it should be a number, requires for a number
-		get_num((UJ*)&num, buf);
-		while (*num == -1) {
+		get_num(ptr, buf);
+
+		while (*ptr == -1) {
 			O("not a number. enter again  ");
 			get_line(buf, csv_max_field_widths[fld]);
-			get_num((UJ*)&num, buf);
+			get_num(ptr, buf);
 		}
-		*(H*)(origin + rec_field_offsets[fld]) = (H)*num;						
+		*((S)origin + rec_field_offsets[fld]) = *(H*)ptr;						
 	}
 	else 
-		strcmp((S)(origin + rec_field_offsets[fld]), buf );
-	free(buf);
+		strncpy((S)((S)origin + rec_field_offsets[fld]), buf, csv_max_field_widths[fld] );	
+	
 }
 //////////////////////////////////////////
 
 //	returns 0 if id does not exist
 I scr_editrec_4_1(UJ id)
 {
-	pRec *origin;
-	UJ num;
+	Rec origin;
+	UJ num = 0;
 
 	if (id == -1) 
  		R 0;
@@ -90,19 +91,20 @@ I scr_editrec_4_1(UJ id)
 	if ((rec_display_fotmated(id))) {									// 	if this record exists
 		origin = rec_get(id);
 		while(1) { 
-			input(&num, 6, "\tSelect field to edit:  ");
-
-			if (num == 0) 												// 	iteration stops only if there was an exit request
+			num = 0;
+			input(&num, 6, "\tSelect field to edit or press 0 to exit:  ");
+			
+			if (!num) 												// 	iteration stops only if there was an exit request
 					R 0;		
 
-			num = 	num == 1 	? fld_title 	:
-					num == 2 	? fld_author 	:
-					num == 3	? fld_year		:
-					num == 4 	? fld_publisher	:
-					num == 5	? fld_pages		:
-								fld_subject;
-		scr_editrec_4_2(num, origin);
-
+			num = 	num == 1 	? 	fld_title 		:
+					num == 2 	? 	fld_author 		:
+					num == 3	? 	fld_year		:
+					num == 4 	? 	fld_publisher	:
+					num == 5	? 	fld_pages		:
+									fld_subject		;
+	
+			scr_editrec_4_2(num, origin);
 	 	}
 	}
 	else
@@ -136,6 +138,7 @@ I scr_search_1(UJ *command)
 				*command == 3 ? 	fld_author		:
 									fld_subject;
 
+
 	scr_search_1_1(*command);
 
 	R get_yn("search by another filed?  ");
@@ -143,8 +146,9 @@ I scr_search_1(UJ *command)
 
 I scr_addrec_2()
 {
-	Rec str;
-
+	Rec origin;
+	C buf[2001];
+	H len;
 	NL()
 	O("\tAdd record\n");
 	O("\t-------------\n");
@@ -152,33 +156,44 @@ I scr_addrec_2()
 
 	////////			COLLAPSE		////////////
 
+	// buf = malloc(SZ(C) * 200);
+	origin = rec_get(1);
+
 	O("TITLE:  ");
-	get_line((S)&(str->title), csv_max_field_widths[fld_title]);
+	len = csv_max_field_widths[fld_title];
+	get_line(buf, len);
+
+	strncpy((S)((S)origin + rec_field_offsets[fld_title]), buf, csv_max_field_widths[fld_title]);	
+	
 
 	O("AUTHOR:  ");
-	get_line((S)&(str->author), csv_max_field_widths[fld_author]);
+	len = csv_max_field_widths[fld_author];
+	get_line(buf, len);
+	strncpy((S)((S)origin + rec_field_offsets[fld_author]), buf, csv_max_field_widths[fld_author]);	
 
-	input_number((UJ*)&(str->year), "YEAR:  ", "not a number. enter again:  ");
+	input_number((UJ*)((S)origin + rec_field_offsets[fld_year]), "YEAR:  ", "not a number. enter again:  ");
 	// str.year = id;
 
 	O("PUBLISHER:  ");
-	get_line((S)&(str->publisher), csv_max_field_widths[fld_publisher]);
+	len = csv_max_field_widths[fld_publisher];
+	get_line(buf, len);
+	strncpy((S)((S)origin + rec_field_offsets[fld_publisher]), buf, csv_max_field_widths[fld_publisher]);	
 
-
-	O("PAGES:  ");
-
-	input_number((UJ*)&(str->pages), "PAGES:  ", "not a number. enter again:  ");
+	input_number((UJ*)((S)origin + rec_field_offsets[fld_pages]), "PAGES:  ", "not a number. enter again:  ");
 
 	O("SUBJECT:  ");
-	get_line((S)&(str->subject), csv_max_field_widths[fld_subject]);
+	len = csv_max_field_widths[fld_subject];
+	get_line(buf, len);
 
-	str->rec_id = next_id();
+	strncpy((S)((S)origin + rec_field_offsets[fld_subject]), buf, csv_max_field_widths[fld_subject]);	
+
+	origin->rec_id = next_id();
 
 	////////		END OF COLLAPSE		////////////
 
-	rec_add(str);
+	rec_add(origin);
 
-	O("[OK: record created with ID %lu]\n", str->rec_id);
+	O("[OK: record created with ID %lu]\n", origin->rec_id);
 	R get_yn("create another one?");
 }
 
@@ -220,7 +235,7 @@ I scr_main_0(UJ *command)
 	NL()
 	MI(0, "Exit program\n")
 	NL()
-
+	
 	input(command, 9, "select command:  ");
 
 
@@ -228,7 +243,7 @@ I scr_main_0(UJ *command)
 	SW(*command) {
 
 		CS(0, R 0;);	 												// 	exit program
-		CS(1, while(scr_search_1(command) != 0); 	break;);			//	search record
+		CS(1, while(scr_search_1(command)); 		break;);			//	search record
 		CS(2, while(scr_addrec_2()); 				break;);			// 	add record
 		CS(3, while(scr_deleterec_3(command)); 		break;);			//	delete record
 		CS(4, while(scr_editrec_4(command)); 		break;);			//	edit record 
