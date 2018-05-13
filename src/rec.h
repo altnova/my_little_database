@@ -1,6 +1,6 @@
 //!\file rec.h \brief database record api
 
-//! basic CRUD operations on records
+//! basic operations on records
 //! \return NIL in case of failure
 ext UJ rec_get(Rec dest, ID rec_id);
 ext UJ rec_create(Rec src);

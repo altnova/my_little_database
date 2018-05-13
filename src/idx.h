@@ -1,27 +1,22 @@
 //!\file idx.h \brief index file api
 
-extern C db_file[], idx_file[];
+ext C db_file[], idx_file[];
 
 //! expect bad stuff to happen
 //! if you forget to call db_init() first
-extern UJ db_init(S db_file, S idx_file);
+ext UJ    db_init(S db_file, S idx_file);
 
-extern ID next_id();
+ext ID    next_id();
 
-extern UJ idx_rebuild();
-extern UJ idx_save();
-extern UJ idx_load();
+ext UJ    idx_add(ID rec_id, UJ pos);
+ext UJ    idx_shift(UJ pos);
+ext UJ    idx_update_pos(ID rec_id, UJ new_pos);
+ext Pair* idx_data();
+ext Pair* idx_get_entry(UJ idx_pos);
+ext UJ    idx_size();
 
-extern UJ idx_add(ID rec_id, UJ pos);
-extern UJ idx_shift(UJ pos);
-extern UJ idx_update_pos(ID rec_id, UJ new_pos);
-extern Pair* idx_data();
-extern Pair* idx_get_entry(UJ idx_pos);
-extern UJ idx_size();
+ext C     cmp_binsearch(V* a, V* b, sz t);
 
-extern C cmp_binsearch(V* a, V* b, sz t);
-
-//! don't forget to call this one, too
-extern V idx_close();
+ext V     db_close(); //< don't forget
 
 //:~

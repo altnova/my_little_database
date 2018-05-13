@@ -28,6 +28,35 @@ Pair* idx_get_entry(UJ idx_pos) {
 	R arr_at(idx, idx_pos, Pair);
 }
 
+//! persist index in a file
+//! \return NIL on error, index bytesize on success
+Z UJ idx_save() {
+	LOG("idx_save");
+	FILE*out;
+	xfopen(out, idx_file, "w+", NIL);
+	fwrite(idx, SZ(Arr)+idx->size*SZ(Pair), 1, out); //< TODO check error
+	UJ idx_fsize = fsize(out);
+	fclose(out);
+	T(TRACE, "saved %lu bytes", idx_fsize);
+	R idx_fsize;
+}
+
+//! squash index entry at given pos
+//! \return NIL on error, new index size on success
+UJ idx_shift(UJ pos) {
+	LOG("idx_shift");
+	Pair* s = arr_at(idx, pos, Pair);
+	UJ to_move = idx->used-pos-1;
+	memcpy(s, s+1, SZ(Pair) * to_move);
+	T(DEBUG, "shifted %lu entries, squashed db_pos=%lu", to_move, pos);
+
+	idx->used--;
+	UJ b_written = idx_save();
+	X(b_written==NIL, T(WARN, "idx_save failed"), NIL);
+
+	R idx_size();
+}
+
 //! returns pointer to indexes' data section
 Pair* idx_data() {
 	R(Pair*)idx->data;
@@ -87,7 +116,7 @@ ZV idx_dump(UJ head) {
 
 //! rebuild index from scratch
 //! \return # recs loaded, NIL on error
-UJ idx_rebuild() {
+Z UJ idx_rebuild() {
 	LOG("idx_rebuild");
 	FILE* in;
 	xfopen(in, db_file, "r", NIL);
@@ -116,42 +145,13 @@ UJ idx_rebuild() {
 }
 
 //! free memory
-V idx_close() {
+ZV idx_close() {
 	arr_free(idx);
-}
-
-//! squash index entry at given pos
-//! \return NIL on error, new index size on success
-UJ idx_shift(UJ pos) {
-	LOG("idx_shift");
-	Pair* s = arr_at(idx, pos, Pair);
-	UJ to_move = idx->used-pos-1;
-	memcpy(s, s+1, SZ(Pair) * to_move);
-	T(DEBUG, "shifted %lu entries, squashed db_pos=%lu", to_move, pos);
-
-	idx->used--;
-	UJ b_written = idx_save();
-	X(b_written==NIL, T(WARN, "idx_save failed"), NIL);
-
-	R idx_size();
-} 
-
-//! persist index in a file
-//! \return NIL on error, index bytesize on success
-UJ idx_save() {
-	LOG("idx_save");
-	FILE*out;
-	xfopen(out, idx_file, "w+", NIL);
-	fwrite(idx, SZ(Arr)+idx->size*SZ(Pair), 1, out); //< TODO check error
-	UJ idx_fsize = fsize(out);
-	fclose(out);
-	T(TRACE, "saved %lu bytes", idx_fsize);
-	R idx_fsize;
 }
 
 //! load index from a file
 //! \return number of entries, NIL on error
-UJ idx_load() {
+Z UJ idx_load() {
 	LOG("idx_load");
 	FILE* in;
 	xfopen(in, idx_file, "r", NIL);
@@ -286,6 +286,11 @@ UJ db_init(S d, S i) {
 	R idx_size;
 }
 
+V db_close() {
+	idx_close();
+}
+
+#ifdef RUN_TESTS_IDX
 ZI idx_test() {
 	LOG("idx_test");
 	Rec b=malloc(SZ_REC);chk(b,1);
@@ -315,12 +320,11 @@ ZI idx_test() {
 	//rec_delete(20); //< delete last
 	//db_dump(); idx_dump(0);
 
-	idx_close();
+	db_close();
 	free(b);
 	R0;
 }
 
-#ifdef RUN_TESTS_IDX
 I main() { R idx_test(); }
 #endif
 
