@@ -318,7 +318,8 @@ ZI hsh_test(sz rand_cnt, sz rand_len) {
 	t1 = clk_stop();
 	E speedup = (E)t/t1;
 	T(TEST, "walk %lu packed values, r=%lu \t--> %lums", ht->cnt, r, t1);
-	T(TEST, "packing speedup %.2f%%", 100*speedup);
+	//T(TEST, "packing speedup \e[91m%.2f%%\e[0m", 100*speedup);
+	T(TEST, "packing speedup \e[91m%.2f%%\e[0m", 100*speedup);
 
 	hsh_info(ht);
 
