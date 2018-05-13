@@ -1,5 +1,6 @@
 //!\file cfg.c \brief database settings
-
+#include <stddef.h>
+#include "___.h"
 #define TEST_MODE
 
 //! L_FATAL|L_WARN|L_INFO|L_TEST|L_DEBUG|L_TRACE
