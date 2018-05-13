@@ -23,8 +23,8 @@ bin: clean
 	./bin/binsearch
 
 arr: clean
-	gcc -DRUN_TESTS_ARR -g -o bin/dynarray src/trc.c src/arr.c 
-	./bin/dynarray
+	gcc -DRUN_TESTS_ARR -g -o bin/arr src/trc.c src/arr.c 
+	./bin/arr
 
 fio:
 	gcc -DRUN_TESTS_FIO -g -o bin/fio src/trc.c src/fio.c 
@@ -37,6 +37,14 @@ clk:
 rnd:
 	gcc -DRUN_TESTS_RND -g -o bin/rnd src/trc.c src/rnd.c 
 	./bin/rnd
+
+tok:
+	gcc -DRUN_TESTS_TOK -g -o bin/tok src/trc.c src/hsh.c src/fio.c src/tok.c 
+	./bin/tok
+
+usr:
+	gcc -DRUN_TESTS_USR -g -o bin/usr src/trc.c src/usr.c 
+	./bin/usr
 
 clean:
 	mkdir -p bin
