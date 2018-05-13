@@ -221,7 +221,6 @@ V hsh_destroy(HT ht){
 V hsh_dump(HT ht) {
 	LOG("hsh_dump")
 	BKT b;
-	O("\n");
 	DO(hsh_capacity(ht),
 		b = ht->buckets[i];
 		if(!b)continue;
@@ -235,7 +234,7 @@ V hsh_dump(HT ht) {
 		T(TEST, STR_EMPTY_SET);
 		TEND();
 	);
-	T(TEST, "capacity=%d, cnt=%d, bcnt=%d, bavg=%.2f, lfactor=%.2f, split=%d, bytes=%lu\n",
+	T(TEST, "capacity=%d, cnt=%d, bcnt=%d, bavg=%.2f, lfactor=%.2f, split=%d, bytes=%lu",
 		hsh_capacity(ht), ht->cnt, hsh_bcnt(ht), hsh_bavg(ht), hsh_factor(ht), ht->split, hsh_mem(ht));
 }
 
@@ -257,7 +256,7 @@ UJ hsh_walk(HT ht) {
 		b = ht->buckets[i];
 		if(!b)continue;
 		W(b){
-			res += b->n;
+			res += !!hsh_get(ht, b->s);
 			b = b->next;
 		}
 	);
@@ -301,19 +300,24 @@ ZI hsh_test(sz rand_cnt, sz rand_len) {
 	hsh_dump(ht);
 
 	clk_start();
-	UJ N = 2000000, r;
+	UJ N = 2000000, t,t1, r;
 	hsh_test_insert_rand(ht, N, rand_len);
 	T(TEST, "inserted %lu values \t--> %lums", N, clk_stop());
 	r = hsh_walk(ht);
-	T(TEST, "walk %lu unpacked values, r=%lu \t--> %lums", ht->cnt, r, clk_stop());
+	T(TEST, "walk %lu unpacked values, r=%lu \t--> %lums", ht->cnt, r, t=clk_stop());
 
 	hsh_pack(ht);
 	T(TEST, "packed %lu values \t--> %lums", ht->cnt, clk_stop());
 	r = hsh_walk(ht);
-	T(TEST, "walk %lu packed values, r=%lu \t--> %lums", ht->cnt, r, clk_stop());
+	t1 = clk_stop();
+	E speedup = (E)t/t1;
+	T(TEST, "walk %lu packed values, r=%lu \t--> %lums", ht->cnt, r, t1);
+	T(TEST, "packing speedup %.2f%%", 100*speedup);
 
+	r = ht->cnt;
 	hsh_destroy(ht);
-	T(TEST, "destroyed %lu values \t--> %lums", ht->cnt, clk_stop());
+
+	T(TEST, "destroyed %lu values \t--> %lums", r, clk_stop());
 
 	R0;
 }
