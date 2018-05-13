@@ -1,9 +1,12 @@
 #include "___.h"
 
+typedef I HTYPE; //< hash width
+
 typedef struct bucket{
-	I h,n;					//< hash and length of payload
+	HTYPE h;				//< payload hash
+	UJ n;					//< payload len
 	struct bucket* next;	//< pointer to next 
-	sz idx;					//< current ht index
+	HTYPE idx;				//< table index
 	C s[];					//< payload
 } pBKT;
 
@@ -11,9 +14,9 @@ const Z sz SZ_BKT = SZ(pBKT); //< bucket header size
 typedef pBKT* BKT;
 
 typedef struct hash_table {
-	I 		split;		//< 
-	I 		level;		//< 
-	sz 		cnt; 		//< total values
+	HTYPE	split;		//< 
+	HTYPE	level;		//< 
+	HTYPE	cnt; 		//< total values
 	sz 		mem;		//< total byte size
 	BKT* 	buckets;	//< pointer to array of bucket pointers
 } pHT;

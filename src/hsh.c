@@ -10,18 +10,23 @@
 #include "hsh.h"
 
 //! djbhash \see http://www.burtleburtle.net/bob/hash/doobs.html
-Z inline I djb(G* a,UI n){I h,r=5381;DO(n,h=33*(h^a[i])); R h;}
+Z inline HTYPE djb(G*a,UJ n){HTYPE h=5381;DO(n,h=33*(h^a[i]));R h;}
 
 //! copy with seek \param d dest \param s source \param n len
 ZS dsn(V* d, V* s, UJ n){R(S)memcpy(d,s,n)+n;}
 
-Z inline UJ hsh_idx(HT ht, S s, I n, I*h) {
-	I hash = djb((G*)s,n); //< calculate the hash
-	UJ idx = hash&(ht->level - 1); //< map to the first half of table
-	if(idx < ht->split)
-		idx = hash&((ht->level<<1)-1); //< map to the entire table
+Z inline V hsh_idx(HT ht, V*s, UJ n, HTYPE*h, HTYPE*idx) {
+	LOG("hsh_idx");
+	HTYPE hash = djb(s,n); //< calculate the hash
+	HTYPE i = hash&(ht->level - 1); //< map to the first half of table
+	C hi = 0;
+	if(i < ht->split){
+		hi = 1;
+		i = hash&((ht->level<<1) - 1); //< map to the entire table
+	}
+	//T(TEST, "IDX %s --> idx(%d)->%d (hi=%d)", s, hash, i, hi);
 	*h = hash;
-	R idx;
+	*idx = i;
 }
 
 //! print value
@@ -36,8 +41,9 @@ V hsh_print(BKT b) {
 
 S hsh_get(HT ht, S s){
 	LOG("hsh_get");
-	I hash;
-	UJ n = scnt(s), idx = hsh_idx(ht, s, n, &hash);
+	HTYPE hash, idx;
+	UJ n = scnt(s);
+	hsh_idx(ht, s, n, &hash, &idx);
 
 	//! lookup the value
 	BKT*b = &ht->buckets[idx];
@@ -59,10 +65,9 @@ S hsh_ins(HT ht, S s){
 	S r = hsh_get(ht, s);
 	P(r, r); //< return pointer if found
 
-	I hash;
-	UJ n = scnt(s),
-		rec_len = SZ_BKT+n+1,
-		idx = hsh_idx(ht, s, n, &hash);
+	HTYPE hash, idx;
+	UJ n = scnt(s), rec_len = SZ_BKT + n + 1;
+	hsh_idx(ht, s, n, &hash, &idx);
 
 	T(TRACE, "cnt=%lu bucket=%d, split=%d, level=%d",
 		ht->cnt, idx, ht->split, ht->level);
@@ -77,7 +82,7 @@ S hsh_ins(HT ht, S s){
 	*dsn(B->s,s,n)    = 0;					//< copy payload and terminate it
 	ht->buckets[idx]  = B;					//< put at the head of the list
 
-	T(TEST, "INS --> %s --> (%d)", B->s, idx);//hsh_print(B);
+	T(TEST, "INS %s --> (%d)", B->s, idx);//hsh_print(B);
 	//! if inserted bucket has a tail, it is a good time to
 	//! attempt to split tails of buckets at split, split+1, split+2...
 	//! by moving linked items to the next available bucket \c new_idx
@@ -85,7 +90,7 @@ S hsh_ins(HT ht, S s){
 	if(B->next){
 		DO(3,
 			BKT*bp = &ht->buckets[ht->split]; //< head of the list
-			UJ new_idx = ht->level + ht->split; //< next available upper idx
+			HTYPE new_idx = ht->level + ht->split; //< next available upper idx
 			W(*bp){ //< while list continues:
 				//! if item's upper hash lands on target index, move it there:
 				if(((*bp)->h&((ht->level<<1)-1))==new_idx){
@@ -126,7 +131,7 @@ HT hsh_init(I level) {
 	HT ht = (HT)malloc(SZ_HT);chk(ht,NULL);
 	ht->level = level;
 	ht->split = ht->cnt = ht->mem = 0; //< init odometers
-	sz init_size = hsh_capacity(ht);
+	HTYPE init_size = hsh_capacity(ht);
 	ht->buckets = (BKT*)calloc(init_size, SZ(BKT)); //< initialize hash table
 	chk(ht->buckets,NULL);
 	T(TEST,"calloc: level=%d capacity=%d mem=%d",
@@ -137,7 +142,7 @@ HT hsh_init(I level) {
 V hsh_destroy(HT ht){
 	LOG("hsh_destroy");
 	BKT curr, next;
-	UJ c = 0;
+	HTYPE c = 0;
 	DO(hsh_capacity(ht),
 		curr = ht->buckets[i];
 		//T(TEST, "freeing up bkt=%lu (%d)", i, !!curr);
@@ -163,13 +168,13 @@ V hsh_dump(HT ht) {
 		TSTART();
 		T(TEST, "%5lu ", i);
 		W(*b){
-			T(TEST,"%s %s ", (*b)->s, STR_ARROW_RIGHT);
+			T(TEST,"(%s) %s ", (*b)->s, STR_ARROW_RIGHT);
 			b = &(*b)->next;
 		}
 		T(TEST, STR_EMPTY_SET);
 		TEND();
 	);
-	T(TEST, "capacity=%lu, cnt=%lu, lfactor=%.2f, bytes=%lu\n",
+	T(TEST, "capacity=%d, cnt=%d, lfactor=%.2f, bytes=%lu\n",
 		hsh_capacity(ht), ht->cnt, hsh_factor(ht), hsh_mem(ht));
 }
 
@@ -179,25 +184,40 @@ ZI hsh_test(sz rand_cnt, sz rand_len) {
 	HT ht = hsh_init(2);
 
 	S keys[] = { "FKTABLE_CAT", "cov", "bmp", "frameset", "cos", "fmt" }; 
+	I keys_len = 6;
 
 	//! insert
-	DO(6, hsh_ins(ht, keys[i]));
-	//! lookup
-	DO(6, hsh_get(ht, keys[i]));
+	UJ addrs[keys_len];
+	DO(keys_len, addrs[i]=hsh_ins(ht, keys[i]));
+
+	//! insert #2
+	DO(keys_len,
+		X(addrs[i]!=hsh_ins(ht, keys[i]),
+			T(TEST, "unstable pos: %d", i),
+			1)
+	);
+
 	//! rand
 	DO(rand_cnt,
 		S s = (S)malloc(rand_len+1);chk(s,1);
 		hsh_ins(ht, rnd_str(s,rand_len,CHARSET_AZ));
 		free(s))
 
-	hsh_dump(ht);
+	//! lookup
+	DO(keys_len,
+		S found = hsh_get(ht, keys[i]);
+		X(!found,
+			{hsh_dump(ht);T(FATAL, "expected %s, got NULL", keys[i]);},
+			1);
+	)
 
+	hsh_dump(ht);
 	hsh_destroy(ht);
 	R0;
 }
 
 #ifdef RUN_TESTS_HSH
-I main(){R hsh_test(10, 3);}
+I main(){R hsh_test(10000, 6);}
 #endif
 
 //:!~
