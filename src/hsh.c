@@ -80,6 +80,7 @@ S hsh_ins(HT ht, S s){
 	B->idx            = idx;				//< set current bucket index
 	B->next           = ht->buckets[idx];	//< link existing list item, if any
 	*dsn(B->s,s,n)    = 0;					//< copy payload and terminate it
+	
 	ht->buckets[idx]  = B;					//< put at the head of the list
 
 	T(TEST, "INS %s --> (%d)", B->s, idx);//hsh_print(B);
@@ -88,9 +89,9 @@ S hsh_ins(HT ht, S s){
 	//! by moving linked items to the next available bucket \c new_idx
 	//! located in the upper part of the table.
 	if(B->next){
-		DO(3,
+		DO(ht->rounds,
 			BKT*bp = &ht->buckets[ht->split]; //< head of the list
-			HTYPE new_idx = ht->level + ht->split; //< next available upper idx
+			HTYPE new_idx = ht->split + ht->level; //< next available upper idx
 			W(*bp){ //< while list continues:
 				//! if item's upper hash lands on target index, move it there:
 				if(((*bp)->h&((ht->level<<1)-1))==new_idx){
@@ -122,14 +123,25 @@ inline sz hsh_mem(HT ht) {
 	R ht->mem + ht_size;
 }
 
+Z HTYPE hsh_bcnt(HT ht) {
+	HTYPE r;
+	DO(hsh_capacity(ht), r+=!!ht->buckets[i])
+	R r;
+}
+
 E hsh_factor(HT ht) {
 	R (E)ht->cnt / hsh_capacity(ht);
 }
 
-HT hsh_init(I level) {
+E hsh_bavg(HT ht) {
+	R (E)ht->cnt / hsh_bcnt(ht);
+}
+
+HT hsh_init(I level, H split_rounds) {
 	LOG("hsh_init");
 	HT ht = (HT)malloc(SZ_HT);chk(ht,NULL);
 	ht->level = level;
+	ht->rounds = split_rounds;
 	ht->split = ht->cnt = ht->mem = 0; //< init odometers
 	HTYPE init_size = hsh_capacity(ht);
 	ht->buckets = (BKT*)calloc(init_size, SZ(BKT)); //< initialize hash table
@@ -174,14 +186,14 @@ V hsh_dump(HT ht) {
 		T(TEST, STR_EMPTY_SET);
 		TEND();
 	);
-	T(TEST, "capacity=%d, cnt=%d, lfactor=%.2f, bytes=%lu\n",
-		hsh_capacity(ht), ht->cnt, hsh_factor(ht), hsh_mem(ht));
+	T(TEST, "capacity=%d, cnt=%d, bcnt=%d, bavg=%.2f, lfactor=%.2f, split=%d, bytes=%lu\n",
+		hsh_capacity(ht), ht->cnt, hsh_bcnt(ht), hsh_bavg(ht), hsh_factor(ht), ht->split, hsh_mem(ht));
 }
 
 ZI hsh_test(sz rand_cnt, sz rand_len) {
 	LOG("hsh_test");
 
-	HT ht = hsh_init(2);
+	HT ht = hsh_init(2, 3);
 
 	S keys[] = { "FKTABLE_CAT", "cov", "bmp", "frameset", "cos", "fmt" }; 
 	I keys_len = 6;
@@ -217,7 +229,7 @@ ZI hsh_test(sz rand_cnt, sz rand_len) {
 }
 
 #ifdef RUN_TESTS_HSH
-I main(){R hsh_test(10000, 6);}
+I main(){R hsh_test(10000, 10);}
 #endif
 
 //:!~
