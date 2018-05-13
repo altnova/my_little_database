@@ -34,6 +34,10 @@ clk:
 	gcc -DRUN_TESTS_CLK -O0 -g -o bin/clk src/trc.c src/clk.c 
 	./bin/clk
 
+rnd:
+	gcc -DRUN_TESTS_RND -g -o bin/rnd src/trc.c src/rnd.c 
+	./bin/rnd
+
 clean:
 	mkdir -p bin
 	rm -rf *.dSYM bin/*.dSYM
