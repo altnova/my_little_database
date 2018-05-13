@@ -46,6 +46,9 @@ ext S hsh_ins(HT ht, S s);
 //! \return ptr to str, NULL if not found
 ext S hsh_get(HT ht, S s);
 
+//! dump hash table metrics
+ext V hsh_info(HT ht);
+
 //! dump hash table contents
 ext V hsh_dump(HT ht);
 

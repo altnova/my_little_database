@@ -165,7 +165,6 @@ C hsh_pack(HT ht) {
 	chk(tmpheap, 0);
 	UJ hptr = 0; //< heap pointer
 	V*mc;
-	//for (UJ i = 0; i < hsh_capacity(ht); i++) {
 	DO(hsh_capacity(ht),
 		prev = NULL;
 		curr = ht->buckets[i];
@@ -192,7 +191,7 @@ C hsh_pack(HT ht) {
 	)
 	if(ht->heap)free(ht->heap);
 	ht->heap = tmpheap;
-	T(TEST, "packing complete");
+	//T(TEST, "packing complete");
 	R1;
 }
 
@@ -218,6 +217,12 @@ V hsh_destroy(HT ht){
 	T(TEST, "released %lu values, hash table destroyed", c);
 }
 
+V hsh_info(HT ht) {
+	LOG("hsh_info");
+	T(INFO, "capacity=%d, cnt=%d, bcnt=%d, bavg=%.2f, lfactor=%.2f, split=%d, bytes=%lu",
+		hsh_capacity(ht), ht->cnt, hsh_bcnt(ht), hsh_bavg(ht), hsh_factor(ht), ht->split, hsh_mem(ht));
+}
+
 V hsh_dump(HT ht) {
 	LOG("hsh_dump")
 	BKT b;
@@ -234,10 +239,11 @@ V hsh_dump(HT ht) {
 		T(TEST, STR_EMPTY_SET);
 		TEND();
 	);
-	T(TEST, "capacity=%d, cnt=%d, bcnt=%d, bavg=%.2f, lfactor=%.2f, split=%d, bytes=%lu",
-		hsh_capacity(ht), ht->cnt, hsh_bcnt(ht), hsh_bavg(ht), hsh_factor(ht), ht->split, hsh_mem(ht));
+
+	hsh_info(ht);
 }
 
+#ifdef RUN_TESTS_HSH
 C hsh_test_insert_rand(HT ht, UJ cnt, UJ rand_len) {
 	LOG("hsh_test_insert_rand");
 	DO(cnt,
@@ -314,6 +320,8 @@ ZI hsh_test(sz rand_cnt, sz rand_len) {
 	T(TEST, "walk %lu packed values, r=%lu \t--> %lums", ht->cnt, r, t1);
 	T(TEST, "packing speedup %.2f%%", 100*speedup);
 
+	hsh_info(ht);
+
 	r = ht->cnt;
 	hsh_destroy(ht);
 
@@ -322,7 +330,6 @@ ZI hsh_test(sz rand_cnt, sz rand_len) {
 	R0;
 }
 
-#ifdef RUN_TESTS_HSH
 I main(){R hsh_test(1, 5);}
 #endif
 
