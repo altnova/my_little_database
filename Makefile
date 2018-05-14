@@ -4,10 +4,10 @@ all: clean clk rnd bin arr fio csv idx
 
 csv: clean nodatafiles
 	gcc -DRUN_TESTS_CSV -g -o bin/csv src/trc.c src/csv.c
-	./bin/csv csv/sample.csv dat/books.dat
+	./bin/csv csv/books.csv dat/books.dat
 
 hsh: clean
-	gcc -DRUN_TESTS_HSH -g -o bin/hsh src/clk.c src/rnd.c src/trc.c src/hsh.c
+	gcc -DRUN_TESTS_HSH -g -o bin/hsh src/arr.c src/clk.c src/rnd.c src/trc.c src/hsh.c
 	./bin/hsh
 
 idx: clean
@@ -39,12 +39,16 @@ rnd:
 	./bin/rnd
 
 tok:
-	gcc -DRUN_TESTS_TOK -g -o bin/tok src/trc.c src/hsh.c src/fio.c src/tok.c 
+	gcc -DRUN_TESTS_TOK -g -o bin/tok src/usr.c src/stm.c src/clk.c src/bin.c src/arr.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/tok.c 
 	./bin/tok
 
 usr:
 	gcc -DRUN_TESTS_USR -g -o bin/usr src/trc.c src/usr.c 
 	./bin/usr
+
+stm:
+	gcc -DRUN_TESTS_STM -O2 -g -o bin/stm src/trc.c src/stm.c
+	./bin/stm
 
 clean:
 	mkdir -p bin
