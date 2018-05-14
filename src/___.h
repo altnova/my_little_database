@@ -44,22 +44,26 @@ typedef size_t sz;
 #define IN(l,x,r) ((l)<=(x)&&(x)<=(r))
 
 //! usual suspects
-#define scnt(x) (UJ)strlen((S)(x))				//!< string length \param str
-#define scmp(x,y) strcmp((S)(x),(S)(y))     	//!< compare two strings \param x str \param y str
-#define schr(h,n) (S)strchr((S)(h),n)       	//!< first pos \param h haystack \param n needle
-#define rchr(h,n) (S)strrchr((S)(h),n)      	//!< last pos \param h haystack \param n needle
-#define mcpy(d,s,n) memcpy((d),(s),n) 			//!< mem copy \param d dest \param s source \param n len
-#define scpy(d,s,n) (S)mcpy((S)d,(S)s,MIN(scnt((S)s),n)) //!< better strcpy \param d dest \param s source \param n limit
-#define fill(d,n,v) DO(n,d[i]=v)				//!< fill memory \param d dest \param n len \param v val 
-//#define zero(d,n) fill(d,n,(V)NULL);			//<! zero out \param d dest \param n len
+#define scnt(x) (UJ)strlen((S)(x))				/*!< string length \param str */
+#define scmp(x,y) strcmp((S)(x),(S)(y))     	/*!< compare two strings \param x str \param y str */
+#define schr(h,n) (S)strchr((S)(h),n)       	/*!< first pos \param h haystack \param n needle */
+#define rchr(h,n) (S)strrchr((S)(h),n)      	/*!< last pos \param h haystack \param n needle */
+#define mcpy(d,s,n) memcpy((d),(s),n) 			/*!< mem copy \param d dest \param s source \param n len */
+#define mcmp(d,s,n) memcmp((d),(s),n) 			/*!< mem compare \param d dest \param s source \param n len */
+#define scpy(d,s,n) (S)mcpy((S)d,(S)s,1+MIN(scnt((S)s),n)) /*!< better strcpy \param d dest \param s source \param n limit */
+#define lcse(s) {DO(scnt(s),s[i]+=IN('A',s[i],'Z')?32:0);} /*! lowercase */
+#define stok(s,n,d,x) {ZC z=0,D[255]="*";if(!z){z=1;DO(scnt(d),D[d[i]]='*')}/*!< tokenize \param s,n,d,x string,len,delims,exec */\
+					   I in=0;sz tok_len,st=0;S tok;DO(n+1,/*if(!IN(' ',s[i],'~'))O("(%d=%d)",i,s[i]);*/\
+					   if(D[s[i]]){if(in){in=0;tok=s+st;s[i]='\0';tok_len=i-st;{x;}}\
+					   else st=i;}else if(!in){in=1;st=i;})}
 
 //! less is more
-#define ZV Z V          //!< static void
-#define ZI Z I          //!< static int
-#define ZC Z C          //!< static char
-#define ZS Z S          //!< static string
-#define ZE Z E          //!< static float
-#define ZJ Z J          //!< static long
+#define ZV Z V
+#define ZI Z I
+#define ZC Z C
+#define ZS Z S
+#define ZE Z E
+#define ZJ Z J
 #define R0 R 0
 #define R1 R 1
 
