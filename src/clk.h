@@ -1,9 +1,12 @@
 //! \file clk.h \brief clock
 
 //! start timer
-extern clock_t clk_start();
+ext clock_t clk_start();
 
 //! milliseconds lapsed since last clk_start()
-extern UJ clk_stop();
+ext UJ clk_stop();
+
+//! calculate ms difference between start and end
+ext UJ clk_diff(clock_t s, clock_t e);
 
 //:~

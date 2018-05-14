@@ -9,7 +9,7 @@ clock_t clk_start() {
 	R start = clock();	
 }
 
-Z UJ clk_diff(clock_t s, clock_t e) {
+UJ clk_diff(clock_t s, clock_t e) {
 	R(e - s) * 1E3 / CLOCKS_PER_SEC;
 }
 

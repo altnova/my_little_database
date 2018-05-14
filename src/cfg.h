@@ -6,7 +6,7 @@
 //! L_FATAL|L_WARN|L_INFO|L_TEST|L_DEBUG|L_TRACE
 #ifdef TEST_MODE
 #define LOGLEVEL L_TEST
-#define CSV_FILE "csv/sample.csv"
+#define CSV_FILE "csv/books.csv"
 #else
 #define LOGLEVEL L_INFO	//< set to WARN in prod builds
 #define CSV_FILE "csv/books.csv"
@@ -59,6 +59,10 @@ ZI rec_field_offsets[] = {
 	offsetof(pRec, pages), offsetof(pRec, year), offsetof(pRec, publisher),
 	offsetof(pRec, title), offsetof(pRec, author), offsetof(pRec, subject)
 };
+
+#define FTI_FIELD_COUNT 6 //< count of full-text search fields
+//! delimiters for text tokenizer
+#define FTI_TOKEN_DELIM " $`^0123456789#@_?~;&/\\,!|+-.:()[]{}<>*=\"\t\n\r'" 
 
 
 //:~

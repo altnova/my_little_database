@@ -12,14 +12,15 @@
 #include "clk.h"
 
 //! djbhash \see http://www.burtleburtle.net/bob/hash/doobs.html
-Z inline HTYPE hsh(G*a,UJ n){HTYPE h=5381;DO(n,h=33*(h^a[i]));R h;}
+Z inline HTYPE hsh_djb(V*a,UJ n){HTYPE h=5381;DO(n,h=33*(h^((G*)a)[i]));R h;}
+HTYPE hsh_identity(V*a,UJ n){R(I)a;}
 
 //! copy with seek \param d dest \param s source \param n len
-ZS dsn(V* d, V* s, UJ n){R(S)memcpy(d,s,n)+n;}
+ZS dsn(V* d, V* s, UJ n){R memcpy(d,s,n)+n;}
 
 Z inline V hsh_idx(HT ht, V*s, UJ n, HTYPE*h, HTYPE*idx) {
 	LOG("hsh_idx");
-	HTYPE hash = hsh(s,n); //< calculate the hash
+	HTYPE hash = ht->fn(s,n); //< calculate the hash
 	HTYPE i = hash&(ht->level - 1); //< map to the first half of table
 	C hi = 0;
 	if(i < ht->split){
@@ -34,45 +35,59 @@ Z inline V hsh_idx(HT ht, V*s, UJ n, HTYPE*h, HTYPE*idx) {
 //! print value
 V hsh_print(BKT b) {
 	LOG("hsh_print");
-	T(TEST, "bkt    -> %d",   b);
-	T(TEST, "idx    -> %d",   b->idx);	
-	T(TEST, "s      -> %s",   b->s);
-	T(TEST, "h      -> %d",   b->h);
-	T(TEST, "n      -> %d",   b->n);
-	T(TEST, "packed -> %d",   b->packed);	
+	T(TEST, "bkt     -> %d",   b);
+	T(TEST, "idx     -> %d",   b->idx);	
+	T(TEST, "s       -> %s",   b->s);
+	T(TEST, "h       -> %d",   b->h);
+	T(TEST, "n       -> %d",   b->n);
+	T(TEST, "payload -> %lu",  b->packed);	
+	//T(TEST, "packed -> %d",   b->packed);	
 	//T(TEST, "next   -> %d",   (b->next)?(b->next)->idx:-1);
-	T(TEST, "next   -> %lu",   b->next);
+	//T(TEST, "next   -> %lu",   b->next);
 }
 
-S hsh_get(HT ht, S s){
+BKT hsh_get_bkt(HT ht, V*k, sz n){
 	LOG("hsh_get");
 	HTYPE hash, idx;
-	UJ n = scnt(s);
-	hsh_idx(ht, s, n, &hash, &idx);
+	P(!k||!n,NULL); //< null ptr or empty key
+	hsh_idx(ht, k, n, &hash, &idx);
 
 	//! lookup the value
 	BKT*b = &ht->buckets[idx];
 	I depth = 0;
 	W(*b){									//< inspect the linked list from head
 		if((*b)->n==n){						//< if length matches...
-	 		DO(n,if((*b)->s[i]!=s[i])goto NEXT)	//< compare bytes, L0 on first mismatch
+	 		DO(n,if(((G)(*b)->s[i])!=((G*)k)[i])goto NEXT)	//< compare bytes, L0 on first mismatch
 	 		//T(TEST, "GET <-- %s (depth=%d)", (*b)->s, depth);
 	 		//hsh_print(B);
-	 		R (*b)->s;}						//< found a match, return the ptr				
+	 		R(*b);}							//< found a match, return the ptr				
 		NEXT:depth++;b=&(*b)->next;}		//< move to next linked node
 
 	R NULL;
 }
 
+UJ* hsh_get_payload(HT ht, V*k, sz n){
+	BKT r = hsh_get_bkt(ht, k, n);
+	P(!r,NULL);
+	R &r->payload;
+}
+
+V* hsh_get(HT ht, V*s, sz n) {
+	BKT r = hsh_get_bkt(ht, s, n);
+	P(!r,NULL);
+	R r->s;
+}
+
 //! \see https://github.com/twonds/ejabberd/blob/master/apps/ejabberd/c_src/tls_drv.c
-S hsh_ins(HT ht, S s){
+BKT hsh_ins(HT ht, V*k, sz n, V*payload){
 	LOG("hsh_ins");
-	S r = hsh_get(ht, s);
+	P(!k||!n,NULL); //< null ptr or empty key
+	V*r = hsh_get_bkt(ht, k, n);
 	P(r, r); //< return pointer if found
 
 	HTYPE hash, idx;
-	UJ n = scnt(s), rec_len = SZ_BKT + n + 1;
-	hsh_idx(ht, s, n, &hash, &idx);
+	UJ rec_len = SZ_BKT + n + 1;
+	hsh_idx(ht, k, n, &hash, &idx);
 
 	T(TRACE, "cnt=%lu bucket=%d, split=%d, level=%d",
 		ht->cnt, idx, ht->split, ht->level);
@@ -81,11 +96,12 @@ S hsh_ins(HT ht, S s){
 	BKT B = malloc(rec_len);chk(B,NULL);	//< init new value
 	ht->mem += rec_len;	ht->cnt++;			//< increment odometers
 	B->h              = hash;				//< set hash value
-	B->n              = n;					//< set payload length
+	B->n              = n;					//< set val length
 	B->idx            = idx;				//< set current bucket index
+	B->payload		  = (UJ)payload;		//< set payload pointer
 	B->packed		  = 0;					//< not in heap
 	B->next           = ht->buckets[idx];	//< link existing list item, if any
-	*dsn(B->s,s,n)    = 0;					//< copy payload and terminate it
+	*dsn(B->s,k,n)    = 0;					//< copy val and terminate it
 	
 	ht->buckets[idx]  = B;					//< put at the head of the list
 
@@ -121,7 +137,7 @@ S hsh_ins(HT ht, S s){
 			}
 		)
 	}
-	R B->s; //< ptr to string
+	R B; //< bucket
 }
 
 sz hsh_mem(HT ht) {
@@ -130,7 +146,7 @@ sz hsh_mem(HT ht) {
 }
 
 Z HTYPE hsh_bcnt(HT ht) {
-	HTYPE r;
+	HTYPE r = 0;
 	DO(hsh_capacity(ht), r+=!!ht->buckets[i])
 	R r;
 }
@@ -144,16 +160,24 @@ E hsh_bavg(HT ht) {
 }
 
 HT hsh_init(I level, H split_rounds) {
+	R hsh_init_custom(level, split_rounds, hsh_djb);
+}
+
+HT hsh_init_custom(I level, H split_rounds, HSH_FN fn) {
 	LOG("hsh_init");
+	X(level<2, T(WARN, "level can't be less than 2"), NULL);
+	X((level&(level-1)), T(WARN, "level must be a power of 2"), NULL);
+	
 	HT ht = (HT)malloc(SZ_HT);chk(ht,NULL);
 	ht->level = level;
 	ht->rounds = split_rounds;
 	ht->heap = NULL;
+	ht->fn = fn;
 	ht->split = ht->cnt = ht->mem = 0; //< init odometers
 	HTYPE init_size = hsh_capacity(ht);
 	ht->buckets = (BKT*)calloc(init_size, SZ(BKT)); //< initialize hash table
 	chk(ht->buckets,NULL);
-	T(TEST,"calloc: level=%d capacity=%d mem=%d",
+	T(DEBUG,"calloc: level=%d capacity=%d mem=%d",
 		ht->level, hsh_capacity(ht), hsh_capacity(ht) * SZ(BKT));
 	R ht;
 }
@@ -204,7 +228,7 @@ V hsh_destroy(HT ht){
 		W(curr) {
 			next = curr->next;
 			if(!curr->packed){
-				T(TEST, "freeing up bkt=%lu %s (%d)", i, curr->s, curr->packed);
+				//T(TEST, "freeing up bkt=%lu %s (%d)", i, curr->s, curr->packed);
 				free(curr);
 			}
 			curr = next;
@@ -214,12 +238,12 @@ V hsh_destroy(HT ht){
 	if(ht->heap)free(ht->heap);
 	free(ht->buckets);
 	free(ht);
-	T(TEST, "released %lu values, hash table destroyed", c);
+	T(DEBUG, "released %lu values, hash table destroyed", c);
 }
 
 V hsh_info(HT ht) {
 	LOG("hsh_info");
-	T(INFO, "capacity=%d, cnt=%d, bcnt=%d, bavg=%.2f, lfactor=%.2f, split=%d, bytes=%lu",
+	T(INFO, "cap=%8d, cnt=%8d, bcnt=%8d, bavg=%4.2f, lf=%4.2f, spl=%8d, mem=%8lu",
 		hsh_capacity(ht), ht->cnt, hsh_bcnt(ht), hsh_bavg(ht), hsh_factor(ht), ht->split, hsh_mem(ht));
 }
 
@@ -243,12 +267,33 @@ V hsh_dump(HT ht) {
 	hsh_info(ht);
 }
 
+V hsh_each(HT ht, HT_EACH fn, V*arg) {
+	LOG("hsh_each")
+	BKT b;
+	UJ cnt = 0;
+	DO(hsh_capacity(ht),
+		b = ht->buckets[i];
+		if(!b)continue;
+		W(b){
+			fn(b, arg, cnt++);
+			b = b->next;
+		}
+	)
+}
+
+
 #ifdef RUN_TESTS_HSH
+
+V hsh_test_each_fn(BKT bkt, V*arg, HTYPE i) {
+	Arr c = (Arr)arg;
+	arr_add(c, bkt->n);
+}
+
 C hsh_test_insert_rand(HT ht, UJ cnt, UJ rand_len) {
 	LOG("hsh_test_insert_rand");
 	DO(cnt,
 		S s = (S)malloc(rand_len+1);chk(s,1);
-		hsh_ins(ht, rnd_str(s,rand_len,CHARSET_AZ));
+		hsh_ins(ht, rnd_str(s,rand_len,CHARSET_AZ), rand_len, NULL);
 		free(s))	
 	R0;
 }
@@ -262,7 +307,7 @@ UJ hsh_walk(HT ht) {
 		b = ht->buckets[i];
 		if(!b)continue;
 		W(b){
-			res += !!hsh_get(ht, b->s);
+			res += !!hsh_get(ht, b->s, b->n);
 			b = b->next;
 		}
 	);
@@ -272,18 +317,18 @@ UJ hsh_walk(HT ht) {
 ZI hsh_test(sz rand_cnt, sz rand_len) {
 	LOG("hsh_test");
 
-	HT ht = hsh_init(2, 3);
+	HT ht = hsh_init();
 
 	S keys[] = { "FKTABLE_CAT", "cov", "bmp", "frameset", "cos", "fmt" }; 
 	I keys_len = 6;
 
 	//! test insert
-	S addrs[keys_len];
-	DO(keys_len, addrs[i]=hsh_ins(ht, keys[i]));
+	BKT*addrs[keys_len];
+	DO(keys_len, addrs[i]=hsh_ins(ht, keys[i], scnt(keys[i]), 0));
 
 	//! test insert #2
 	DO(keys_len,
-		X(addrs[i]!=hsh_ins(ht, keys[i]),
+		X(addrs[i]!=hsh_ins(ht, keys[i], scnt(keys[i]), 0),
 			T(TEST, "unstable pos: %d", i),
 			1)
 	);
@@ -292,11 +337,21 @@ ZI hsh_test(sz rand_cnt, sz rand_len) {
 
 	//! test lookup
 	DO(keys_len,
-		S found = hsh_get(ht, keys[i]);
+		S found = hsh_get(ht, keys[i], scnt(keys[i]));
 		X(!found,
 			{hsh_dump(ht);T(FATAL, "expected %s, got NULL", keys[i]);},
 			1);
 	)
+
+	//! test each
+	Arr out = arr_init(1, UJ);
+	hsh_each(ht, (HT_EACH)hsh_test_each_fn, (V*)out);
+	TSTART();
+	T(TEST, "arr_each result -> ");
+	DO(ht->cnt,
+		T(TEST, " (%lu)", *arr_at(out,i,UJ)))
+	TEND();
+	arr_free(out);
 
 	hsh_dump(ht);
 	hsh_pack(ht); //< test inital pack

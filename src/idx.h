@@ -15,6 +15,13 @@ ext Pair* idx_data();
 ext Pair* idx_get_entry(UJ idx_pos);
 ext UJ    idx_size();
 
+//! apply fn() to each record in the database
+//! \param fn function that takes (Rec r, V* arg, UJ i)
+//! \param arg argument to be passed to each fn() call
+//! \return 0 on ok, NIL on error
+typedef UJ(*IDX_EACH)(Rec r, V*arg, UJ i); //< idx_each function interface
+ext UJ idx_each(IDX_EACH fn, V*arg, C halt_on_err);
+
 ext C     cmp_binsearch(V* a, V* b, sz t);
 
 ext V     db_close(); //< don't forget

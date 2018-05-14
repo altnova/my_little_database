@@ -64,6 +64,7 @@ UJ csv_load(S fname){
     currline = 1;
 	I bytesRead, fld=-1, fldpos=0;
 	C buf[BUF], is_line_end, is_fld_end, in_skip, in_field, in_quotes, curr, prev, fldbuf[FLDMAX+1];
+	in_skip = in_field = in_quotes = 0;
 	
 	W((bytesRead = fread(buf, 1, BUF, csv)) > 0) {
 		DO(bytesRead,

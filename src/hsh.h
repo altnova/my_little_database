@@ -1,14 +1,16 @@
 #include "___.h"
 
 typedef I HTYPE; //< hash width
+typedef HTYPE(*HSH_FN)(V*val, UJ len); //< hsh_each function interface
 
 typedef struct bucket{
-	HTYPE h;				//< payload hash
-	UJ n;					//< payload len
+	HTYPE h;				//< value hash
+	UJ n;					//< value len
 	struct bucket* next;	//< pointer to next 
 	HTYPE idx;				//< table index
 	C packed;				//< in heap
-	C s[];					//< payload
+	UJ payload;				//< pointer to payload
+	G s[];					//< value bytes
 } pBKT;
 
 const Z sz SZ_BKT = SZ(pBKT); //< bucket header size
@@ -19,6 +21,7 @@ typedef struct hash_table {
 	HTYPE	level;		//< capacity is 2^level
 	H		rounds;		//< split rounds	
 	HTYPE	cnt; 		//< total values
+	HSH_FN  fn;			//< hash function
 	sz 		mem;		//< total byte size
 	V*		heap;		//< bucket heap pointer
 	BKT* 	buckets;	//< pointer to array of bucket pointers
@@ -28,23 +31,30 @@ const Z sz SZ_HT = SZ(pHT); //< hash table header size
 typedef pHT* HT;
 
 //! create hash table
-//! \param level initial level
+//! \param level initial level, must be a power of two
 //! \param srounds split rounds, higher is faster lookups but slower inserts
+//! \param fn hash function
 //! \return ptr to table, NULL if error
-ext HT hsh_init(I level, H srounds);
+ext HT hsh_init(I level, H split_rounds);
+ext HT hsh_init_custom(I level, H srounds, HSH_FN fn);
+
+//! passthrough hash function
+ext HTYPE hsh_identity(V*a,UJ n);
 
 //! hash table capacity
 #define hsh_capacity(ht) (ht->level * 2)
 
 //! insert str into the hash table
-//! \param ht,s table, str
+//! \param ht,s,n tab,key,len \param payload pointer to payload struct
 //! \return ptr to permanent address or NULL if error
-ext S hsh_ins(HT ht, S s);
+ext BKT hsh_ins(HT ht, V*k, sz n, V*payload);
 
-//! lookup str in the hash table
-//! \param s str
+//! lookup key,payload,bucket by key
+//! \param s,n key,len
 //! \return ptr to str, NULL if not found
-ext S hsh_get(HT ht, S s);
+ext V* hsh_get(HT ht, V*k, sz n);
+ext UJ* hsh_get_payload(HT ht, V*k, sz n);
+ext BKT hsh_get_bkt(HT ht, V*k, sz n);
 
 //! dump hash table metrics
 ext V hsh_info(HT ht);
@@ -68,6 +78,16 @@ ext sz hsh_mem(HT ht);
 //! \return 1 if ok, 0 if error
 ext C hsh_pack(HT ht);
 
+//! apply fn() to each bucket in the table
+//! \param fn function that takes (BT bkt, V* arg, HTYPE i)
+//! \param arg argument to be passed to each fn() call
+typedef V(*HT_EACH)(BKT bkt, V*arg, HTYPE i); //< hsh_each function interface
+ext V hsh_each(HT ht, HT_EACH fn, V*arg);
+
+//! debug print bucket
+ext V hsh_print(BKT b);
+
 //! release hash table
+//! \param destroy_payload deallocate non-empty payload pointers
 ext V hsh_destroy(HT ht);
 

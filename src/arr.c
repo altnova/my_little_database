@@ -43,7 +43,7 @@ I arr_add_(Arr* aptr, V* el){
 		a->size *= 2;
 		*aptr = a = (Arr)realloc(a, SZ_HDR + a->el_size * a->size);
 		chk(a,1);
-		T(TEST,"grew to %lu", a->size);
+		T(TRACE,"grew to %lu", a->size);
 	}
 	memcpy((V*)(a->data + a->el_size * a->used++), el, a->el_size);
 	R0;

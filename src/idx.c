@@ -61,6 +61,7 @@ UJ idx_shift(UJ pos) {
 Pair* idx_data() {
 	R(Pair*)idx->data;
 }
+
 //! create db file if not exists \returns number of records
 Z UJ db_touch(S fname) {
 	LOG("db_touch");
@@ -113,6 +114,23 @@ ZV idx_dump(UJ head) {
 	)
 	TEND();
 }
+
+UJ idx_each(IDX_EACH fn, V*arg, C halt_on_err) {
+	LOG("idx_each")
+	FILE* in;
+	xfopen(in, db_file, "r", NIL);
+	UJ rcnt, pos = 0;
+	W((rcnt = fread(buf, SZ_REC, RECBUFLEN, in))) {
+		T(DEBUG, "read %lu records", rcnt);
+		DO(rcnt,
+			Rec b = &buf[i];
+			UJ res = fn(b, arg, pos++);
+			P(halt_on_err&&res==NIL, NIL)
+		)
+	}
+	R pos;
+}
+
 
 //! rebuild index from scratch
 //! \return # recs loaded, NIL on error
