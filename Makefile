@@ -54,6 +54,10 @@ tri:
 	gcc -DRUN_TESTS_TRI -O2 -g -o bin/tri src/trc.c src/tri.c
 	./bin/tri
 
+hea:
+	gcc -DRUN_TESTS_HEA -O2 -g -o bin/hea src/trc.c src/hea.c
+	./bin/hea
+
 clean:
 	mkdir -p bin
 	rm -rf *.dSYM bin/*.dSYM
