@@ -15,6 +15,7 @@ HEAP hea_init(sz init_sz) {
 	HEAP h = (HEAP)calloc(SZ_HEAP,1);chk(h,NULL);
 	h->ptr = calloc(1,init_sz);chk(h->ptr,NULL);
 	h->size = init_sz;
+	h->used = 0;
 	R h;}
 
 V* hea_add(HEAP h, V*obj, sz obj_sz) {
@@ -30,12 +31,12 @@ V* hea_add(HEAP h, V*obj, sz obj_sz) {
 		offset = old_ptr-(h->ptr);
 		T(TEST, "realloc heap %lu, diff=%lu", h->size, offset);
 	}
-	V*heap_addr=h->ptr+(h->used);
-	mcpy(heap_addr, obj, obj_sz);
+	V*obj_addr=h->ptr+(h->used);
+	mcpy(obj_addr, obj, obj_sz);
 	h->used += obj_sz;
 	h->offset = offset;
 	h->cnt++;
-	R heap_addr;}
+	R obj_addr;}
 
 V hea_destroy(HEAP h) {
 	free(h->ptr);

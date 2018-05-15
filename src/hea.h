@@ -13,3 +13,6 @@ typedef struct heap {
 #define SZ_HEAP SZ(pHEAP)
 typedef pHEAP* HEAP;
 
+ext HEAP hea_init(sz init_sz);
+ext V*   hea_add(HEAP h, V*obj, sz obj_sz);
+ext V    hea_destroy(HEAP h);
