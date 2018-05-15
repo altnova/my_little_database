@@ -29,4 +29,7 @@ ext NODE tri_get(TRIE t, S key);
 ext C tri_is_leaf(NODE n);
 ext V tri_dump(TRIE t, NODE curr, I depth);
 
+typedef V(*TRIE_EACH)(NODE n, V*arg, I depth); //< tri_each function interface
+ext V tri_each(TRIE t, TRIE_EACH fn, V*arg);
+
 ext V tri_destroy(TRIE t);

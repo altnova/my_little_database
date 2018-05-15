@@ -65,6 +65,18 @@ NODE tri_get(TRIE t, S key) {
 		curr = curr->children[idx])
 	R curr;}
 
+ZV tri_each_node(TRIE t, NODE curr, TRIE_EACH fn, V*arg, I depth) {
+	fn(curr, arg, depth);
+	DO(TRI_RANGE,
+		NODE c = curr->children[i];
+		if(c)tri_each_node(t,c,fn,arg,depth+1)
+	)	
+}
+
+V tri_each(TRIE t, TRIE_EACH fn, V*arg) {
+	tri_each_node(t, t->root, fn, arg, 0);
+}
+
 V tri_dump(TRIE t, NODE curr, I depth) {
 	C c,idx;
 	DO(depth,O(" "))
@@ -80,6 +92,11 @@ V tri_destroy(TRIE t){
 
 #ifdef RUN_TESTS_TRI
 
+V tri_test_each(NODE n, V*arg, I depth){
+	LOG("tri_test_each");
+	T(TEST, "id=%4lu key=%c depth=%d arg=%d", n->id, n->key, depth, (I)arg);
+}
+
 I main() {
 
 	S keys[] = {"abbot", "abbey", "abacus", "abolition", "abolitions", "abortion", "abort", "zero"};
@@ -92,6 +109,8 @@ I main() {
 	T(TEST,"inserted %lu nodes", t->cnt);
 
 	tri_dump(t,t->root,0);
+
+	tri_each(t, tri_test_each, 42);
 
 	DO(8, X(!tri_get(t, keys[i]), T(FATAL, "can't find %s", keys[i]), 1))
 
