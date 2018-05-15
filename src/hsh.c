@@ -167,6 +167,7 @@ HT hsh_init_custom(I level, H split_rounds, HSH_FN fn) {
 	LOG("hsh_init");
 	X(level<2, T(WARN, "level can't be less than 2"), NULL);
 	X((level&(level-1)), T(WARN, "level must be a power of 2"), NULL);
+	X(split_rounds<1, T(WARN, "split_rounds can't be less than 1"), NULL);
 	
 	HT ht = (HT)malloc(SZ_HT);chk(ht,NULL);
 	ht->level = level;
@@ -219,13 +220,13 @@ C hsh_pack(HT ht) {
 	R1;
 }
 
-V hsh_destroy(HT ht){
+V hsh_destroy(HT ht) {
 	LOG("hsh_destroy");
 	BKT curr, next;
 	HTYPE c = 0;
 	DO(hsh_capacity(ht),
 		curr = ht->buckets[i];
-		W(curr) {
+		W(curr){
 			next = curr->next;
 			if(!curr->packed){
 				//T(TEST, "freeing up bkt=%lu %s (%d)", i, curr->s, curr->packed);
@@ -281,7 +282,6 @@ V hsh_each(HT ht, HT_EACH fn, V*arg) {
 	)
 }
 
-
 #ifdef RUN_TESTS_HSH
 
 V hsh_test_each_fn(BKT bkt, V*arg, HTYPE i) {
@@ -298,7 +298,7 @@ C hsh_test_insert_rand(HT ht, UJ cnt, UJ rand_len) {
 	R0;
 }
 
-//! dummy walk to test data locality speedup
+//! dummy walk for testing data locality speedup
 UJ hsh_walk(HT ht) {
 	LOG("hsh_walk")
 	BKT b;
