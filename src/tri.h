@@ -20,3 +20,13 @@ typedef struct node {
 
 #define SZ_NODE SZ(pNODE)
 typedef pNODE* NODE;
+
+ext TRIE tri_init();
+
+ext NODE tri_insert(TRIE t, S key, V*payload);
+ext NODE tri_upsert(TRIE t, S key, V*payload);
+ext NODE tri_get(TRIE t, S key);
+ext C tri_is_leaf(NODE n);
+ext V tri_dump(TRIE t, NODE curr, I depth);
+
+ext V tri_destroy(TRIE t);

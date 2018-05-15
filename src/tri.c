@@ -24,18 +24,23 @@ Z NODE tri_ins_at(TRIE t, NODE at, C key) {
 	}
 	R n;}
 
+Z NODE tri_paste(TRIE t, S key, V*payload, C overwrite) {
+	LOG("tri_ins");
+	sz l = scnt(key); P(!l,NULL)
+	DO(l,P(!IN(0,key[i]-TRI_RANGE_OFFSET,TRI_RANGE-1),NULL))
+	NODE curr = t->root;
+	DO(l,curr = tri_ins_at(t, curr, key[i]))
+	if(overwrite||!curr->payload)curr->payload = payload;
+	R curr;}
+
 ZV tri_destroy_node(TRIE t, NODE n) {
 	DO(TRI_RANGE,
 		NODE c = n->children[i];
 		if(c)tri_destroy_node(t,c))
 	free(n);}
 
-C tri_is_leaf(NODE n){
+C tri_is_leaf(NODE n) {
 	R!!n->payload;}
-
-V tri_destroy(TRIE t){
-	tri_destroy_node(t,t->root);
-	free(t);}
 
 TRIE tri_init() {
 	LOG("tri_init");	
@@ -44,14 +49,11 @@ TRIE tri_init() {
 	t->root = tri_init_node(0,1);
 	R t;}
 
-NODE tri_ins(TRIE t, S key, V*payload) {
-	LOG("tri_ins");
-	sz l = scnt(key); P(!l,NULL)
-	DO(l,P(!IN(0,key[i]-TRI_RANGE_OFFSET,TRI_RANGE-1),NULL))
-	NODE curr = t->root;
-	DO(l,curr = tri_ins_at(t, curr, key[i]))
-	curr->payload = payload;
-	R curr;}
+NODE tri_insert(TRIE t, S key, V*payload) {
+	R tri_paste(t,key,payload,0);}
+
+NODE tri_upsert(TRIE t, S key, V*payload) {
+	R tri_paste(t,key,payload,1);}
 
 NODE tri_get(TRIE t, S key) {
 	LOG("tri_get");
@@ -72,6 +74,10 @@ V tri_dump(TRIE t, NODE curr, I depth) {
 		if(c)tri_dump(t,c,depth+1)
 	)}
 
+V tri_destroy(TRIE t){
+	tri_destroy_node(t,t->root);
+	free(t);}
+
 #ifdef RUN_TESTS_TRI
 
 I main() {
@@ -82,7 +88,7 @@ I main() {
 	TRIE t=tri_init();
 	X(!t,T(FATAL,"cannot init trie"),1);
 
-	DO(8, X(!tri_ins(t, keys[i], 1), T(FATAL, "can't insert %s", keys[i]), 1))
+	DO(8, X(!tri_insert(t, keys[i], (V*)1), T(FATAL, "can't insert %s", keys[i]), 1))
 	T(TEST,"inserted %lu nodes", t->cnt);
 
 	tri_dump(t,t->root,0);
