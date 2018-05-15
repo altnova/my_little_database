@@ -18,6 +18,7 @@ Z NODE tri_ins_at(TRIE t, NODE at, C key) {
 	NODE n=at->children[idx];
 	if(!n){
 		n = tri_init_node(at->id+1,key);
+		P(!n, NULL)
 		at->children[idx] = n;
 		t->cnt++;
 	}
