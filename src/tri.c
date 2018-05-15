@@ -94,20 +94,8 @@ I main() {
 	tri_dump(t,t->root,0);
 
 	DO(8, X(!tri_get(t, keys[i]), T(FATAL, "can't find %s", keys[i]), 1))
-//	T(TEST, "abo -> %d", !!tri_get(t, "abo"));
-//	T(TEST, "abbot -> %d", !!tri_get(t, "abbot"));
-//	T(TEST, "abolition -> %d", !!tri_get(t, "abbot"));
 
-	tri_destroy(t);
 	exit(0);
-
-	C bits[9];
-	O("%lu", SZ(long double));
-	exit(0);
-	DO(256,
-		bits_char(i, bits);
-		O("%lu b=%s\n", i, bits)
-	)
 }
 
 #endif

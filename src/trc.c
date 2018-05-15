@@ -42,4 +42,21 @@ V bits_char(C x, S dest) {
     dest[pos]=0;
 }
 
+/*
+//	T(TEST, "abo -> %d", !!tri_get(t, "abo"));
+//	T(TEST, "abbot -> %d", !!tri_get(t, "abbot"));
+//	T(TEST, "abolition -> %d", !!tri_get(t, "abbot"));
+
+	tri_destroy(t);
+	exit(0);
+
+	C bits[9];
+	O("%lu", SZ(long double));
+	exit(0);
+	DO(256,
+		bits_char(i, bits);
+		O("%lu b=%s\n", i, bits)
+	)
+*/
+
 //:~
