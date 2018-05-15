@@ -33,19 +33,15 @@ UJ tok_load_stop_words(S fname) {
 	FILE* fd;
 	xfopen(fd, fname, "r+", NIL);
 	UJ fsz = fsize(fd);
-	S buf = malloc(fsz);
+	S buf = malloc(fsz); chk(buf,NIL);
 	UJ bytesRead = fread(buf, 1, fsz, fd);
+	lcse(buf);
 	S delim = "\n";
-	S sword = strtok(buf, delim);
-	if (!sword) R0;
-	W(sword!=NULL) {
-		lcse(sword);
-		T(TRACE, "stopword --> (%s)", sword);
-		UJ len = scnt(sword);
-		hsh_ins(stopwords, sword, len, NULL);
-		sword = strtok(NULL, delim);
-	}
+	stok(buf, fsz, "\n",
+		T(TEST, "stopword --> (%s)", tok);
+		hsh_ins(stopwords, tok, tok_len, NULL))
 	fclose(fd);
+	free(buf);
 
 	hsh_pack(stopwords);
 	hsh_info(stopwords); //hsh_dump(stopwords);
@@ -183,7 +179,7 @@ V tok_pack() {
 	DO(FTI_FIELD_COUNT,
 		hsh_each(ftidx[i], tok_ftidx_repack_each, NULL);
 		hsh_pack(ftidx[i]);//hsh_info(ftidx[i]);
-	);
+	)
 	T(TEST, "packed indexes in %lums", clk_stop());
 }
 
@@ -219,8 +215,6 @@ I main() {
 	
 	db_init(DAT_FILE, IDX_FILE);
 
-	stopwords = hsh_init(2,3);
-
 	DO(FTI_FIELD_COUNT,
 		ftidx[i]=hsh_init(2,3);
 		wordbags[i]=hsh_init(2,3);
@@ -228,12 +222,15 @@ I main() {
 		wordbag_heap_sizes[i]=WORDBAG_INIT_SIZE;
 		wordbag_heap_usage[i]=0;
 		X(!ftidx[i], T(FATAL, "cannot initialize hash table %d", i), 1);
-	);
+	)
 
 	//! load stop words
+	stopwords = hsh_init(2,3);
 	UJ swcnt = tok_load_stop_words("dat/stopwords.txt");
 	X(swcnt==NIL,T(FATAL, "cannot load stopwords"), 1);
 	T(TEST, "loaded %lu stopwords", stopwords->cnt);
+
+	exit(0);
 
 	//! test tokenizer
 	//mcpy(qq,c,scnt(c));tok_index_field(0, 5, qq, 0); exit(0);
@@ -258,11 +255,11 @@ I main() {
 	//hsh_each(ftidx[5], tok_ftidx_inspect_each, NULL);
 	//hsh_each(wordbags[5], tok_wordbag_inspect_each, NULL);
 
-	//! tedst ui
-	C q[LINE_BUF];USR_LOOP(usr_input_str(q, "Search query", "Inavalid input"), tok_search(q));
+	//! test ui
+	C q[LINE_BUF]; USR_LOOP(usr_input_str(q, "Search query", "Inavalid characters"), tok_search(q));
 
 	hsh_destroy(stopwords);
-	DO(4, hsh_each(ftidx[2+i], tok_ftidx_destroy_each, NULL));
+	DO(FTI_FIELD_COUNT, hsh_each(ftidx[2+i], tok_ftidx_destroy_each, NULL));
 	DO(FTI_FIELD_COUNT, hsh_destroy(ftidx[i]));
 
 	db_close();
@@ -270,4 +267,7 @@ I main() {
 	T(TEST, "done");
 	R0;
 }
+
+//:~
+
 
