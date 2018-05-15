@@ -6,10 +6,10 @@
 #include "trc.h"
 #include "rnd.h"
 
-S rnd_str(S dest, sz size, I charset){
+S rnd_str(S dest, sz size, I charset) {
 	S dict;
 	SW(charset){
-		CS(0,dict="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+		CS(0,dict="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 		CS(1,dict="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 		CS(2,dict="ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 		CS(3,dict="abcdefghijklmnopqrstuvwxyz")
@@ -22,6 +22,8 @@ S rnd_str(S dest, sz size, I charset){
 	dest[size] = '\0'; //< terminate string
 	R dest;
 }
+
+#ifdef RUN_TESTS_RND
 
 I rnd_test() {
 	LOG("rnd_test");
@@ -36,6 +38,6 @@ I rnd_test() {
 	R0;
 }
 
-#ifdef RUN_TESTS_RND
 I main() { R rnd_test(); }
+
 #endif
