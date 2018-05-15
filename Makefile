@@ -50,6 +50,10 @@ stm:
 	gcc -DRUN_TESTS_STM -O2 -g -o bin/stm src/trc.c src/stm.c
 	./bin/stm
 
+tri:
+	gcc -DRUN_TESTS_TRI -O2 -g -o bin/tri src/trc.c src/tri.c
+	./bin/tri
+
 clean:
 	mkdir -p bin
 	rm -rf *.dSYM bin/*.dSYM
