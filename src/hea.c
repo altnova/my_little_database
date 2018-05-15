@@ -23,11 +23,11 @@ V* hea_add(HEAP h, V*obj, sz obj_sz) {
 	sz offset = 0;
 	if((obj_sz+h->used) > h->size){
 		V*old_ptr = h->ptr;
-		AGAIN:
+		REALLOC:
 		h->ptr = realloc(h->ptr, HEA_GROW_FACTOR * h->size);chk(h->ptr,NULL);
 		zero(h->ptr+(h->size), h->size); //< zero out
 		h->size *= HEA_GROW_FACTOR;
-		if((obj_sz+h->used) > h->size)goto AGAIN;
+		if((obj_sz+h->used) > h->size)goto REALLOC;
 		offset = old_ptr-(h->ptr);
 		T(TEST, "realloc heap %lu, diff=%lu", h->size, offset);
 	}
