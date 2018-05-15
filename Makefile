@@ -38,10 +38,6 @@ rnd:
 	gcc -DRUN_TESTS_RND -g -o bin/rnd src/trc.c src/rnd.c 
 	./bin/rnd
 
-tok:
-	gcc -DRUN_TESTS_TOK -g -o bin/tok src/usr.c src/stm.c src/clk.c src/bin.c src/arr.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/tok.c 
-	./bin/tok
-
 usr:
 	gcc -DRUN_TESTS_USR -g -o bin/usr src/trc.c src/usr.c 
 	./bin/usr
@@ -57,6 +53,10 @@ tri:
 hea:
 	gcc -DRUN_TESTS_HEA -O2 -g -o bin/hea src/trc.c src/hea.c
 	./bin/hea
+
+tok:
+	gcc -DRUN_TESTS_TOK -g -o bin/tok src/hea.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/arr.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/tok.c 
+	./bin/tok
 
 clean:
 	mkdir -p bin
