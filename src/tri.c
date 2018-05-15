@@ -67,20 +67,31 @@ NODE tri_get(TRIE t, S key) {
 	R curr;}
 
 ZV tri_each_node(TRIE t, NODE curr, TRIE_EACH fn, V*arg, I depth) {
+	fn(curr, arg, depth);
 	DO(TRI_RANGE,
 		NODE c = curr->children[i];
 		if(c)tri_each_node(t,c,fn,arg,depth+1)
+	)}
+
+ZV tri_each_node_reverse(TRIE t, NODE curr, TRIE_EACH fn, V*arg, I depth) {
+	DO(TRI_RANGE,
+		NODE c = curr->children[i];
+		if(c)tri_each_node_reverse(t,c,fn,arg,depth+1)
 	)
-	fn(curr, arg, depth);}
+	fn(curr, arg, depth);
+}
 
 V tri_each(TRIE t, TRIE_EACH fn, V*arg) {
 	tri_each_node(t, t->root, fn, arg, 0);}
+
+V tri_each_reverse(TRIE t, TRIE_EACH fn, V*arg) {
+	tri_each_node_reverse(t, t->root, fn, arg, 0);}
 
 V tri_dump(TRIE t) {
 	tri_each(t, tri_dump_node, NULL);}
 
 V tri_destroy(TRIE t){
-	tri_each(t, tri_destroy_node, NULL);
+	tri_each_reverse(t, tri_destroy_node, NULL);
 	free(t);
 }
 
