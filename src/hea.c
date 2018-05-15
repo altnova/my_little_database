@@ -19,18 +19,21 @@ HEAP hea_init(sz init_sz) {
 
 V* hea_add(HEAP h, V*obj, sz obj_sz) {
 	LOG("hea_add");
-	sz diff = 0;
-	if(h->used+obj_sz > h->size){
+	sz offset = 0;
+	if((obj_sz+h->used) > h->size){
 		V*old_ptr = h->ptr;
+		AGAIN:
 		h->ptr = realloc(h->ptr, HEA_GROW_FACTOR * h->size);chk(h->ptr,NULL);
 		zero(h->ptr+(h->size), h->size); //< zero out
 		h->size *= HEA_GROW_FACTOR;
-		diff = old_ptr-(h->ptr);
+		if((obj_sz+h->used) > h->size)goto AGAIN;
+		offset = old_ptr-(h->ptr);
+		T(TEST, "realloc heap %lu, diff=%lu", h->size, offset);
 	}
 	V*heap_addr=h->ptr+(h->used);
 	mcpy(heap_addr, obj, obj_sz);
 	h->used += obj_sz;
-	h->diff = diff;
+	h->offset = offset;
 	h->cnt++;
 	R heap_addr;}
 
@@ -46,14 +49,14 @@ I main() {
 
 	S keys[] = {"abbot", "abbey", "abacus", "abolition", "abolitions", "abortion", "abort", "zero"};
 
-	HEAP h=hea_init(1024);
+	HEAP h=hea_init(1);
 	X(!h,T(FATAL,"cannot init heap"),1);
 
 	S obj;
 	DO(8,
 		obj = (S)hea_add(h, keys[i], scnt(keys[i]));
 		X(!obj, T(FATAL, "can't add to heap"), 1);
-		T(TEST, "added %s, diff=%ld", obj, h->diff))
+		T(TEST, "added %s, offset=%ld", keys[i], h->offset))
 
 	T(TEST,"added %lu objects", h->cnt);
 	T(TEST,"heap contents: (%s)", h->ptr);
