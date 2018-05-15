@@ -27,7 +27,7 @@ Z NODE tri_ins_at(TRIE t, NODE at, C key) {
 Z NODE tri_paste(TRIE t, S key, V*payload, C overwrite) {
 	LOG("tri_ins");
 	sz l = scnt(key); P(!l,NULL)
-	DO(l,P(!IN(0,key[i]-TRI_RANGE_OFFSET,TRI_RANGE-1),NULL))
+	DO(l,P(!IN(0,key[i]-TRI_RANGE_OFFSET,TRI_RANGE-1),(T(WARN,"unsupported characters in (%s)", key),NULL)))
 	NODE curr = t->root;
 	DO(l,curr = tri_ins_at(t, curr, key[i]))
 	if(overwrite||!curr->payload)curr->payload = payload;
