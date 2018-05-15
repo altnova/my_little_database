@@ -6,7 +6,7 @@ typedef struct heap {
 	sz size;
 	sz used;
 	sz cnt;
-	J  diff;
+	J  offset;
 	V* ptr;
 } pHEAP;
 
