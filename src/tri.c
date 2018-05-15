@@ -30,8 +30,7 @@ ZV tri_destroy_node(TRIE t, NODE n) {
 	free(n);}
 
 C tri_is_leaf(NODE n){
-	R!!n->payload;
-}
+	R!!n->payload;}
 
 V tri_destroy(TRIE t){
 	tri_destroy_node(t,t->root);
@@ -50,7 +49,7 @@ NODE tri_ins(TRIE t, S key, V*payload) {
 	DO(l,P(!IN(0,key[i]-TRI_RANGE_OFFSET,TRI_RANGE-1),NULL))
 	NODE curr = t->root;
 	DO(l,curr = tri_ins_at(t, curr, key[i]))
-	curr->payload=payload;
+	curr->payload = payload;
 	R curr;}
 
 NODE tri_get(TRIE t, S key) {
@@ -60,8 +59,7 @@ NODE tri_get(TRIE t, S key) {
 	C c,idx;
 	DO(l,
 		c=key[i];idx=c-TRI_RANGE_OFFSET; P(!IN(0,idx,TRI_RANGE-1),NULL)
-		curr = curr->children[idx];
-	)
+		curr = curr->children[idx])
 	R curr;}
 
 V tri_dump(TRIE t, NODE curr, I depth) {
