@@ -67,11 +67,11 @@ NODE tri_get(TRIE t, S key) {
 	R curr;}
 
 ZV tri_each_node(TRIE t, NODE curr, TRIE_EACH fn, V*arg, I depth) {
-	fn(curr, arg, depth);
 	DO(TRI_RANGE,
 		NODE c = curr->children[i];
 		if(c)tri_each_node(t,c,fn,arg,depth+1)
-	)}
+	)
+	fn(curr, arg, depth);}
 
 V tri_each(TRIE t, TRIE_EACH fn, V*arg) {
 	tri_each_node(t, t->root, fn, arg, 0);}
@@ -81,7 +81,8 @@ V tri_dump(TRIE t) {
 
 V tri_destroy(TRIE t){
 	tri_each(t, tri_destroy_node, NULL);
-	free(t);}
+	free(t);
+}
 
 #ifdef RUN_TESTS_TRI
 
@@ -107,7 +108,9 @@ I main() {
 
 	DO(8, X(!tri_get(t, keys[i]), T(FATAL, "can't find %s", keys[i]), 1))
 
-	exit(0);
+	tri_destroy(t);
+
+	R0;
 }
 
 #endif
