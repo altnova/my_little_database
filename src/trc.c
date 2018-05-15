@@ -29,8 +29,17 @@ I T(I lvl, const S fn, const S file, const I line, const S fmt, ...) {
 	R1; //< err
 }
 
-//< line continuation flag
+//! line continuation flag
 V TSTART() {cont=1;}
 V TEND() {O("\n");cont=0;newline=1;}
+
+
+//! print bits
+V bits_char(C x, S dest) {
+    C pos=0;
+    for(I z=128; z>0; z>>=1)
+    	dest[pos++]="01"[(x&z)==z];
+    dest[pos]=0;
+}
 
 //:~
