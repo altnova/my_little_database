@@ -41,22 +41,23 @@ I arr_add_(V** aptr, V* el){
 	Arr a = *aptr;
 	if(arr_full(a)){
 		a->size *= 2;
-		*aptr = a = (Arr)realloc(a, SZ_HDR + a->el_size * a->size);
-		chk(a,1);
-		T(TRACE,"grew to %lu", a->size);
+		a = realloc(a, SZ_HDR + a->el_size * a->size);chk(a,1);
+		*aptr = a;
+		T(TEST, "realloc to %p", *aptr);
+		T(TEST,"grew to %lu", a->size);
 	}
 	memcpy((V*)(a->data + a->el_size * a->used++), el, a->el_size);
 	R0;
 }
 
 //! test
-typedef J TT; //< type
+typedef UJ TT; //< type
 ZI arr_test(){
 	LOG("arr_test");
 	UJ t = 100; //< test iterations
-	Arr a = arr_init(10,TT);	//< initially 10 elements
+	Arr a = arr_init(1,TT);	//< initially 10 elements
 	X(!a,T(FATAL, "arr_init failed"),1)
-	DO(t,arr_add(a,i)) //< will grow as necessary
+	DO(t,O("%c", ".*"[arr_add(a,i)] )) //< will grow as necessary
 	TSTART();
 	DO(t,T(TEST, "%ld->%ld ", i, *arr_at(a,i,TT)))
 	TEND();
