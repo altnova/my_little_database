@@ -284,8 +284,7 @@ V hsh_each(HT ht, HT_EACH fn, V*arg) {
 #ifdef RUN_TESTS_HSH
 
 V hsh_test_each_fn(BKT bkt, V*arg, HTYPE i) {
-	Arr c = (Arr)arg;
-	arr_add(c, bkt->n);
+	arr_add(arg, bkt->n);
 }
 
 C hsh_test_insert_rand(HT ht, UJ cnt, UJ rand_len) {
