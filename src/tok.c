@@ -227,8 +227,6 @@ V tok_pack() {
 }
 
 V tok_ftidx_destroy_each(BKT bkt, V*arg, HTYPE i) {
-	//HT wordbag = (HT)bkt->payload;
-	//hsh_destroy(wordbag);
 	Arr a = (Arr)bkt->payload;
 	arr_destroy(a);
 }
@@ -309,14 +307,13 @@ I main() {
 	hea_destroy(wordbag_heap);
 	hsh_destroy(stopwords);
 
-	DO(FTI_FIELD_COUNT, hsh_each(ftidx[2+i], tok_ftidx_destroy_each, NULL));
+	DO(FTI_FIELD_COUNT, hsh_each(ftidx[i], tok_ftidx_destroy_each, NULL));
 	DO(FTI_FIELD_COUNT, hsh_destroy(ftidx[i]));
 
 	db_close();
 
 	free(fti_info);
 	
-	T(TEST, "done");
 	R0;
 }
 

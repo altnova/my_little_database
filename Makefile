@@ -1,3 +1,4 @@
+#CC=gcc-7
 CC=gcc
 
 all: clean hea tri stm rnd clk fio arr bin hsh

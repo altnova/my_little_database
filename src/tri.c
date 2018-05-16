@@ -108,7 +108,7 @@ V tri_destroy(TRIE t){
 
 V tri_test_each(NODE n, V*arg, I depth){
 	LOG("tri_test_each");
-	T(TEST, "key=(%c) depth=%3d arg=%d", n->key, depth, (I)arg);
+	T(TEST, "key=(%c) depth=%3d arg=%ld", n->key, depth, (J)arg);
 }
 
 I main() {

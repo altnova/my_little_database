@@ -13,7 +13,6 @@
 
 //! djbhash \see http://www.burtleburtle.net/bob/hash/doobs.html
 Z inline HTYPE hsh_djb(V*a,UJ n){HTYPE h=5381;DO(n,h=33*(h^((G*)a)[i]));R h;}
-HTYPE hsh_identity(V*a,UJ n){R(I)a;}
 
 //! copy with seek \param d dest \param s source \param n len
 ZS dsn(V* d, V* s, UJ n){R memcpy(d,s,n)+n;}
