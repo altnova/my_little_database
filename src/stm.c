@@ -617,6 +617,9 @@ I main(){
   O("\033[0m");
   O("\n");
 
+  free(lineIn);
+  free(lineOut);
+
   fclose(input);
   fclose(output);
 
