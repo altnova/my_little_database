@@ -19,6 +19,7 @@ Z NODE tri_ins_at(TRIE t, NODE at, C key) {
 	if(!n){
 		n = tri_init_node(key);
 		P(!n, NULL)
+		n->parent = at;
 		at->children[idx] = n;
 		t->cnt++;
 	}
@@ -27,10 +28,12 @@ Z NODE tri_ins_at(TRIE t, NODE at, C key) {
 Z NODE tri_paste(TRIE t, S key, V*payload, C overwrite) {
 	LOG("tri_ins");
 	sz l = scnt(key); P(!l,NULL)
-	DO(l,P(!IN(0,key[i]-TRI_RANGE_OFFSET,TRI_RANGE-1),(T(WARN,"unsupported characters in (%s)", key),NULL)))
+	DO(l,P(!IN(0,key[i]-TRI_RANGE_OFFSET,TRI_RANGE-1),
+		(T(WARN,"unsupported characters in (%s)", key),NULL)))
 	NODE curr = t->root;
 	DO(l,curr = tri_ins_at(t, curr, key[i]))
 	if(overwrite||!curr->payload)curr->payload = payload;
+	curr->depth = l; //< depth <=> keylen
 	R curr;}
 
 V tri_destroy_node(NODE n, V*arg, I depth) {
@@ -38,7 +41,7 @@ V tri_destroy_node(NODE n, V*arg, I depth) {
 
 V tri_dump_node(NODE n, V*arg, I depth) {
 	DO(depth,O(" "))
-	O("%c (%d)\n", n->key, tri_is_leaf(n));}
+	O("%c (%d, %d) %c\n", n->key, tri_is_leaf(n), n->depth, n->parent->key);}
 
 C tri_is_leaf(NODE n) {
 	R!!n->payload;}
@@ -81,6 +84,9 @@ ZV tri_each_node_reverse(TRIE t, NODE curr, TRIE_EACH fn, V*arg, I depth) {
 	fn(curr, arg, depth);
 }
 
+V tri_each_from(TRIE t, NODE n, TRIE_EACH fn, V*arg) {
+	tri_each_node(t, n, fn, arg, 0);}
+
 V tri_each(TRIE t, TRIE_EACH fn, V*arg) {
 	tri_each_node(t, t->root, fn, arg, 0);}
 
@@ -89,6 +95,9 @@ V tri_each_reverse(TRIE t, TRIE_EACH fn, V*arg) {
 
 V tri_dump(TRIE t) {
 	tri_each(t, tri_dump_node, NULL);}
+
+V tri_dump_from(TRIE t, NODE n) {
+	tri_each_from(t, n, tri_dump_node, NULL);}
 
 V tri_destroy(TRIE t){
 	tri_each_reverse(t, tri_destroy_node, NULL);

@@ -53,6 +53,8 @@ typedef pRec* Rec; //< use this one
 
 enum rec_fields { fld_pages, fld_year, fld_publisher, fld_title, fld_author, fld_subject };
 
+ZS rec_field_names[] = {"pages", "year", "publisher", "title", "author", "subject"};
+
 ZI csv_max_field_widths[] = { 4, 4, 100, 200, 50, 2000 };
 
 ZI rec_field_offsets[] = {

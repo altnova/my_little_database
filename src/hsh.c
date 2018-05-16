@@ -66,10 +66,10 @@ BKT hsh_get_bkt(HT ht, V*k, sz n){
 	R NULL;
 }
 
-UJ* hsh_get_payload(HT ht, V*k, sz n){
+V* hsh_get_payload(HT ht, V*k, sz n){
 	BKT r = hsh_get_bkt(ht, k, n);
 	P(!r,NULL);
-	R &r->payload;
+	R r->payload;
 }
 
 V* hsh_get(HT ht, V*s, sz n) {
@@ -98,7 +98,7 @@ BKT hsh_ins(HT ht, V*k, sz n, V*payload){
 	B->h              = hash;				//< set hash value
 	B->n              = n;					//< set val length
 	B->idx            = idx;				//< set current bucket index
-	B->payload		  = (UJ)payload;		//< set payload pointer
+	B->payload		  = payload;			//< set payload pointer
 	B->packed		  = 0;					//< not in heap
 	B->next           = ht->buckets[idx];	//< link existing list item, if any
 	*dsn(B->s,k,n)    = 0;					//< copy val and terminate it

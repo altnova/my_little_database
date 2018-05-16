@@ -53,9 +53,9 @@ typedef size_t sz;
 #define scpy(d,s,n) (S)mcpy((S)d,(S)s,1+MIN(scnt((S)s),n)) /*!< better strcpy \param d dest \param s source \param n limit */
 #define lcse(s) {DO(scnt(s),s[i]+=IN('A',s[i],'Z')?32:0);} /*! lowercase */
 #define stok(s,n,d,x) {ZC z=0,D[255]="*";if(!z){z=1;DO(scnt(d),D[d[i]]='*')}/*!< tokenize \param s,n,d,x string,len,delims,exec */\
-					   I in=0;sz tok_len,st=0;S tok;DO(n+1,/*if(!IN(' ',s[i],'~'))O("(%d=%d)",i,s[i]);*/\
-					   if(D[s[i]]){if(in){in=0;tok=s+st;s[i]='\0';tok_len=i-st;{x;}}\
-					   else st=i;}else if(!in){in=1;st=i;})}
+					   I in=0;sz tok_len,tok_pos=0;S tok;DO(n+1,/*if(!IN(' ',s[i],'~'))O("(%d=%d)",i,s[i]);*/\
+					   if(D[s[i]]){if(in){in=0;tok=s+tok_pos;s[i]='\0';tok_len=i-tok_pos;{x;}}\
+					   else tok_pos=i;}else if(!in){in=1;tok_pos=i;})}
 
 //! less is more
 #define ZV Z V

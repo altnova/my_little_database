@@ -22,12 +22,12 @@ V* arr_at_(Arr a, UJ i){
 V* arr_last_(Arr a){
 	R(V*)(a->data + a->el_size * (a->used-1));}
 
-V arr_free(Arr a){
+V arr_destroy(Arr a){
 	if(a)free(a);
 	a = NULL;
 }
 
-sz arr_sz(Arr a){
+sz arr_size(Arr a){
 	R a->used;
 }
 
@@ -36,7 +36,7 @@ ZC arr_full(Arr a){
 }
 
 //! \return 0 -> ok, 1 -> err
-I arr_add_(Arr* aptr, V* el){
+I arr_add_(V** aptr, V* el){
 	LOG("arr_add");
 	Arr a = *aptr;
 	if(arr_full(a)){
@@ -60,8 +60,8 @@ ZI arr_test(){
 	TSTART();
 	DO(t,T(TEST, "%ld->%ld ", i, *arr_at(a,i,TT)))
 	TEND();
-	T(TEST,"capacity=%lu, used=%lu", a->size, arr_sz(a)); //< print number of elements
-	arr_free(a); //< never forget
+	T(TEST,"capacity=%lu, used=%lu", a->size, arr_size(a)); //< print number of elements
+	arr_destroy(a); //< never forget
 	R0;
 }
 

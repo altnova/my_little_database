@@ -20,7 +20,7 @@ C idx_file[MAX_FNAME_LEN+1];
 
 //! current idx size
 UJ idx_size() {
-	R arr_sz(idx);
+	R arr_size(idx);
 }
 
 //! returns specific index entry
@@ -164,7 +164,7 @@ Z UJ idx_rebuild() {
 
 //! free memory
 ZV idx_close() {
-	arr_free(idx);
+	arr_destroy(idx);
 }
 
 //! load index from a file

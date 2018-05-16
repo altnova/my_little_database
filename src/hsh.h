@@ -9,7 +9,7 @@ typedef struct bucket{
 	struct bucket* next;	//< pointer to next 
 	HTYPE idx;				//< table index
 	C packed;				//< in heap
-	UJ payload;				//< pointer to payload
+	V* payload;				//< pointer to payload
 	G s[];					//< value bytes
 } pBKT;
 
@@ -53,7 +53,7 @@ ext BKT hsh_ins(HT ht, V*k, sz n, V*payload);
 //! \param s,n key,len
 //! \return ptr to str, NULL if not found
 ext V* hsh_get(HT ht, V*k, sz n);
-ext UJ* hsh_get_payload(HT ht, V*k, sz n);
+ext V* hsh_get_payload(HT ht, V*k, sz n);
 ext BKT hsh_get_bkt(HT ht, V*k, sz n);
 
 //! dump hash table metrics
