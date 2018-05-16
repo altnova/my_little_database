@@ -23,7 +23,7 @@ ZS loglevel_names[] = {"FATAL", "WARN", "INFO", "TEST", "DEBUG", "TRACE"};
 #define STACK() {} /*! no execinfo.h on win */
 #else
 ext V _stack(S msg, I d, I offset);
-#define STACK() {_stack("", TRC_MAX_STACK_DEPTH, 0);}
+#define STACK() {T(TEST, "stack frames:");_stack("", TRC_MAX_STACK_DEPTH, 0);}
 #endif
 
 //! trace

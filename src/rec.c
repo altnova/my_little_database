@@ -6,7 +6,6 @@
 #include "cfg.h"
 #include "trc.h"
 #include "bin.h"
-#include "arr.h"
 #include "idx.h"
 #include "fio.h"
 

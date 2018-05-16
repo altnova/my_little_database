@@ -5,14 +5,14 @@
 #include "___.h"
 #include "cfg.h"
 #include "trc.h"
-#include "arr.h"
+#include "vec.h"
 #include "bin.h"
 #include "idx.h"
 #include "rec.h"
 #include "fio.h"
 #include "clk.h"
 
-Z Arr idx;		//< in-memory instance of the index
+Z Vec idx;		//< in-memory instance of the index
 Z bufRec buf;	//< readbuffer RECBUFLEN records
 
 C db_file[MAX_FNAME_LEN+1];
@@ -20,12 +20,12 @@ C idx_file[MAX_FNAME_LEN+1];
 
 //! current idx size
 UJ idx_size() {
-	R arr_size(idx);
+	R vec_size(idx);
 }
 
 //! returns specific index entry
 Pair* idx_get_entry(UJ idx_pos) {
-	R arr_at(idx, idx_pos, Pair);
+	R vec_at(idx, idx_pos, Pair);
 }
 
 //! persist index in a file
@@ -34,7 +34,7 @@ Z UJ idx_save() {
 	LOG("idx_save");
 	FILE*out;
 	xfopen(out, idx_file, "w+", NIL);
-	fwrite(idx, SZ(Arr)+idx->size*SZ(Pair), 1, out); //< TODO check error
+	fwrite(idx, SZ(Vec)+idx->size*SZ(Pair), 1, out); //< TODO check error
 	UJ idx_fsize = fsize(out);
 	fclose(out);
 	T(TRACE, "saved %lu bytes", idx_fsize);
@@ -45,7 +45,7 @@ Z UJ idx_save() {
 //! \return NIL on error, new index size on success
 UJ idx_shift(UJ pos) {
 	LOG("idx_shift");
-	Pair* s = arr_at(idx, pos, Pair);
+	Pair* s = vec_at(idx, pos, Pair);
 	UJ to_move = idx->used-pos-1;
 	memcpy(s, s+1, SZ(Pair) * to_move);
 	T(DEBUG, "shifted %lu entries, squashed db_pos=%lu", to_move, pos);
@@ -109,7 +109,7 @@ ZV idx_dump(UJ head) {
 	TSTART();
 	T(TEST, "{ last_id=%lu, used=%lu } =>", idx->hdr, idx_size());
 	DO(head?head:idx_size(),
-		e = arr_at(idx, i, Pair);
+		e = vec_at(idx, i, Pair);
 		T(TEST, " (%lu -> %lu)", e->rec_id, e->pos);
 	)
 	if(head&&head<idx_size())T(TEST,"...");
@@ -149,7 +149,7 @@ Z UJ idx_rebuild() {
 			Rec b = &buf[i];
 			e.rec_id = b->rec_id;
 			e.pos = pos++;
-			arr_add(idx, e);
+			vec_add(idx, e);
 		)
 	}
 
@@ -157,7 +157,7 @@ Z UJ idx_rebuild() {
 	idx_sort();
 
 	Pair last = e;
-	idx->hdr = last.rec_id; 	//< use Arr header field to store last_id
+	idx->hdr = last.rec_id; 	//< use Vec header field to store last_id
 
 	T(INFO, "rebuilt, entries=%lu, last_id=%lu", idx->used, idx->hdr);
 	R idx_size();
@@ -165,7 +165,7 @@ Z UJ idx_rebuild() {
 
 //! free memory
 ZV idx_close() {
-	arr_destroy(idx);
+	vec_destroy(idx);
 }
 
 //! load index from a file
@@ -176,8 +176,8 @@ Z UJ idx_load() {
 	xfopen(in, idx_file, "r", NIL);
 	idx_close();
 	J size = fsize(in);
-	Arr* tmp = &idx; //< replace pointer
-	*tmp = arr_init((size-SZ_HDR)/SZ(Pair), Pair); //< reinit idx
+	Vec* tmp = &idx; //< replace pointer
+	*tmp = vec_init((size-SZ_HDR)/SZ(Pair), Pair); //< reinit idx
 	fread(idx, size, 1, in); //< TODO check error
 	fclose(in);
 	T(INFO, "%lu bytes, %lu entries, capacity=%lu, last_id=%lu", \
@@ -191,7 +191,7 @@ UJ idx_update_hdr() {
 	FILE*out;
 	xfopen(out, idx_file, "r+", NIL);
 	zseek(out, 0L, SEEK_SET);
-	fwrite(idx, SZ(Arr), 1, out);
+	fwrite(idx, SZ(Vec), 1, out);
 	fclose(out);
 	T(DEBUG, "idx header updated");
 	R 0;
@@ -209,12 +209,12 @@ UJ idx_update_pos(UJ rec_id, UJ new_pos) {
 	LOG("idx_update_pos");
 	UJ idx_pos = rec_get_idx_pos(rec_id);
 	X(idx_pos==NIL, T(WARN, "rec_get_idx_pos failed"), NIL); //< no such record
-	Pair *i = arr_at(idx, idx_pos, Pair);
+	Pair *i = vec_at(idx, idx_pos, Pair);
 	i->pos = new_pos;
 
 	FILE*out;
 	xfopen(out, idx_file, "r+", NIL);
-	zseek(out, SZ(Arr)+SZ(Pair)*(idx_pos-1), SEEK_SET);
+	zseek(out, SZ(Vec)+SZ(Pair)*(idx_pos-1), SEEK_SET);
 	fwrite(i, SZ(Pair), 1, out);
 	fclose(out);
 	T(DEBUG, "rec_id=%lu, new_pos=%lu", rec_id, new_pos);
@@ -227,7 +227,7 @@ UJ idx_add(ID rec_id, UJ db_pos) {
 	Pair e = (Pair){0,0};
 	e.rec_id = rec_id;
 	e.pos = db_pos;
-	arr_add(idx, e);
+	vec_add(idx, e);
 	T(DEBUG, "rec_id=%lu, pos=%lu", rec_id, db_pos);
 	R idx_save(); //< TODO append single item instead of full rewrite
 }
@@ -271,7 +271,7 @@ Z UJ idx_open() {
 	X(idx_fsize==NIL, T(WARN, "fsize(%d) reports error", idx_file), NIL);
 	fclose(in);
 
-	idx = arr_init(RECBUFLEN, Pair);
+	idx = vec_init(RECBUFLEN, Pair);
 	X(idx==NULL, T(WARN, "cannot initialize memory for index"), NIL);
 
 	if (!idx_fsize) { //! empty index

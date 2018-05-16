@@ -11,11 +11,11 @@
 #include "hsh.h"
 #include "idx.h"
 #include "clk.h"
-#include "arr.h"
+#include "vec.h"
 #include "stm.h"
 #include "usr.h"
 #include "tri.h"
-#include "hea.h"
+#include "bag.h"
 #include "tok.h"
 
 #define PACK_EVERY_N_RECS (4*4096)
@@ -24,11 +24,11 @@
 Z FTI_INFO fti_info;
 
 Z HT stopwords;	//< hash table: stop words
-Z HT ftidx[FTI_FIELD_COUNT]; //< hash tables: stem -> Arr(rec_ids)
+Z HT ftidx[FTI_FIELD_COUNT]; //< hash tables: stem -> Vec(rec_ids)
 Z HT wordbags[FTI_FIELD_COUNT]; //< hash tables: term -> stem
 
 Z TRIE wordbag; //< trie: global term -> stem
-Z HEAP wordbag_heap;
+Z BAG wordbag_store;
 
 //Z inline V tok_lcase(S tk) {DO(scnt(tk), tk[i]=tolower(tk[i]));}
 
@@ -61,7 +61,7 @@ ZI tok_cmp_qsort(const V*a, const V*b) {
 //! sort index by rec_id
 ZV tok_ftidx_sort_each(BKT bkt, V*arg, UJ i) {
 	LOG("tok_ftidx_sort_each");
-	Arr a = (Arr)bkt->payload;
+	Vec a = (Vec)bkt->payload;
 	if(a->used<2)R;
 	qsort(a->data, a->used, SZ(ID), tok_cmp_qsort);
 	//T(TEST, "%lu %s index sorted %lu items", i, bkt->s, a->used);
@@ -72,18 +72,18 @@ V tok_wordbag_adjust_ptr(NODE bkt, V*diff, I depth) { bkt->payload -= (J)diff; }
 
 const ZI STOK_TRACE=0, STOK_VAL_LEN=5; ZS STOK_VAL = "aaron";
 
-V tok_store_completion(NODE n, V*arr, I depth) {
+V tok_store_completion(NODE n, V*vec, I depth) {
 	if(n->payload)
-		arr_add(arr, n);
+		vec_add(vec, n);
 }
 V tok_print_completions_for(S radix) {
 	LOG("tok_get_completions_for");
-	Arr results = arr_init(10,NODE);
+	Vec results = vec_init(10,NODE);
 	tri_each_from(wordbag, tri_get(wordbag, radix), tok_store_completion, results);
 	O("%s:", radix);
 	I rlen = scnt(radix);
-	DO(arr_size(results),
-		NODE n = *arr_at(results, i, NODE);
+	DO(vec_size(results),
+		NODE n = *vec_at(results, i, NODE);
 		I len = n->depth - rlen;
 		C cpl[len+1];
 		DO(len, cpl[len-i-1]=n->key; n=n->parent;) //< bubble up to root
@@ -91,7 +91,7 @@ V tok_print_completions_for(S radix) {
 		if(len)
 			O(" -\e[33m%s\e[0m", cpl))
 	O("\n");
-	arr_destroy(results);
+	vec_destroy(results);
 }
 
 V tok_search_help() {
@@ -153,7 +153,6 @@ UJ tok_index_field(ID rec_id, I field, S s, UJ i) {
 
 		if (!b){
 			T(WARN, "skipping bad token at rec=%lu fld=%s pos=%d", rec_id, rec_field_names[field], tok_pos);
-			STACK();
 			continue; //< unsupported characters
 		}
 
@@ -166,14 +165,13 @@ UJ tok_index_field(ID rec_id, I field, S s, UJ i) {
 			//	T(TEST, "STM %s -> (%d)", tok, tok_len);
 
 			//! add stem to wordbag
-			S heaptok = (S)hea_add(wordbag_heap, tok, tok_len+1);
+			S bagtok = (S)bag_add(wordbag_store, tok, tok_len+1);
 
-			if(wordbag_heap->offset){
-				//hsh_each(wordbags[field], tok_wordbag_adjust_ptr, old_wbh-wbh);
-				tri_each(wordbag, tok_wordbag_adjust_ptr, (V*)wordbag_heap->offset);
+			if(wordbag_store->offset){
+				tri_each(wordbag, tok_wordbag_adjust_ptr, (V*)wordbag_store->offset);
 	    	}
 			//! link stem to word
-			b->payload = heaptok;
+			b->payload = bagtok;
 			fti_info->total_tokens++;
 		} else {
 			tok = b->payload;
@@ -186,8 +184,8 @@ UJ tok_index_field(ID rec_id, I field, S s, UJ i) {
 		tok[tok_len+1]=0;
 
     	BKT fti = hsh_ins(ftidx[field], tok, tok_len+1, 0);
-		if(!fti->payload) fti->payload = arr_init(10, ID);
-		arr_add(fti->payload, rec_id);
+		if(!fti->payload) fti->payload = vec_init(10, ID);
+		vec_add(fti->payload, rec_id);
 		tok_cnt++;
 	)
 
@@ -228,8 +226,8 @@ V tok_pack() {
 }
 
 V tok_ftidx_destroy_each(BKT bkt, V*arg, HTYPE i) {
-	Arr a = (Arr)bkt->payload;
-	arr_destroy(a);
+	Vec a = (Vec)bkt->payload;
+	vec_destroy(a);
 }
 
 V tok_wordbag_inspect_each(BKT bkt, V*arg, HTYPE i) {
@@ -240,11 +238,11 @@ V tok_wordbag_inspect_each(BKT bkt, V*arg, HTYPE i) {
 
 V tok_ftidx_inspect_each(BKT bkt, V*arg, HTYPE i) {
 	LOG("tok_ftidx_inspect_each");
-	Arr wordbag = (Arr)bkt->payload;
+	Vec wordbag = (Vec)bkt->payload;
 	//TSTART();
-	//if(arr_size(wordbag)>1000) {
+	//if(vec_size(wordbag)>1000) {
 	if(STOK_TRACE&&!mcmp(bkt->s, "aaro",4))
-		T(TEST, "(%s) %lu %d", bkt->s, arr_size(wordbag), bkt->h);
+		T(TEST, "(%s) %lu %d", bkt->s, vec_size(wordbag), bkt->h);
 }
 
 I main() {
@@ -268,7 +266,7 @@ I main() {
 
 	//! init wordbag
 	wordbag = tri_init();
-	wordbag_heap = hea_init(WORDBAG_INIT_SIZE);
+	wordbag_store = bag_init(WORDBAG_INIT_SIZE);
 
 	//! load stop words
 	stopwords = hsh_init(2,3);
@@ -293,7 +291,7 @@ I main() {
 	DO(FTI_FIELD_COUNT, hsh_info(ftidx[i]))
 
 	//tok_pack();
-	//Arr terms = arr_init(ftidx[5]->cnt), ;
+	//Vec terms = vec_init(ftidx[5]->cnt), ;
 	//hsh_each(ftidx[5], tok_ftidx_inspect_each, NULL);
 	//hsh_each(wordbags[5], tok_wordbag_inspect_each, NULL);
 
@@ -305,7 +303,7 @@ I main() {
 	C q[LINE_BUF]; USR_LOOP(usr_input_str(q, "Search query", "Inavalid characters"), tok_search(q));
 
 	tri_destroy(wordbag);
-	hea_destroy(wordbag_heap);
+	bag_destroy(wordbag_store);
 	hsh_destroy(stopwords);
 
 	DO(FTI_FIELD_COUNT, hsh_each(ftidx[i], tok_ftidx_destroy_each, NULL));

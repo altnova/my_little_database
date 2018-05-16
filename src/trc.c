@@ -48,7 +48,6 @@ V _stack(S msg, I d, I offset) {
  S*strings;
  size = backtrace(array, d);
  strings = backtrace_symbols(array,size);
- T(TEST, "obtained %zd stack frames:", size);
  DO(size-offset,O("%s %s\n",msg, strings[i+offset]));
  free(strings);}
 #endif

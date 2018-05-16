@@ -6,7 +6,7 @@
 #include <time.h>
 #include "___.h"
 #include "trc.h"
-#include "arr.h"
+#include "vec.h"
 #include "rnd.h"
 #include "hsh.h"
 #include "clk.h"
@@ -286,7 +286,7 @@ V hsh_each(HT ht, HT_EACH fn, V*arg) {
 
 ZV hsh_test_each_fn(BKT bkt, V*arg, HTYPE i) {
 	LOG("hsh_test_each_fn");
-	arr_add(*arg, bkt->n);
+	vec_add(*arg, bkt->n);
 	T(DEBUG, "(each_fn after, argptr=%p)", arg);
 }
 
@@ -345,15 +345,15 @@ ZI hsh_test(sz rand_cnt, sz rand_len) {
 	)
 
 	//! test each
-	Arr out = arr_init(1, UJ);
+	Vec out = vec_init(1, UJ);
 	out->grow_factor = 100;
 	hsh_each(ht, hsh_test_each_fn, (V*)&out);
 	TSTART();
-	T(TEST, "arr_each result -> ");
-	DO(arr_size(out),
-		T(TEST, " (%lu)", *arr_at(out,i,UJ)))
+	T(TEST, "vec_each result -> ");
+	DO(vec_size(out),
+		T(TEST, " (%lu)", *vec_at(out,i,UJ)))
 	TEND();
-	arr_destroy(out);
+	vec_destroy(out);
 
 	hsh_dump(ht);
 	hsh_pack(ht); //< test inital pack
