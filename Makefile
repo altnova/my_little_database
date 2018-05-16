@@ -1,5 +1,5 @@
-#CC=gcc-7
-CC=gcc
+CC=gcc-8
+#CC=gcc
 VLG=/opt/valgrind/bin/valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes
 #--verbose --log-file=valgrind-out.txt
 VLG=
@@ -21,7 +21,7 @@ csv: clean nodatafiles
 	$(VLG) ./bin/csv csv/books.csv dat/books.dat
 
 hsh: clean
-	$(CC) -DRUN_TESTS_HSH -O2 -g -o bin/hsh src/arr.c src/clk.c src/rnd.c src/trc.c src/hsh.c
+	$(CC) -DRUN_TESTS_HSH -g -o bin/hsh src/arr.c src/clk.c src/rnd.c src/trc.c src/hsh.c
 	$(VLG) ./bin/hsh
 
 bin: clean

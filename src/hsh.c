@@ -275,7 +275,9 @@ V hsh_each(HT ht, HT_EACH fn, V*arg) {
 		b = ht->buckets[i];
 		if(!b)continue;
 		W(b){
+			O("(hsh_each before=%p)\n", arg);
 			fn(b, arg, cnt++);
+			O("(hsh_each after=%p)\n", arg);
 			b = b->next;
 		}
 	)
@@ -283,10 +285,10 @@ V hsh_each(HT ht, HT_EACH fn, V*arg) {
 
 #ifdef RUN_TESTS_HSH
 
-V hsh_test_each_fn(BKT bkt, V*arg, HTYPE i) {
-	O("%c", ".*"[arr_add_(&arg,&bkt->n)]);
-	//arr_add(arg, bkt->n);
-	O("(each_fn=%p)", arg);
+ZV hsh_test_each_fn(BKT bkt, V*arg, HTYPE i) {
+	O("(each_fn before=%p)\n", arg);
+	arr_add(arg, bkt->n);
+	O("(each_fn after=%p)\n", arg);
 }
 
 C hsh_test_insert_rand(HT ht, UJ cnt, UJ rand_len) {
@@ -346,7 +348,7 @@ ZI hsh_test(sz rand_cnt, sz rand_len) {
 	//! test each
 	Arr out = arr_init(1, UJ);
 	O("(hsh_main=%p)", out);
-	hsh_each(ht, hsh_test_each_fn, out);
+	hsh_each(ht, hsh_test_each_fn, (V*)out);
 	O("(hsh_main=%p)", out);
 	TSTART();
 	T(TEST, "arr_each result -> ");
