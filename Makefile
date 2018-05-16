@@ -1,6 +1,7 @@
 #CC=gcc-7
 CC=gcc
-#VLG=valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose --log-file=valgrind-out.txt
+VLG=/opt/valgrind/bin/valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes
+#--verbose --log-file=valgrind-out.txt
 VLG=
 
 all: clean hea tri stm rnd clk fio arr bin hsh
@@ -12,11 +13,11 @@ menu: clean
 	./bin/menu
 
 idx: clean
-	$(CC) -DRUN_TESTS_IDX  -O2 -g -o bin/idx src/bin.c src/arr.c src/idx.c src/fio.c src/rec.c src/trc.c
-	./bin/idx
+	$(CC) -DRUN_TESTS_IDX -O2 -g -o bin/idx src/bin.c src/arr.c src/idx.c src/fio.c src/rec.c src/trc.c
+	$(VLG) ./bin/idx
 
 csv: clean nodatafiles
-	$(CC) -DRUN_TESTS_CSV  -O2 -g -o bin/csv src/trc.c src/csv.c
+	$(CC) -DRUN_TESTS_CSV -O2 -o bin/csv src/trc.c src/csv.c
 	$(VLG) ./bin/csv csv/books.csv dat/books.dat
 
 hsh: clean
@@ -61,7 +62,7 @@ hea:
 
 tok:
 	$(CC) -DRUN_TESTS_TOK -g -o bin/tok src/hea.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/arr.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/tok.c 
-	./bin/tok
+	$(VLG) ./bin/tok
 
 
 clean:
