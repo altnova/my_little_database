@@ -23,6 +23,8 @@ V* arr_last_(Arr a){
 	R(V*)(a->data + a->el_size * (a->used-1));}
 
 V arr_destroy(Arr a){
+	LOG("arr_destroy");
+	T(TEST, "destroy at %p", a);
 	if(a)free(a);
 	a = NULL;
 }

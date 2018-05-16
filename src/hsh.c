@@ -284,7 +284,8 @@ V hsh_each(HT ht, HT_EACH fn, V*arg) {
 #ifdef RUN_TESTS_HSH
 
 V hsh_test_each_fn(BKT bkt, V*arg, HTYPE i) {
-	O("%c", ".*"[arr_add(arg, bkt->n)]);
+	O("%c", ".*"[arr_add_(&arg,&bkt->n)]);
+	//arr_add(arg, bkt->n);
 	O("(each_fn=%p)", arg);
 }
 
@@ -344,10 +345,12 @@ ZI hsh_test(sz rand_cnt, sz rand_len) {
 
 	//! test each
 	Arr out = arr_init(1, UJ);
+	O("(hsh_main=%p)", out);
 	hsh_each(ht, hsh_test_each_fn, out);
+	O("(hsh_main=%p)", out);
 	TSTART();
 	T(TEST, "arr_each result -> ");
-	O("(hsh_main=%p)", out);
+	
 	DO(arr_size(out),
 		T(TEST, " (%lu)", *arr_at(out,i,UJ)))
 	TEND();
