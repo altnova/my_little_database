@@ -23,7 +23,7 @@ ZV rec_print(Rec r){
 ZV recbuf_flush(){
 	LOG("recbuf_flush");
 	fwrite(recbuf, SZ_REC, recbufpos, outfile);	//< flush current buffer to outfile
-	T(INFO, "flushed %d records", recbufpos);
+	T(DEBUG, "flushed %d records", recbufpos);
 	recbufpos = 0; //< rewind buffer
 }
 
@@ -47,7 +47,8 @@ ZI add_field(I fld, S val){
 	if (fld==COLS-1) {						//< reached last field
 		ID id = next_id();					//< allocate rec_id
 		memcpy(r, &id, SZ(ID));				//< populate rec_id
-		rec_print(&recbuf[recbufpos++]);	//< debug print
+		if(((I)id%5000)==0)
+			rec_print(&recbuf[recbufpos++]);	//< debug print every 1000 records
 	}
 
 	if (recbufpos==RECBUFLEN)				//< record buffer is full...
@@ -142,6 +143,8 @@ V csv_close(){
 	T(TRACE, "csv parser is shut down");
 }
 
+#ifdef RUN_TESTS_CSV
+
 Z UJ csv_test(S csv_file, S db_file) {
 	LOG("csv_test");
 	X(csv_init(db_file),
@@ -149,13 +152,12 @@ Z UJ csv_test(S csv_file, S db_file) {
 	R csv_load(csv_file);
 }
 
-#ifdef RUN_TESTS_CSV
 I main(I argc, S*argv){
 	LOG("csv_main");
 	UJ res;
 	X((res=csv_test(argv[1], argv[2]))==NIL,
-		T(WARN, "csv parser test failed"), 1)
-	T(INFO, "loaded %d records", res);
+		T(FATAL, "csv parser test failed"), 1)
+	T(TEST, "loaded %d records", res);
 	R0;
 }
 #endif

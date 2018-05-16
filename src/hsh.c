@@ -317,13 +317,13 @@ UJ hsh_walk(HT ht) {
 ZI hsh_test(sz rand_cnt, sz rand_len) {
 	LOG("hsh_test");
 
-	HT ht = hsh_init();
+	HT ht = hsh_init(2,3);
 
 	S keys[] = { "FKTABLE_CAT", "cov", "bmp", "frameset", "cos", "fmt" }; 
 	I keys_len = 6;
 
 	//! test insert
-	BKT*addrs[keys_len];
+	BKT addrs[keys_len];
 	DO(keys_len, addrs[i]=hsh_ins(ht, keys[i], scnt(keys[i]), 0));
 
 	//! test insert #2
@@ -351,7 +351,7 @@ ZI hsh_test(sz rand_cnt, sz rand_len) {
 	DO(ht->cnt,
 		T(TEST, " (%lu)", *arr_at(out,i,UJ)))
 	TEND();
-	arr_free(out);
+	arr_destroy(out);
 
 	hsh_dump(ht);
 	hsh_pack(ht); //< test inital pack

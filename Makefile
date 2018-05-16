@@ -1,61 +1,64 @@
-all: clean clk rnd bin arr fio csv idx
-	# hsh
-	echo "done"
+CC=gcc
+
+all: clean hea tri stm rnd clk fio arr bin hsh
+
+db:
+	csv idx
+
+menu: clean
+	$(CC) -w -Werror -g -o bin/menu src/scr.c
+	./bin/menu
+
+idx: clean
+	$(CC) -DRUN_TESTS_IDX  -O2 -g -o bin/idx src/bin.c src/arr.c src/idx.c src/fio.c src/rec.c src/trc.c
+	./bin/idx
 
 csv: clean nodatafiles
-	gcc -DRUN_TESTS_CSV -g -o bin/csv src/trc.c src/csv.c
+	$(CC) -DRUN_TESTS_CSV  -O2 -g -o bin/csv src/trc.c src/csv.c
 	./bin/csv csv/books.csv dat/books.dat
 
 hsh: clean
-	gcc -DRUN_TESTS_HSH -g -o bin/hsh src/arr.c src/clk.c src/rnd.c src/trc.c src/hsh.c
+	$(CC) -DRUN_TESTS_HSH -O2 -g -o bin/hsh src/arr.c src/clk.c src/rnd.c src/trc.c src/hsh.c
 	./bin/hsh
 
-idx: clean
-	gcc -DRUN_TESTS_IDX -g -o bin/idx src/bin.c src/arr.c src/idx.c src/fio.c src/rec.c src/trc.c
-	./bin/idx
-
-menu: clean
-	gcc -w -Werror -g -o bin/menu src/scr.c
-	./bin/menu
-
 bin: clean
-	gcc -DRUN_TESTS_BIN -g -o bin/binsearch src/trc.c src/bin.c 
+	$(CC) -DRUN_TESTS_BIN -O2 -g -o bin/binsearch src/trc.c src/bin.c 
 	./bin/binsearch
 
 arr: clean
-	gcc -DRUN_TESTS_ARR -g -o bin/arr src/trc.c src/arr.c 
+	$(CC) -DRUN_TESTS_ARR -O2 -g -o bin/arr src/trc.c src/arr.c 
 	./bin/arr
 
 fio:
-	gcc -DRUN_TESTS_FIO -g -o bin/fio src/trc.c src/fio.c 
+	$(CC) -DRUN_TESTS_FIO -O2 -g -o bin/fio src/trc.c src/fio.c 
 	./bin/fio
 
 clk:
-	gcc -DRUN_TESTS_CLK -O0 -g -o bin/clk src/trc.c src/clk.c 
+	$(CC) -DRUN_TESTS_CLK -O2 -O0 -g -o bin/clk src/trc.c src/clk.c 
 	./bin/clk
 
 rnd:
-	gcc -DRUN_TESTS_RND -g -o bin/rnd src/trc.c src/rnd.c 
+	$(CC) -DRUN_TESTS_RND -O2 -g -o bin/rnd src/trc.c src/rnd.c 
 	./bin/rnd
 
 usr:
-	gcc -DRUN_TESTS_USR -g -o bin/usr src/trc.c src/usr.c 
+	$(CC) -DRUN_TESTS_USR -O2 -g -o bin/usr src/trc.c src/usr.c 
 	./bin/usr
 
 stm:
-	gcc -DRUN_TESTS_STM -O2 -g -o bin/stm src/trc.c src/stm.c
+	$(CC) -DRUN_TESTS_STM -O2 -g -o bin/stm src/trc.c src/stm.c
 	./bin/stm
 
 tri:
-	gcc -DRUN_TESTS_TRI -O2 -g -o bin/tri src/trc.c src/tri.c
+	$(CC) -DRUN_TESTS_TRI -O2 -g -o bin/tri src/trc.c src/tri.c
 	./bin/tri
 
 hea:
-	gcc -DRUN_TESTS_HEA -O2 -g -o bin/hea src/trc.c src/hea.c
+	$(CC) -DRUN_TESTS_HEA -O2 -g -o bin/hea src/trc.c src/hea.c
 	./bin/hea
 
 tok:
-	gcc -DRUN_TESTS_TOK -g -o bin/tok src/hea.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/arr.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/tok.c 
+	$(CC) -DRUN_TESTS_TOK -g -o bin/tok src/hea.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/arr.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/tok.c 
 	./bin/tok
 
 clean:

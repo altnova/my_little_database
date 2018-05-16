@@ -41,7 +41,7 @@ V tri_destroy_node(NODE n, V*arg, I depth) {
 
 V tri_dump_node(NODE n, V*arg, I depth) {
 	DO(depth,O(" "))
-	O("%c (%d, %d) %c\n", n->key, tri_is_leaf(n), n->depth, n->parent->key);}
+	O("%c (%d, %d)\n", n->key, tri_is_leaf(n), n->depth);}
 
 C tri_is_leaf(NODE n) {
 	R!!n->payload;}
