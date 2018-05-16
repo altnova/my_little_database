@@ -23,7 +23,6 @@ Z NODE tri_ins_at(TRIE t, NODE at, C key) {
 		P(!n, NULL)
 		n->parent = at;
 		at->children[idx] = n;
-		t->cnt++;
 	}
 	R n;}
 
@@ -34,7 +33,10 @@ Z NODE tri_paste(TRIE t, S key, V*payload, C overwrite) {
 		(T(WARN,"unsupported characters in (%s)", key),NULL)))
 	NODE curr = t->root;
 	DO(l,curr = tri_ins_at(t, curr, key[i]))
-	if(overwrite||!curr->payload)curr->payload = payload;
+	if(overwrite||!curr->payload){
+		curr->payload = payload;
+		t->cnt++;
+	}
 	curr->depth = l; //< depth <=> keylen
 	R curr;}
 

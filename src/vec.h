@@ -1,4 +1,4 @@
-//!\file vec.h \brief dynamic Vecay api
+//!\file vec.h \brief dynamic VECay api
 
 typedef struct vector {
 	UJ hdr;			//< reserved
@@ -8,10 +8,10 @@ typedef struct vector {
 	C grow_factor;	//< size multiplier on realloc, defaults to 2, never set to <2
 	sz el_size;		//< element size
 	G data[0];		//< struct hack
-} pVec;
+} pVEC;
 
-typedef pVec* Vec;
-#define SZ_HDR SZ(pVec) //< vector header size
+typedef pVEC* VEC;
+#define SZ_HDR SZ(pVEC) //< vector header size
 
 //! public api
 //! \param a,el,t,n,i vector, element, type, elements, index
@@ -19,14 +19,14 @@ typedef pVec* Vec;
 #define  vec_add(a,el)		({typeof(el)_e=el;vec_add_((V**)(&a),&_e);})
 #define  vec_at(a,i,t)		({(t*)vec_at_(a,i);})
 #define  vec_last(a,t)		({(t*)vec_last_(a);})
-ext sz   vec_size(Vec a);
-ext sz   vec_mem(Vec a);
-ext sz   vec_destroy(Vec);		//< never forget
+ext sz   vec_size(VEC a);
+ext sz   vec_mem(VEC a);
+ext sz   vec_destroy(VEC);		//< never forget
 
 //! underlying implementation
-ext Vec  vec_init_(sz n, sz t);
-ext Vec  vec_add_(V**a, V*el);
-ext V*   vec_at_(Vec a, UJ i);
-ext V*   vec_last_(Vec a);
+ext VEC  vec_init_(sz n, sz t);
+ext VEC  vec_add_(V**a, V*el);
+ext V*   vec_at_(VEC a, UJ i);
+ext V*   vec_last_(VEC a);
 
 //:~

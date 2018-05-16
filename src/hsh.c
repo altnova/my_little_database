@@ -185,10 +185,10 @@ HT hsh_init_custom(I level, H split_rounds, HSH_FN fn) {
 C hsh_pack(HT ht) {
 	LOG("hsh_pack");
 	BKT prev, curr, next;
-	V*tmpheap = malloc(ht->mem);
-	chk(tmpheap, 0);
+	V*tmpheap = malloc(ht->mem); chk(tmpheap, 0);
 	UJ hptr = 0; //< heap pointer
 	V*mc;
+	sz buckets_packed = 0;
 	DO(hsh_capacity(ht),
 		prev = NULL;
 		curr = ht->buckets[i];
@@ -210,12 +210,13 @@ C hsh_pack(HT ht) {
 			}
 			curr = next;
 			hptr += bsize;
+			buckets_packed++;
 			//T(TEST, "packed bkt=%lu (size=%lu)", i, bsize);
 		}
 	)
 	if(ht->heap)free(ht->heap);
 	ht->heap = tmpheap;
-	//T(TEST, "packing complete");
+	T(TEST, "packing complete, bkts=%lu", buckets_packed);
 	R1;
 }
 
@@ -348,7 +349,7 @@ ZI hsh_test(sz rand_cnt, sz rand_len) {
 	)
 
 	//! test each
-	Vec out = vec_init(1, UJ);
+	VEC out = vec_init(1, UJ);
 	out->grow_factor = 100;
 	hsh_each(ht, hsh_test_each_fn, (V*)&out);
 	TSTART();

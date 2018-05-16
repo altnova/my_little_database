@@ -12,7 +12,7 @@
 #include "fio.h"
 #include "clk.h"
 
-Z Vec idx;		//< in-memory instance of the index
+Z VEC idx;		//< in-memory instance of the index
 Z bufRec buf;	//< readbuffer RECBUFLEN records
 
 Z sz mem=0;		//< total allocated memory
@@ -36,7 +36,7 @@ Z UJ idx_save() {
 	LOG("idx_save");
 	FILE*out;
 	xfopen(out, idx_file, "w+", NIL);
-	fwrite(idx, SZ(Vec)+idx->size*SZ(Pair), 1, out); //< TODO check error
+	fwrite(idx, SZ(VEC)+idx->size*SZ(Pair), 1, out); //< TODO check error
 	UJ idx_fsize = fsize(out);
 	fclose(out);
 	mem=idx_fsize;
@@ -160,7 +160,7 @@ Z UJ idx_rebuild() {
 	idx_sort();
 
 	Pair last = e;
-	idx->hdr = last.rec_id; 	//< use Vec header field to store last_id
+	idx->hdr = last.rec_id; 	//< use VEC header field to store last_id
 
 	T(INFO, "rebuilt, entries=%lu, last_id=%lu", idx->used, idx->hdr);
 	R idx_size();
@@ -179,7 +179,7 @@ Z UJ idx_load() {
 	xfopen(in, idx_file, "r", NIL);
 	idx_close();
 	J size = fsize(in);
-	Vec* tmp = &idx; //< replace pointer
+	VEC* tmp = &idx; //< replace pointer
 	*tmp = vec_init((size-SZ_HDR)/SZ(Pair), Pair); //< reinit idx
 	fread(idx, size, 1, in); //< TODO check error
 	fclose(in);
@@ -195,7 +195,7 @@ UJ idx_update_hdr() {
 	FILE*out;
 	xfopen(out, idx_file, "r+", NIL);
 	zseek(out, 0L, SEEK_SET);
-	fwrite(idx, SZ(Vec), 1, out);
+	fwrite(idx, SZ(VEC), 1, out);
 	fclose(out);
 	T(DEBUG, "idx header updated");
 	R 0;
@@ -218,7 +218,7 @@ UJ idx_update_pos(UJ rec_id, UJ new_pos) {
 
 	FILE*out;
 	xfopen(out, idx_file, "r+", NIL);
-	zseek(out, SZ(Vec)+SZ(Pair)*(idx_pos-1), SEEK_SET);
+	zseek(out, SZ(VEC)+SZ(Pair)*(idx_pos-1), SEEK_SET);
 	fwrite(i, SZ(Pair), 1, out);
 	fclose(out);
 	T(DEBUG, "rec_id=%lu, new_pos=%lu", rec_id, new_pos);

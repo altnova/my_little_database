@@ -6,11 +6,11 @@
 #include "trc.h"
 #include "vec.h"
 
-Vec vec_init_(sz n, sz t) {
+VEC vec_init_(sz n, sz t) {
 	LOG("arr_init");
+	X(!t, T(WARN, "zero element width"), NULL);
 	sz init_size = SZ_HDR + n * t;
-	Vec a = (Vec)malloc(init_size);
-	chk(a,0);
+	VEC a = (VEC)malloc(init_size); chk(a,0);
 	a->mem = init_size;
 	a->used = 0;
 	a->size = n;
@@ -19,14 +19,14 @@ Vec vec_init_(sz n, sz t) {
 	T(TRACE, "at %p", a);
 	R a;}
 
-V* vec_at_(Vec a, UJ i){
+V* vec_at_(VEC a, UJ i){
 	P(i>a->used, NULL);
 	R(V*)(a->data + i * a->el_size);}
 
-V* vec_last_(Vec a){
+V* vec_last_(VEC a){
 	R(V*)(a->data + a->el_size * (a->used-1));}
 
-sz vec_destroy(Vec a){
+sz vec_destroy(VEC a){
 	LOG("vec_destroy");
 	T(TRACE, "destroy at %p", a);
 	sz released = a->mem;
@@ -35,22 +35,22 @@ sz vec_destroy(Vec a){
 	R released;
 }
 
-sz vec_mem(Vec a){
+sz vec_mem(VEC a){
 	R a->mem;
 }
 
-sz vec_size(Vec a){
+sz vec_size(VEC a){
 	R a->used;
 }
 
-ZC vec_full(Vec a){
+ZC vec_full(VEC a){
 	R a->used==a->size;
 }
 
 //! \return pointer to self on ok, NULL on error
-Vec vec_add_(V** aptr, V* el){
+VEC vec_add_(V** aptr, V* el){
 	LOG("vec_add");
-	Vec a = *aptr;
+	VEC a = *aptr;
 	if(vec_full(a)) {
 		X(a->grow_factor<2, T(FATAL,"grow_factor is less than 2"), NULL)
 		a->size *= a->grow_factor;
@@ -69,7 +69,7 @@ typedef UJ TT; //< type
 ZI vec_test(){
 	LOG("vec_test");
 	UJ t = 100; //< test iterations
-	Vec a = vec_init(1,TT);	//< initially 10 elements
+	VEC a = vec_init(1,TT);	//< initially 10 elements
 	X(!a,T(FATAL, "vec_init failed"),1)
 	DO(t,vec_add(a,i)) //< will grow as necessary
 	TSTART();
