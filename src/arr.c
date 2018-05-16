@@ -13,6 +13,8 @@ Arr arr_init_(sz n, sz t) {
 	a->used = 0;
 	a->size = n;
 	a->el_size = t;
+	a->grow_factor = 2;
+	T(TEST, "at %p", a);
 	R a;}
 
 V* arr_at_(Arr a, UJ i){
@@ -37,19 +39,19 @@ ZC arr_full(Arr a){
 	R a->used==a->size;
 }
 
-//! \return 0 -> ok, 1 -> err
-I arr_add_(V** aptr, V* el){
+//! \return pointer to self on ok, NULL on error
+Arr arr_add_(V** aptr, V* el){
 	LOG("arr_add");
 	Arr a = *aptr;
-	if(arr_full(a)){
-		a->size *= 2;
-		a = realloc(a, SZ_HDR + a->el_size * a->size);chk(a,1);
+	if(arr_full(a)) {
+		X(a->grow_factor<2, T(FATAL,"grow_factor is less than 2"), NULL)
+		a->size *= a->grow_factor;
+		a = realloc(a, SZ_HDR + a->el_size * a->size);chk(a,NULL);
 		*aptr = a;
-		T(TEST, "realloc to %p", *aptr);
-		T(TRACE,"grew to %lu", a->size);
+		T(TEST, "realloc to %lu (%p)", a->size, *aptr);
 	}
 	memcpy((V*)(a->data + a->el_size * a->used++), el, a->el_size);
-	R0;
+	R a;
 }
 
 //! test
@@ -59,7 +61,7 @@ ZI arr_test(){
 	UJ t = 100; //< test iterations
 	Arr a = arr_init(1,TT);	//< initially 10 elements
 	X(!a,T(FATAL, "arr_init failed"),1)
-	DO(t,O("%c", ".*"[arr_add(a,i)] )) //< will grow as necessary
+	DO(t,arr_add(a,i)) //< will grow as necessary
 	TSTART();
 	DO(t,T(TEST, "%ld->%ld ", i, *arr_at(a,i,TT)))
 	TEND();

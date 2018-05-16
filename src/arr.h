@@ -4,6 +4,7 @@ typedef struct dynarray {
 	UJ hdr;			//< reserved
 	sz used;		//< occupied
 	sz size;		//< current capacity
+	C grow_factor;	//< size multiplier on realloc, defaults to 2, never set to <2
 	sz el_size;		//< element size
 	G data[0];		//< struct hack
 } pArr;
@@ -22,7 +23,7 @@ ext V    arr_destroy(Arr);		//< never forget
 
 //! underlying implementation
 ext Arr  arr_init_(sz n, sz t);
-ext I    arr_add_(V**a, V*el);
+ext Arr  arr_add_(V**a, V*el);
 ext V*   arr_at_(Arr a, UJ i);
 ext V*   arr_last_(Arr a);
 
