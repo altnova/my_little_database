@@ -5,6 +5,7 @@ typedef struct fti_info {
 	UJ total_records;
 	UJ total_tokens;
 	UJ total_terms;
+	J  total_mem;
 
 } pFTI_INFO;
 

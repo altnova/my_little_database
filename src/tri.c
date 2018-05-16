@@ -8,17 +8,18 @@
 #include "trc.h"
 #include "tri.h"
 
-Z NODE tri_init_node(C key){
+Z NODE tri_init_node(TRIE t, C key){
 	LOG("tri_init_node");
 	NODE n = (NODE)calloc(SZ_NODE,1);chk(n,NULL);
 	n->key=key;
+	t->mem+=SZ_NODE;
 	R n;}
 
 Z NODE tri_ins_at(TRIE t, NODE at, C key) {
 	C idx = key-TRI_RANGE_OFFSET;
 	NODE n=at->children[idx];
 	if(!n){
-		n = tri_init_node(key);
+		n = tri_init_node(t, key);
 		P(!n, NULL)
 		n->parent = at;
 		at->children[idx] = n;
@@ -50,8 +51,9 @@ C tri_is_leaf(NODE n) {
 TRIE tri_init() {
 	LOG("tri_init");	
 	TRIE t = (TRIE)malloc(SZ_TRIE);chk(t,NULL);
+	t->mem+=SZ_TRIE;
 	t->cnt = 0;
-	t->root = tri_init_node(0);
+	t->root = tri_init_node(t,0);
 	R t;}
 
 NODE tri_insert(TRIE t, S key, V*payload) {
@@ -65,9 +67,10 @@ NODE tri_get(TRIE t, S key) {
 	sz l = scnt(key); P(!l,NULL)
 	NODE curr = t->root;
 	C c,idx;
-	DO(l,
+	DO(l,//for(UJ i=0;i<l;i++){
 		c=key[i];idx=c-TRI_RANGE_OFFSET; P(!IN(0,idx,TRI_RANGE-1),NULL)
-		curr = curr->children[idx])
+		P(!curr, NULL)
+		curr = curr->children[idx];)//}
 	R curr;}
 
 ZV tri_each_node(TRIE t, NODE curr, TRIE_EACH fn, V*arg, I depth) {
@@ -86,6 +89,7 @@ ZV tri_each_node_reverse(TRIE t, NODE curr, TRIE_EACH fn, V*arg, I depth) {
 }
 
 V tri_each_from(TRIE t, NODE n, TRIE_EACH fn, V*arg) {
+	if(!n)R;
 	tri_each_node(t, n, fn, arg, 0);}
 
 V tri_each(TRIE t, TRIE_EACH fn, V*arg) {
@@ -100,9 +104,11 @@ V tri_dump(TRIE t) {
 V tri_dump_from(TRIE t, NODE n) {
 	tri_each_from(t, n, tri_dump_node, NULL);}
 
-V tri_destroy(TRIE t){
+sz tri_destroy(TRIE t){
 	tri_each_reverse(t, tri_destroy_node, NULL);
+	sz released = t->mem;
 	free(t);
+	R released;
 }
 
 #ifdef RUN_TESTS_TRI
@@ -135,3 +141,5 @@ I main() {
 }
 
 #endif
+
+//:~

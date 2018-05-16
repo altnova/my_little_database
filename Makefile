@@ -8,10 +8,6 @@ all: clean bag tri stm rnd clk fio vec bin hsh
 
 db: csv idx
 
-menu: clean
-	$(CC) -w -Werror -g -o bin/menu src/scr.c
-	./bin/menu
-
 idx: clean
 	$(CC) -DRUN_TESTS_IDX -O2 -g -o bin/idx src/bin.c src/vec.c src/idx.c src/fio.c src/rec.c src/trc.c
 	$(VLG) ./bin/idx
@@ -20,8 +16,12 @@ csv: clean nodatafiles
 	$(CC) -DRUN_TESTS_CSV -O2 -o bin/csv src/trc.c src/csv.c
 	$(VLG) ./bin/csv csv/books.csv dat/books.dat
 
+set: clean
+	$(CC) -DRUN_TESTS_SET -g -o bin/set src/trc.c src/hsh.c src/bag.c src/set.c
+	$(VLG) ./bin/set
+
 hsh: clean
-	$(CC) -DRUN_TESTS_HSH -g -o bin/hsh src/vec.c src/clk.c src/rnd.c src/trc.c src/hsh.c
+	$(CC) -DRUN_TESTS_HSH -O2 -g -o bin/hsh src/vec.c src/clk.c src/rnd.c src/trc.c src/hsh.c
 	$(VLG) ./bin/hsh
 
 bin: clean

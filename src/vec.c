@@ -8,8 +8,10 @@
 
 Vec vec_init_(sz n, sz t) {
 	LOG("arr_init");
-	Vec a = (Vec)malloc(SZ_HDR + n * t);
+	sz init_size = SZ_HDR + n * t;
+	Vec a = (Vec)malloc(init_size);
 	chk(a,0);
+	a->mem = init_size;
 	a->used = 0;
 	a->size = n;
 	a->el_size = t;
@@ -24,11 +26,13 @@ V* vec_at_(Vec a, UJ i){
 V* vec_last_(Vec a){
 	R(V*)(a->data + a->el_size * (a->used-1));}
 
-V vec_destroy(Vec a){
+sz vec_destroy(Vec a){
 	LOG("vec_destroy");
 	T(TRACE, "destroy at %p", a);
+	sz released = a->mem;
 	if(a)free(a);
 	a = NULL;
+	R released;
 }
 
 sz vec_size(Vec a){
@@ -46,7 +50,9 @@ Vec vec_add_(V** aptr, V* el){
 	if(vec_full(a)) {
 		X(a->grow_factor<2, T(FATAL,"grow_factor is less than 2"), NULL)
 		a->size *= a->grow_factor;
-		a = realloc(a, SZ_HDR + a->el_size * a->size);chk(a,NULL);
+		sz new_size = SZ_HDR + a->el_size * a->size;
+		a = realloc(a, new_size);chk(a,NULL);
+		a->mem = new_size;
 		*aptr = a;
 		T(TRACE, "realloc to %lu (%p)", a->size, *aptr);
 	}

@@ -1,4 +1,4 @@
-//! \ bag.c \brief bag
+//! \file bag.c \brief bag
 
 #include <stdlib.h>
 #include <string.h>
@@ -29,7 +29,7 @@ V* bag_add(BAG h, V*obj, sz obj_sz) {
 		h->size *= BAG_GROW_FACTOR;
 		if((obj_sz+h->used) > h->size)goto REALLOC;
 		offset = old_ptr-(h->ptr);
-		T(TEST, "realloc bag %lu, diff=%lu", h->size, offset);
+		T(TRACE, "realloc bag %lu, diff=%lu", h->size, offset);
 	}
 	V*obj_addr=h->ptr+(h->used);
 	mcpy(obj_addr, obj, obj_sz);
@@ -38,9 +38,11 @@ V* bag_add(BAG h, V*obj, sz obj_sz) {
 	h->cnt++;
 	R obj_addr;}
 
-V bag_destroy(BAG h) {
+sz bag_destroy(BAG h) {
+	sz released = h->size;
 	free(h->ptr);
 	free(h);
+	R released;
 }
 
 #ifdef RUN_TESTS_BAG
@@ -64,7 +66,9 @@ I main() {
 
 	bag_destroy(h);
 
-	R 0;
+	R0;
 }
 
 #endif
+
+//:~

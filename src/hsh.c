@@ -18,7 +18,7 @@ Z inline HTYPE hsh_djb(V*a,UJ n){HTYPE h=5381;DO(n,h=33*(h^((G*)a)[i]));R h;}
 ZS dsn(V* d, V* s, UJ n){R memcpy(d,s,n)+n;}
 
 Z inline V hsh_idx(HT ht, V*s, UJ n, HTYPE*h, HTYPE*idx) {
-	LOG("hsh_idx");
+	LOG("hsh_idx");	
 	HTYPE hash = ht->fn(s,n); //< calculate the hash
 	HTYPE i = hash&(ht->level - 1); //< map to the first half of table
 	C hi = 0;
@@ -26,7 +26,7 @@ Z inline V hsh_idx(HT ht, V*s, UJ n, HTYPE*h, HTYPE*idx) {
 		hi = 1;
 		i = hash&((ht->level<<1) - 1); //< map to the entire table
 	}
-	//T(TEST, "IDX %s --> idx(%d)->%d (hi=%d)", s, hash, i, hi);
+	T(TRACE, "IDX %s --> idx(%d)->%d (hi=%d)", s, hash, i, hi);
 	*h = hash;
 	*idx = i;
 }
@@ -219,10 +219,11 @@ C hsh_pack(HT ht) {
 	R1;
 }
 
-V hsh_destroy(HT ht) {
+sz hsh_destroy(HT ht) {
 	LOG("hsh_destroy");
 	BKT curr, next;
 	HTYPE c = 0;
+	sz released = ht->mem;
 	DO(hsh_capacity(ht),
 		curr = ht->buckets[i];
 		W(curr){
@@ -235,10 +236,12 @@ V hsh_destroy(HT ht) {
 			c++;
 		}
 	)
-	if(ht->heap)free(ht->heap);
+	if(ht->heap)
+		free(ht->heap);
 	free(ht->buckets);
 	free(ht);
 	T(DEBUG, "released %lu values, hash table destroyed", c);
+	R released;
 }
 
 V hsh_info(HT ht) {

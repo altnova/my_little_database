@@ -7,6 +7,7 @@
 
 typedef struct trie {
 	UJ cnt;
+	sz mem;
 	struct node* root;
 } pTRIE;
 
@@ -38,4 +39,7 @@ ext V tri_each(TRIE t, TRIE_EACH fn, V*arg);
 ext V tri_each_from(TRIE t, NODE n, TRIE_EACH fn, V*arg);
 ext V tri_each_reverse(TRIE t, TRIE_EACH fn, V*arg);
 
-ext V tri_destroy(TRIE t);
+ext sz tri_destroy(TRIE t);
+
+
+//:~
