@@ -23,6 +23,10 @@ V* vec_at_(VEC a, UJ i){
 	P(i>a->used, NULL);
 	R(V*)(a->data + i * a->el_size);}
 
+V* vec_random(VEC a) {
+	R vec_at_(a, (UJ)rand()%a->used);
+}
+
 V* vec_last_(VEC a){
 	R(V*)(a->data + a->el_size * (a->used-1));}
 

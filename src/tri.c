@@ -1,4 +1,5 @@
 //! \file tri.c \brief trie
+//! \see http://www.mathcs.emory.edu/~cheung/Courses/323/Syllabus/Text/trie01.html
 
 #include <stdio.h>
 #include <stdlib.h>

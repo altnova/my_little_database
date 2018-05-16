@@ -1,4 +1,4 @@
-#CC=gcc-8
+CC=gcc-8
 #CC=gcc
 VLG=/opt/valgrind/bin/valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes
 #--verbose --log-file=valgrind-out.txt
@@ -61,7 +61,7 @@ bag:
 	$(VLG) ./bin/bag
 
 tok:
-	$(CC) -DRUN_TESTS_TOK -g -o bin/tok src/bag.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/vec.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/tok.c 
+	$(CC) -DRUN_TESTS_TOK -g -o bin/tok src/rnd.c src/bag.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/vec.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/tok.c 
 	$(VLG) ./bin/tok
 
 

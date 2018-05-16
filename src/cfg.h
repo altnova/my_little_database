@@ -44,6 +44,7 @@ typedef struct record {
 	C title[201];
 	C author[51];
 	C subject[2001];
+	I lengths[4];
 } pRec;
 
 typedef pRec bufRec[RECBUFLEN];

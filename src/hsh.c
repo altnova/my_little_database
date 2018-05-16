@@ -11,8 +11,40 @@
 #include "hsh.h"
 #include "clk.h"
 
+//#define HSH_DEFAULT_FN hsh_fnv32
+#define HSH_DEFAULT_FN hsh_djb
+
+//#define HX4_DJBX33A_ROUND(i) h=(h<<5)+h+a[i],
+#define HX4_DJBX33A_ROUND(i)   h=33*(h^a[i]);
+
 //! djbhash \see http://www.burtleburtle.net/bob/hash/doobs.html
-Z inline HTYPE hsh_djb(V*a,UJ n){HTYPE h=5381;DO(n,h=33*(h^((G*)a)[i]));R h;}
+#define DJB_LEVEL 5381
+Z inline HTYPE hsh_djb(S a,UI n){HTYPE h=DJB_LEVEL;DO(n,h=33*(h^a[i]));R h;}
+Z inline HTYPE hsh_djb2(S a,UI n){HTYPE h=DJB_LEVEL;DO(n,h=(h<<5)+h+a[i]);R h;}
+
+//! fnvhash \see https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
+#define FNV_PRIME_32 16777619
+#define FNV_OFFSET_32 2166136261U
+Z inline HTYPE hsh_fnv32(const S s, const I n){
+	HTYPE h = FNV_OFFSET_32;
+	DO(n,h=h^(s[i]);h=h * FNV_PRIME_32)R h;} 
+
+/*
+Z inline HTYPE hsh_djb2(S key, UJ len)
+{
+  HTYPE hash, i;
+  for (hash=0, i=0; i<len; ++i)
+  {
+    hash += key[i];
+    hash += (hash << 10);
+    hash ^= (hash >> 6);
+  }
+  hash += (hash << 3);
+  hash ^= (hash >> 11);
+  hash += (hash << 15);
+  return (hash & mask);
+}
+*/
 
 //! copy with seek \param d dest \param s source \param n len
 ZS dsn(V* d, V* s, UJ n){R memcpy(d,s,n)+n;}
@@ -159,7 +191,7 @@ E hsh_bavg(HT ht) {
 }
 
 HT hsh_init(I level, H split_rounds) {
-	R hsh_init_custom(level, split_rounds, hsh_djb);
+	R hsh_init_custom(level, split_rounds, HSH_DEFAULT_FN);
 }
 
 HT hsh_init_custom(I level, H split_rounds, HSH_FN fn) {
@@ -290,7 +322,7 @@ V hsh_each(HT ht, HT_EACH fn, V*arg) {
 
 ZV hsh_test_each_fn(BKT bkt, V*arg, HTYPE i) {
 	LOG("hsh_test_each_fn");
-	vec_add(*arg, bkt->n);
+	vec_add(*(VEC*)arg, bkt->n);
 	T(DEBUG, "(each_fn after, argptr=%p)", arg);
 }
 
@@ -322,7 +354,7 @@ UJ hsh_walk(HT ht) {
 ZI hsh_test(sz rand_cnt, sz rand_len) {
 	LOG("hsh_test");
 
-	HT ht = hsh_init(2,3);
+	HT ht = hsh_init(2,1);
 
 	S keys[] = { "FKTABLE_CAT", "cov", "bmp", "frameset", "cos", "fmt" }; 
 	I keys_len = 6;
@@ -345,7 +377,7 @@ ZI hsh_test(sz rand_cnt, sz rand_len) {
 		S found = hsh_get(ht, keys[i], scnt(keys[i]));
 		X(!found,
 			{hsh_dump(ht);T(FATAL, "expected %s, got NULL", keys[i]);},
-			1);
+			1)
 	)
 
 	//! test each
@@ -374,6 +406,7 @@ ZI hsh_test(sz rand_cnt, sz rand_len) {
 	T(TEST, "walk %lu unpacked values, r=%lu \t--> %lums", ht->cnt, r, t=clk_stop());
 
 	hsh_pack(ht);
+
 	T(TEST, "packed %lu values \t--> %lums", ht->cnt, clk_stop());
 	r = hsh_walk(ht);
 	t1 = clk_stop();
@@ -394,5 +427,73 @@ ZI hsh_test(sz rand_cnt, sz rand_len) {
 
 I main(){R hsh_test(1, 5);}
 #endif
+
+/*
+* DJBX33A (Daniel J. Bernstein, Times 33 with Addition)
+*
+* This is Daniel J. Bernstein's popular `times 33' hash function as
+* posted by him years ago on comp.lang.c. It basically uses a function
+* like ``hash(i) = hash(i-1) * 33 + str[i]''. This is one of the best
+* known hash functions for strings. Because it is both computed very
+* fast and distributes very well.
+*
+* The magic of number 33, i.e. why it works better than many other
+* constants, prime or not, has never been adequately explained by
+* anyone. So I try an explanation: if one experimentally tests all
+* multipliers between 1 and 256 (as RSE did now) one detects that even
+* numbers are not useable at all. The remaining 128 odd numbers
+* (except for the number 1) work more or less all equally well. They
+* all distribute in an acceptable way and this way fill a hash table
+* with an average percent of approx. 86%.
+*
+* If one compares the Chi^2 values of the variants, the number 33 not
+* even has the best value. But the number 33 and a few other equally
+* good numbers like 17, 31, 63, 127 and 129 have nevertheless a great
+* advantage to the remaining numbers in the large set of possible
+* multipliers: their multiply operation can be replaced by a faster
+* operation based on just one shift plus either a single addition
+* or subtraction operation. And because a hash function has to both
+* distribute good _and_ has to be very fast to compute, those few
+* numbers should be preferred and seems to be the reason why Daniel J.
+* Bernstein also preferred it.
+*
+*
+* -- Ralf S. Engelschall <rse@engelschall.com>
+*/
+
+//for(I i = 0; i < n; a++,i++) {h = ((h << 5) + h) + (*a);}R h;
+
+/*
+
+Z inline HTYPE hsh_djb3(S a, UI n) {
+	HTYPE h = DJB_LEVEL;
+	if(n==6) {
+		HX4_DJBX33A_ROUND(0)
+		HX4_DJBX33A_ROUND(1)
+		HX4_DJBX33A_ROUND(2)
+		HX4_DJBX33A_ROUND(3)
+		HX4_DJBX33A_ROUND(4)
+		HX4_DJBX33A_ROUND(5)
+		R h;
+    }
+	if(n==10) {
+		HX4_DJBX33A_ROUND(0)
+		HX4_DJBX33A_ROUND(1)
+		HX4_DJBX33A_ROUND(2)
+		HX4_DJBX33A_ROUND(3)
+		HX4_DJBX33A_ROUND(4)
+		HX4_DJBX33A_ROUND(5)
+		HX4_DJBX33A_ROUND(6)
+		HX4_DJBX33A_ROUND(7)
+		HX4_DJBX33A_ROUND(8)
+		HX4_DJBX33A_ROUND(9)
+		R h;
+    }
+    DO(n,h=(h<<5)+h+a[i])R h;
+}
+
+
+*/
+
 
 //:!~

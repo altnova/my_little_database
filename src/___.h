@@ -51,7 +51,8 @@ typedef size_t sz;
 #define mcpy(d,s,n) memcpy((d),(s),n) 			/*!< mem copy \param d dest \param s source \param n len */
 #define mcmp(d,s,n) memcmp((d),(s),n) 			/*!< mem compare \param d dest \param s source \param n len */
 #define scpy(d,s,n) (S)mcpy((S)d,(S)s,1+MIN(scnt((S)s),n)) /*!< better strcpy \param d dest \param s source \param n limit */
-#define lcse(s) {DO(scnt(s),s[i]+=IN('A',s[i],'Z')?32:0);} /*! lowercase */
+#define lcse(s,n) {DO(n,s[i]+=IN('A',s[i],'Z')?32:0);} /*! lowercase */
+//#define lcse(s) {DO(scnt(s),s[i]=lower(s[i]));} /*! lowercase */
 #define stok(s,n,d,x) {ZC z=0,D[255]="*";if(!z){z=1;DO(scnt(d),D[d[i]]='*')}/*!< tokenize \param s,n,d,x string,len,delims,exec */\
 					   I in=0;sz tok_len,tok_pos=0;S tok;DO(n+1,/*if(!IN(' ',s[i],'~'))O("(%d=%d)",i,s[i]);*/\
 					   if(D[s[i]]){if(in){in=0;tok=s+tok_pos;s[i]='\0';tok_len=i-tok_pos;{x;}}\

@@ -1,7 +1,7 @@
 #include "___.h"
 
-typedef I HTYPE; //< hash width
-typedef HTYPE(*HSH_FN)(V*val, UJ len); //< hsh_each function interface
+typedef UI HTYPE; //< hash width
+typedef HTYPE(*HSH_FN)(S val, UI len); //< hsh_each function interface
 
 typedef struct bucket{
 	HTYPE h;				//< value hash
@@ -21,6 +21,7 @@ typedef struct hash_table {
 	HTYPE	level;		//< capacity is 2^level
 	H		rounds;		//< split rounds	
 	HTYPE	cnt; 		//< total values
+	HTYPE	bcnt;		//< occupied buckets
 	HSH_FN  fn;			//< hash function
 	sz 		mem;		//< total byte size
 	V*		heap;		//< bucket heap pointer

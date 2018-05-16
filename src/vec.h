@@ -21,6 +21,7 @@ typedef pVEC* VEC;
 #define  vec_last(a,t)		({(t*)vec_last_(a);})
 ext sz   vec_size(VEC a);
 ext sz   vec_mem(VEC a);
+ext V*   vec_random(VEC a);
 ext sz   vec_destroy(VEC);		//< never forget
 
 //! underlying implementation
