@@ -1,5 +1,7 @@
 //!\file trc.h \brief logging system api
 
+#define TRC_MAX_STACK_DEPTH 41
+
 enum loglevels { L_FATAL, L_WARN, L_INFO, L_TEST, L_DEBUG, L_TRACE };
 
 //! register function for logging
@@ -16,6 +18,13 @@ enum loglevels { L_FATAL, L_WARN, L_INFO, L_TEST, L_DEBUG, L_TRACE };
 #define TRACE L_TRACE,FN,__FILE__,__LINE__
 
 ZS loglevel_names[] = {"FATAL", "WARN", "INFO", "TEST", "DEBUG", "TRACE"};
+
+#if WIN32||_WIN64
+#define STACK() {} /*! no execinfo.h on win */
+#else
+ext V _stack(S msg, I d, I offset);
+#define STACK() {_stack("", TRC_MAX_STACK_DEPTH, 0);}
+#endif
 
 //! trace
 ext I T(I lvl, const S fn, const S file, const I line, const S format, ...);

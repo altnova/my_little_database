@@ -1,5 +1,6 @@
 //! \file tri.c \brief trie
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "___.h"

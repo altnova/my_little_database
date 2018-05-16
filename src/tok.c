@@ -153,6 +153,7 @@ UJ tok_index_field(ID rec_id, I field, S s, UJ i) {
 
 		if (!b){
 			T(WARN, "skipping bad token at rec=%lu fld=%s pos=%d", rec_id, rec_field_names[field], tok_pos);
+			STACK();
 			continue; //< unsupported characters
 		}
 

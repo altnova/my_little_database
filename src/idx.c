@@ -112,6 +112,7 @@ ZV idx_dump(UJ head) {
 		e = arr_at(idx, i, Pair);
 		T(TEST, " (%lu -> %lu)", e->rec_id, e->pos);
 	)
+	if(head&&head<idx_size())T(TEST,"...");
 	TEND();
 }
 
@@ -333,7 +334,8 @@ ZI idx_test() {
 	//db_dump(); idx_dump(0);
 	DO(3, rec_create(b);)
 	rec_delete(17);
-	db_dump(); idx_dump(0);
+	//db_dump();
+	idx_dump(10);
 
 	//rec_delete(20); //< delete last
 	//db_dump(); idx_dump(0);

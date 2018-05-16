@@ -3,8 +3,7 @@ CC=gcc
 
 all: clean hea tri stm rnd clk fio arr bin hsh
 
-db:
-	csv idx
+db: csv idx
 
 menu: clean
 	$(CC) -w -Werror -g -o bin/menu src/scr.c

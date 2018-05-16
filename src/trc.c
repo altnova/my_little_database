@@ -1,6 +1,12 @@
 //!\file trc.c \brief logging system
 
+#if WIN32||_WIN64
+#else
+#include <execinfo.h>
+#endif 
+
 #include <stdarg.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "___.h"
@@ -33,6 +39,19 @@ I T(I lvl, const S fn, const S file, const I line, const S fmt, ...) {
 V TSTART() {cont=1;}
 V TEND() {O("\n");cont=0;newline=1;}
 
+#if WIN32||_WIN64
+#else
+V _stack(S msg, I d, I offset) {
+ LOG("stack");
+ V* array[d];
+ sz size, i;
+ S*strings;
+ size = backtrace(array, d);
+ strings = backtrace_symbols(array,size);
+ T(TEST, "obtained %zd stack frames:", size);
+ DO(size-offset,O("%s %s\n",msg, strings[i+offset]));
+ free(strings);}
+#endif
 
 //! print bits
 V bits_char(C x, S dest) {
