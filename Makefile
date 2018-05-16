@@ -4,7 +4,7 @@ VLG=/opt/valgrind/bin/valgrind --leak-check=full --show-leak-kinds=all --track-o
 #--verbose --log-file=valgrind-out.txt
 VLG=
 
-all: clean hea tri stm rnd clk fio arr bin hsh
+all: clean bag tri stm rnd clk fio vec bin hsh
 
 db: csv idx
 
@@ -13,7 +13,7 @@ menu: clean
 	./bin/menu
 
 idx: clean
-	$(CC) -DRUN_TESTS_IDX -O2 -g -o bin/idx src/bin.c src/arr.c src/idx.c src/fio.c src/rec.c src/trc.c
+	$(CC) -DRUN_TESTS_IDX -O2 -g -o bin/idx src/bin.c src/vec.c src/idx.c src/fio.c src/rec.c src/trc.c
 	$(VLG) ./bin/idx
 
 csv: clean nodatafiles
@@ -21,16 +21,16 @@ csv: clean nodatafiles
 	$(VLG) ./bin/csv csv/books.csv dat/books.dat
 
 hsh: clean
-	$(CC) -DRUN_TESTS_HSH -g -o bin/hsh src/arr.c src/clk.c src/rnd.c src/trc.c src/hsh.c
+	$(CC) -DRUN_TESTS_HSH -g -o bin/hsh src/vec.c src/clk.c src/rnd.c src/trc.c src/hsh.c
 	$(VLG) ./bin/hsh
 
 bin: clean
 	$(CC) -DRUN_TESTS_BIN -O2 -g -o bin/binsearch src/trc.c src/bin.c 
 	$(VLG) ./bin/binsearch
 
-arr: clean
-	$(CC) -DRUN_TESTS_ARR -O2 -g -o bin/arr src/trc.c src/arr.c 
-	$(VLG) ./bin/arr
+vec: clean
+	$(CC) -DRUN_TESTS_VEC -O2 -g -o bin/vec src/trc.c src/vec.c 
+	$(VLG) ./bin/vec
 
 fio:
 	$(CC) -DRUN_TESTS_FIO -O2 -g -o bin/fio src/trc.c src/fio.c 
@@ -56,12 +56,12 @@ tri:
 	$(CC) -DRUN_TESTS_TRI -O2 -g -o bin/tri src/trc.c src/tri.c
 	$(VLG) ./bin/tri
 
-hea:
-	$(CC) -DRUN_TESTS_HEA -O2 -g -o bin/hea src/trc.c src/hea.c
-	$(VLG) ./bin/hea
+bag:
+	$(CC) -DRUN_TESTS_BAG -O2 -g -o bin/bag src/trc.c src/bag.c
+	$(VLG) ./bin/bag
 
 tok:
-	$(CC) -DRUN_TESTS_TOK -g -o bin/tok src/hea.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/arr.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/tok.c 
+	$(CC) -DRUN_TESTS_TOK -g -o bin/tok src/bag.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/vec.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/tok.c 
 	$(VLG) ./bin/tok
 
 
