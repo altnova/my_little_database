@@ -40,9 +40,9 @@ ZI add_field(I fld, S val){
 
 	if (fld<2) {							//< pages and year are shorts
 		H i = (H)atoi(val);					//< parse integer
-		memcpy(f, &i, SZ(H));				//< populate short field
+		mcpy(f, &i, SZ(H));					//< populate short field
 	} else									//< all other fields are strings
-		strcpy(f, val);						//< populate string field
+		scpy(f, val, csv_max_field_widths[fld]);	//< populate string field
 
 	if (fld==COLS-1) {						//< reached last field
 		ID id = next_id();					//< allocate rec_id
