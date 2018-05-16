@@ -288,7 +288,8 @@ V tok_shutdown() {
 		tok_dec_mem("fti", hsh_destroy(ftidx[i]))
 	)
 
-	db_close();
+	tok_dec_mem("file_index",
+		db_close());
 
 	tok_dec_mem("fti_info", SZ_FTI_INFO);
 	if (fti_info->total_mem)
@@ -318,7 +319,8 @@ I main() {
 	C qq[scnt(c)]; mcpy(qq,c,scnt(c));
 	//tok_search(qq);//exit(0);
 	
-	db_init(DAT_FILE, IDX_FILE);
+	tok_inc_mem("file_index",
+		db_init(DAT_FILE, IDX_FILE));
 
 	//! init hash tables
 	DO(FTI_FIELD_COUNT,

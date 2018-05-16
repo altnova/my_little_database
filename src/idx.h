@@ -4,7 +4,7 @@ ext C db_file[], idx_file[];
 
 //! expect bad stuff to happen
 //! if you forget to call db_init() first
-ext UJ    db_init(S db_file, S idx_file);
+ext sz    db_init(S db_file, S idx_file);
 
 ext ID    next_id();
 
@@ -24,6 +24,6 @@ ext UJ idx_each(IDX_EACH fn, V*arg, C halt_on_err);
 
 ext C     cmp_binsearch(V* a, V* b, sz t);
 
-ext V     db_close(); //< don't forget
+ext sz    db_close(); //< don't forget
 
 //:~

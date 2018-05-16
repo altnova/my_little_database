@@ -15,6 +15,8 @@
 Z Vec idx;		//< in-memory instance of the index
 Z bufRec buf;	//< readbuffer RECBUFLEN records
 
+Z sz mem=0;		//< total allocated memory
+
 C db_file[MAX_FNAME_LEN+1];
 C idx_file[MAX_FNAME_LEN+1];
 
@@ -37,6 +39,7 @@ Z UJ idx_save() {
 	fwrite(idx, SZ(Vec)+idx->size*SZ(Pair), 1, out); //< TODO check error
 	UJ idx_fsize = fsize(out);
 	fclose(out);
+	mem=idx_fsize;
 	T(TRACE, "saved %lu bytes", idx_fsize);
 	R idx_fsize;
 }
@@ -164,8 +167,8 @@ Z UJ idx_rebuild() {
 }
 
 //! free memory
-ZV idx_close() {
-	vec_destroy(idx);
+Z sz idx_close() {
+	R vec_destroy(idx);
 }
 
 //! load index from a file
@@ -182,6 +185,7 @@ Z UJ idx_load() {
 	fclose(in);
 	T(INFO, "%lu bytes, %lu entries, capacity=%lu, last_id=%lu", \
 		size, idx->used, idx->size, idx->hdr);
+	mem = size;
 	R idx_size();
 }
 
@@ -302,11 +306,11 @@ UJ db_init(S d, S i) {
 	scpy(idx_file, i, MAX_FNAME_LEN);
 	UJ idx_size = idx_open();
 	T(INFO, "database initialized");
-	R idx_size;
+	R vec_mem(idx);
 }
 
-V db_close() {
-	idx_close();
+sz db_close() {
+	R idx_close();
 }
 
 #ifdef RUN_TESTS_IDX

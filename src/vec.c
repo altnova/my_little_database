@@ -35,6 +35,10 @@ sz vec_destroy(Vec a){
 	R released;
 }
 
+sz vec_mem(Vec a){
+	R a->mem;
+}
+
 sz vec_size(Vec a){
 	R a->used;
 }
