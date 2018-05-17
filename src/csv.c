@@ -7,6 +7,7 @@
 #include "cfg.h"
 #include "trc.h"
 #include "fio.h"
+#include "clk.h"
 
 Z FILE* outfile;
 Z ID last_id = 0;
@@ -50,7 +51,7 @@ ZI add_field(I fld, S val){
 		ID id = next_id();					//< allocate rec_id
 		memcpy(r, &id, SZ(ID));				//< populate rec_id
 		if(((I)id%5000)==0)
-			rec_print(&recbuf[recbufpos]);	//< debug print every 5000 records
+			rec_print(&recbuf[recbufpos]);	//< echo every 5000th record
 		recbufpos++;
 	}
 

@@ -81,6 +81,7 @@ ZI vec_test(){
 	TEND();
 	T(TEST,"capacity=%lu, used=%lu", a->size, vec_size(a)); //< print number of elements
 	vec_destroy(a); //< never forget
+
 	R0;
 }
 

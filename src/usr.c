@@ -21,7 +21,6 @@ I usr_input_str(S str, S prompt, S errmsg){
     R EOF;
 }
 
-
 #ifdef RUN_TESTS_USR
 I main(V){
 	I n;C str[LINE_BUF];
