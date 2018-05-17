@@ -44,12 +44,12 @@ typedef size_t sz;
 #define IN(l,x,r) ((l)<=(x)&&(x)<=(r))
 
 //! usual suspects
-#define scnt(x) (UJ)strlen((S)(x))				/*!< string length \param str */
-#define scmp(x,y) strcmp((S)(x),(S)(y))     	/*!< compare two strings \param x str \param y str */
-#define schr(h,n) (S)strchr((S)(h),n)       	/*!< first pos \param h haystack \param n needle */
-#define rchr(h,n) (S)strrchr((S)(h),n)      	/*!< last pos \param h haystack \param n needle */
-#define mcpy(d,s,n) memcpy((d),(s),n) 			/*!< mem copy \param d dest \param s source \param n len */
-#define mcmp(d,s,n) memcmp((d),(s),n) 			/*!< mem compare \param d dest \param s source \param n len */
+#define scnt(x) (UJ)strlen((S)(x))				//!< string length \param str */
+#define scmp(x,y) strcmp((S)(x),(S)(y))     	//!< compare two strings \param x str \param y str */
+#define schr(h,n) (S)strchr((S)(h),n)       	//!< first pos \param h haystack \param n needle */
+#define rchr(h,n) (S)strrchr((S)(h),n)      	//!< last pos \param h haystack \param n needle */
+#define mcpy(d,s,n) memcpy((d),(s),n) 			//!< mem copy \param d dest \param s source \param n len */
+#define mcmp(d,s,n) memcmp((d),(s),n) 			//!< mem compare \param d dest \param s source \param n len */
 #define scpy(d,s,n) (S)mcpy((S)d,(S)s,1+MIN(scnt((S)s),n)) /*!< better strcpy \param d dest \param s source \param n limit */
 #define lcse(s,n) {DO(n,s[i]=tolower(s[i]))}
 #define stok(s,n,d,x) {ZC z=0,D[255]="*";if(!z){z=1;DO(scnt(d),D[d[i]]='*')}/*!< tokenize \param s,n,d,x string,len,delims,exec */\
