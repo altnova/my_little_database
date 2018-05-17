@@ -456,7 +456,7 @@
 				<key>name</key>
 				<string>Function argument</string>
 				<key>scope</key>
-				<string>variable.parameter - (source.c | source.c++ | source.objc | source.objc++)</string>
+				<string>variable.parameter</string>
 				<key>settings</key>
 				<dict>
 					<key>fontStyle</key>

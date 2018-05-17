@@ -1,4 +1,4 @@
-//!\file vec.c \brief dynarray implemenation
+//!\file vec.c \brief vector implemenation
 
 #include <stdlib.h>
 #include <string.h>

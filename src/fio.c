@@ -1,4 +1,4 @@
-//!\file fio.c \brief file utilities
+//! \file fio.c \brief file utilities
 #include "___.h"
 #include "fio.h"
 #include "trc.h"
@@ -32,7 +32,8 @@ C fexist(S fpath){
 	R0; //< no file
 }
 
-//! test
+#ifdef RUN_TESTS_FIO
+
 ZI fio_test(){
 	LOG("fio_test");
 	FILE* fp;
@@ -49,11 +50,12 @@ ZI fio_test(){
 	UJ file_size = fsize(fp);
 	P(file_size==NIL, T(FATAL, "fsize(%s) failed", f)) //< returns 1
 	T(TEST, "OK -> %s fsize=%lu", f, file_size);
+
 	R0;
 }
 
-#ifdef RUN_TESTS_FIO
 I main(){R fio_test();}
+
 #endif
 
 

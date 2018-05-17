@@ -1,4 +1,4 @@
-//!\file vec.h \brief dynamic VECay api
+//!\file vec.h \brief vector api
 
 typedef struct vector {
 	UJ hdr;			//< reserved
@@ -14,11 +14,12 @@ typedef pVEC* VEC;
 #define SZ_HDR SZ(pVEC) //< vector header size
 
 //! public api
-//! \param a,el,t,n,i vector, element, type, elements, index
+//! \param a,el,t,n,i vector, element, type, count, index
 #define  vec_init(n,t)		({vec_init_(n,SZ(t));})
 #define  vec_add(a,el)		({typeof(el)_e=el;vec_add_((V**)(&a),&_e);})
 #define  vec_at(a,i,t)		({(t*)vec_at_(a,i);})
 #define  vec_last(a,t)		({(t*)vec_last_(a);})
+
 ext sz   vec_size(VEC a);
 ext sz   vec_mem(VEC a);
 ext V*   vec_random(VEC a);
