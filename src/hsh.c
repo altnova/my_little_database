@@ -248,7 +248,7 @@ C hsh_pack(HT ht) {
 	)
 	if(ht->heap)free(ht->heap);
 	ht->heap = tmpheap;
-	T(TEST, "packing complete, bkts=%lu", buckets_packed);
+	T(DEBUG, "packing complete, bkts=%lu", buckets_packed);
 	R1;
 }
 
@@ -279,7 +279,7 @@ sz hsh_destroy(HT ht) {
 
 V hsh_info(HT ht) {
 	LOG("hsh_info");
-	T(INFO, "cap=%8d, cnt=%8d, bcnt=%8d, bavg=%4.2f, lf=%4.2f, spl=%8d, mem=%8lu",
+	T(DEBUG, "cap=%8d, cnt=%8d, bcnt=%8d, bavg=%4.2f, lf=%4.2f, spl=%8d, mem=%8lu",
 		hsh_capacity(ht), ht->cnt, hsh_bcnt(ht), hsh_bavg(ht), hsh_factor(ht), ht->split, hsh_mem(ht));
 }
 

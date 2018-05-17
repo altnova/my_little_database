@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <signal.h>
 #include <ctype.h>
 #include <time.h>
 #include "___.h"
@@ -21,7 +20,7 @@
 #include "rnd.h"
 #include "tok.h"
 
-#define PACK_EVERY_N_RECS (4*4096)
+#define PACK_EVERY_N_RECS (2*4096)
 #define WORDBAG_INIT_SIZE 1048576
 
 Z FTI_INFO fti_info;
@@ -31,26 +30,24 @@ Z HT ftidx[FTI_FIELD_COUNT]; //< hash tables: stem -> VEC(rec_ids)
 Z HT wordbags[FTI_FIELD_COUNT]; //< hash tables: term -> stem
 
 Z HT wordbag_ht;
-Z TRIE wordbag; //< trie: global term -> stem
+Z TRIE wordbag; 		//< trie: global term -> stem
 Z BAG wordbag_store;
 Z VEC test_vec;
 
-//Z inline V tok_lcase(S tk) {DO(scnt(tk), tk[i]=tolower(tk[i]));}
-
 ZC MEM_TRACE=0;
-V tok_inc_mem(S label, J bytes) {
+ZV tok_inc_mem(S label, J bytes) {
 	LOG("tok_inc_mem");
 	if(MEM_TRACE)
 		T(TEST, "\e[33m%s alloc %lu\e[m", label, bytes);
 	fti_info->total_mem += bytes;}
 
-V tok_dec_mem(S label, J bytes) {
+ZV tok_dec_mem(S label, J bytes) {
 	LOG("tok_dec_mem");
 	if(MEM_TRACE)	
 		T(TEST, "%s free %lu", label, bytes);
 	fti_info->total_mem -= bytes;}
 
-UJ tok_load_stop_words(S fname) {
+Z UJ tok_load_stop_words(S fname) {
 	LOG("tok_load_stop_words");
 	FILE*fd;
 	xfopen(fd, fname, "r+", NIL);
@@ -71,6 +68,10 @@ UJ tok_load_stop_words(S fname) {
 	R stopwords->cnt;
 }
 
+FTI_INFO tok_info() {
+	R fti_info;
+}
+
 //! comparator for qsort()
 ZI tok_cmp_qsort(const V*a, const V*b) {
 	R ((UJ)a)-((UJ)b);
@@ -87,20 +88,21 @@ ZV tok_ftidx_sort_each(BKT bkt, V*arg, UJ i) {
 	//T(TEST, "%lu %s index sorted %lu items", i, bkt->s, a->used);
 }
 
-V tok_wordbag_adjust_ptr(NODE bkt, V*diff, I depth) { bkt->payload -= (J)diff; }
+ZV tok_wordbag_adjust_ptr(NODE bkt, V*diff, I depth) { bkt->payload -= (J)diff; }
 
-V tok_store_completion(NODE n, VEC**vec, I depth) {
+ZV tok_store_completion(NODE n, VEC**vec, I depth) {
 	if(n&&n->payload)
 		vec_add(*vec, n);
 }
-V tok_print_completions_for(S radix) {
+
+V tok_print_completions_for(S query) {
 	LOG("tok_get_completions_for");
 	VEC results = vec_init(10,NODE);
-	tri_each_from(wordbag, tri_get(wordbag, radix), (TRIE_EACH)tok_store_completion, &results);
-	O("%s:", radix);
-	I rlen = scnt(radix);
+	tri_each_from(wordbag, tri_get(wordbag, query), (TRIE_EACH)tok_store_completion, &results);
+	O("\n\t%s:", query);
+	I rlen = scnt(query);
 	if(!vec_size(results))
-		O("\e[91m%s\e[0m", " no completions");
+		O(" \e[91m%s\e[0m", "no completions");
 	DO(vec_size(results),
 		NODE n = *vec_at(results, i, NODE);
 		I len = n->depth - rlen;
@@ -109,40 +111,13 @@ V tok_print_completions_for(S radix) {
 		cpl[len]=0; //< terminate
 		if(len)
 			O(" -\e[33m%s\e[0m", cpl))
-	O("\n");
 	vec_destroy(results);
-}
-
-V tok_search_help() {
-	O("\n\tindexed fields:                             ");
-	DO(FTI_FIELD_COUNT, O(" %s", rec_field_names[i])); O("\n");
-	O("\n\ttotal records in index:                      %lu\n", fti_info->total_records);
-	O("\ttotal distinct tokens:                       %lu\n", fti_info->total_tokens);
-	O("\ttotal search terms:                          %lu\n",  fti_info->total_terms);
-	O("\ttotal memory used:                           %lu\n",  fti_info->total_mem);
-	O("\n");
-	O("\tcombination of terms for fuzzy search:       war peace tolstoy\n");
-	O("\tadd quotes to search for exact matches:      \"War and Peace\"\n");
-	O("\tappend or prepend * for substring search:    dostoev*\n");
-	O("\tprepend field name to search in field:       title:algernon\n");
-	O("\tappend ? to display completions:             music?\n");
-	O("\n");
-
+	O("\n\n");
 }
 
 V tok_search(S query) {
-	I qlen = scnt(query);
-	if(qlen==1&&query[0]=='?') {
-		tok_search_help();
-		R;
-	}
-	if(query[qlen-1]=='?') {
-		query[qlen-1]=0;
-		tok_print_completions_for(query);
-		R;
-	}
-
 	LOG("tok_search");
+	I qlen = scnt(query);
 	lcse(query,qlen); //< lowercase
 	//T(TEST, "raw query: -> (%s)", query);
 	TSTART();
@@ -232,24 +207,23 @@ UJ tok_index_field(ID rec_id, I field, S s, I flen, UJ i) {
 	R tok_cnt;
 }
 
-UJ tok_index_rec(Rec r, V*arg, UJ i) {
+Z UJ tok_index_rec(Rec r, V*arg, UJ i) {
 	//rec_print_dbg(r);
 	tok_index_field(r->rec_id, fld_publisher, r->publisher, r->lengths[0], i);
 	tok_index_field(r->rec_id, fld_title, r->title, r->lengths[1], i);
 	tok_index_field(r->rec_id, fld_author, r->author, r->lengths[2], i);
 	tok_index_field(r->rec_id, fld_subject, r->subject, r->lengths[3], i);
-
 	fti_info->total_records++;
 	R0;
 }
 
-V tok_ftidx_repack_each(BKT bkt, V*arg, HTYPE i) {
+ZV tok_ftidx_repack_each(BKT bkt, V*arg, HTYPE i) {
 	HT wordbag = (HT)(bkt->payload);
 	hsh_pack(wordbag);
 	//hsh_info(wordbag);
 }
 
-V tok_pack() {
+ZV tok_pack() {
 	LOG("tok_pack");
 	clk_start();
 	DO(FTI_FIELD_COUNT,
@@ -259,19 +233,19 @@ V tok_pack() {
 	T(TEST, "packed indexes in %lums", clk_stop());
 }
 
-V tok_ftidx_destroy_each(BKT bkt, V*arg, HTYPE i) {
+ZV tok_ftidx_destroy_each(BKT bkt, V*arg, HTYPE i) {
 	VEC a = (VEC)bkt->payload;
 	sz*released = (sz*)arg;
 	*released = (*released)+vec_destroy(a);
 }
 
-V tok_wordbag_inspect_each(BKT bkt, V*arg, HTYPE i) {
+ZV tok_wordbag_inspect_each(BKT bkt, V*arg, HTYPE i) {
 	LOG("tok_wordbag_inspect_each");
 	if(bkt->n<11 && mcmp(bkt->s, "malachy", 7))
 		vec_add_((V**)&test_vec, bkt->s);
 }
 
-V tok_ftidx_inspect_each(BKT bkt, V*arg, HTYPE i) {
+ZV tok_ftidx_inspect_each(BKT bkt, V*arg, HTYPE i) {
 	LOG("tok_ftidx_inspect_each");
 	VEC wordbag = (VEC)bkt->payload;
 	//TSTART();
@@ -280,7 +254,7 @@ V tok_ftidx_inspect_each(BKT bkt, V*arg, HTYPE i) {
 		T(TEST, "(%s) %lu %d", bkt->s, vec_size(wordbag), bkt->h);
 }
 
-V tok_shutdown() {
+I tok_shutdown() {
 	LOG("tok_shutdown");
 	tok_dec_mem("wordbag", tri_destroy(wordbag));
 	tok_dec_mem("wordbag_store", bag_destroy(wordbag_store));
@@ -304,20 +278,18 @@ V tok_shutdown() {
 	tok_dec_mem("test_vec", vec_destroy(test_vec));
 	tok_dec_mem("fti_info", SZ_FTI_INFO);
 
-	O("\n\n");
-	if (fti_info->total_mem)
-		T(INFO, "\tshutdown incomplete, \e[91mmem=%ld\e[0m", fti_info->total_mem);	
-	else
+	free(fti_info);
+
+	O("\n\n"); I r=0;
+	if (fti_info->total_mem){
+		T(INFO, "\tshutdown incomplete, \e[91mmem=%ld\e[0m", fti_info->total_mem);
+		r=1;
+	}else
 		T(INFO, "\tshutdown complete. good bye.");
 
-	free(fti_info);	
-
 	O("\n");
-}
 
-V tok_interrupt_handler(I itr) {
-    tok_shutdown();
-    exit(0);
+	R r;
 }
 
 V tok_bench() {
@@ -363,23 +335,15 @@ V tok_bench() {
 	T(TEST, "htab rounds: %d hits in %lums", HITS, clk_stop());	
 }
 
-I main() {
-	LOG("tok_test");
-	srand(time(NULL));
+I tok_init() {
+	LOG("tok_init");
 
 	test_vec = vec_init(50000, char[11]);
 	X(!test_vec, T(FATAL, "cannot initialize test vector"), 1)
 
-	signal(SIGINT, tok_interrupt_handler);
-
 	fti_info = (FTI_INFO)calloc(SZ_FTI_INFO,1);chk(fti_info,1);
 	tok_inc_mem("fti_info", SZ_FTI_INFO);
 
-	//! test tokenizer
-	S c = "a aaron abaissiez abandon aaron aaron abandoned abase abash abate abated abatement abatements abates abbess abbey abbeys abbominable abbot a";
-	C qq[scnt(c)]; mcpy(qq,c,scnt(c));
-	//tok_search(qq);//exit(0);
-	
 	tok_inc_mem("file_index",
 		db_init(DAT_FILE, IDX_FILE));
 
@@ -402,9 +366,6 @@ I main() {
 	T(TEST, "loaded %lu stopwords", stopwords->cnt);
 	tok_inc_mem("stopwords", stopwords->mem);
 
-	//! test tokenizer
-	//mcpy(qq,c,scnt(c));tok_index_field(0, 5, qq, 0); exit(0);
-
 	//! build inverted index
 	clock_t idx_start = clk_start();
 	UJ res = idx_each(tok_index_rec, NULL, 1);
@@ -415,8 +376,7 @@ I main() {
 	tok_inc_mem("wordbag_store", wordbag_store->size);
 	tok_inc_mem("wordbag_ht", wordbag_ht->mem);
 
-	//! sort document buckets
-	
+	//! sort document buckets	
 	DO(FTI_FIELD_COUNT,
 		sz allocated = 0;
 		hsh_each(ftidx[i], (HT_EACH)tok_ftidx_sort_each, &allocated);
@@ -424,28 +384,39 @@ I main() {
 	)
 	T(TEST, "sorted buckets in %lums", clk_stop());
 
-	T(TEST, "fti metrics:");
 	DO(FTI_FIELD_COUNT, 
 		tok_inc_mem("fti", ftidx[i]->mem);
 	//	hsh_info(ftidx[i])
 	)
 
-	T(TEST, "wordbag_ht metrics:");
 	hsh_info(wordbag_ht);
 	hsh_pack(wordbag_ht);
 
-	//tok_pack();
-	//VEC terms = vec_init(ftidx[5]->cnt), ;
-	hsh_each(ftidx[5], tok_ftidx_inspect_each, NULL);
+	R0;
+}
 
+#ifdef RUN_TESTS_TOK
+
+I main() {
+	LOG("tok_test");
+	srand(time(NULL));
+
+	P(tok_init(),1);
+
+	//! test tokenizer
+	S c = "a aaron abaissiez abandon aaron aaron abandoned abase abash abate abated abatement abatements abates abbess abbey abbeys abbominable abbot a";
+	C qq[scnt(c)]; mcpy(qq,c,scnt(c));
+	//tok_search(qq);//exit(0);
+	
+	//! test tokenizer
+	//mcpy(qq,c,scnt(c));tok_index_field(0, 5, qq, 0); exit(0);
+
+	hsh_each(ftidx[5], tok_ftidx_inspect_each, NULL);
 	hsh_each(wordbag_ht, tok_wordbag_inspect_each, NULL);
 	tok_inc_mem("test_vec", test_vec->mem);
 
-	//! test ui
-	O("empty line to quit, ? for help\n");
-	C q[LINE_BUF]; USR_LOOP(usr_input_str(q, "Search query", "Inavalid characters"), tok_search(q));
+	tok_bench();
 
-	//tok_bench();
 	//tri_dump(wordbag);
 	//tri_dump_from(wordbag, tri_get(wordbag, "music"));
 
@@ -453,6 +424,8 @@ I main() {
 	
 	R0;
 }
+
+#endif
 
 //:~
 

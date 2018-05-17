@@ -1,15 +1,16 @@
 CC=gcc-8
 CC=gcc
 CCOPTS=-mavx2 -ffast-math -march=native -flto -mfpmath=sse -funroll-loops -Ofast -g
+CCOPTS=
 VLG=/opt/valgrind/bin/valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes
 VLG=
 
 
-all: csv idx tok
-
-tests: clean bag tri stm rnd clk fio vec bin hsh set
+all: app
 
 db: csv idx
+
+tests: clean bag tri stm rnd clk fio vec bin hsh set tok
 
 idx: clean
 	$(CC) -DRUN_TESTS_IDX $(CCOPTS) -o bin/idx src/bin.c src/vec.c src/idx.c src/fio.c src/rec.c src/trc.c
@@ -17,7 +18,8 @@ idx: clean
 
 csv: clean nodatafiles
 	$(CC) -DRUN_TESTS_CSV $(CCOPTS) -o bin/csv src/trc.c src/csv.c
-	$(VLG) ./bin/csv csv/books.csv dat/books.dat
+	#$(VLG) ./bin/csv csv/books.csv dat/books.dat
+	$(VLG) ./bin/csv csv/sample.csv dat/books.dat
 
 set: clean
 	$(CC) -DRUN_TESTS_SET $(CCOPTS) -o bin/set src/trc.c src/hsh.c src/bag.c src/set.c
@@ -47,6 +49,10 @@ rnd:
 	$(CC) -DRUN_TESTS_RND $(CCOPTS) -o bin/rnd src/trc.c src/rnd.c 
 	$(VLG) ./bin/rnd
 
+kbd:
+	$(CC) -DRUN_TESTS_KBD $(CCOPTS) -o bin/kbd src/trc.c src/kbd.c 
+	$(VLG) ./bin/kbd
+
 usr:
 	$(CC) -DRUN_TESTS_USR $(CCOPTS) -o bin/usr src/trc.c src/usr.c 
 	$(VLG) ./bin/usr
@@ -64,9 +70,12 @@ bag:
 	$(VLG) ./bin/bag
 
 tok:
-	$(CC) -DRUN_TESTS_TOK $(CCOPTS) -o bin/tok src/rnd.c src/bag.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/vec.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/tok.c 
+	$(CC) -DRUN_TESTS_TOK $(CCOPTS) -o bin/tok src/tui.c src/rnd.c src/bag.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/vec.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/tok.c 
 	$(VLG) ./bin/tok
 
+app: 
+	$(CC) $(CCOPTS) -o bin/cli src/cli.c src/rnd.c src/bag.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/vec.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/tok.c 
+	$(VLG) ./bin/cli
 
 clean:
 	mkdir -p bin
