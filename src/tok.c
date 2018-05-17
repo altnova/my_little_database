@@ -21,7 +21,6 @@
 #include "rnd.h"
 #include "tok.h"
 
-
 #define PACK_EVERY_N_RECS (4*4096)
 #define WORDBAG_INIT_SIZE 1048576
 
@@ -53,7 +52,7 @@ V tok_dec_mem(S label, J bytes) {
 
 UJ tok_load_stop_words(S fname) {
 	LOG("tok_load_stop_words");
-	FILE* fd;
+	FILE*fd;
 	xfopen(fd, fname, "r+", NIL);
 	UJ fsz = fsize(fd);
 	S buf = malloc(fsz); chk(buf,NIL);
