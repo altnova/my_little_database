@@ -10,15 +10,19 @@ first_line_match: "-[*]-( Mode:)? C -[*]-"
 scope: source.c
 
 variables:
+  log_control: "T|LOG|TSTART|TEND"
+  project_types: "Pair|Idx|Rec|VEC|BAG|SET|ID|HT|BKT|HTYPE|TRIE|ID|sz|NODE"
   identifier: '\b[[:alpha:]_][[:alnum:]_]*\b'
   numeric: '\b((0(x|X)[0-9a-fA-F]*(\.[0-9a-fA-F]+p-?\d+)?)|(([0-9]+\.?[0-9]*)|(\.[0-9]+))((e|E)(\+|-)?[0-9]+)?)(L|l|UL|ul|u|U|F|f|ll|LL|ull|ULL)?\b'
   doxytags: '\~|xrefitem|xmlonly|weakgroup|warning|vhdlflow|version|verbinclude|verbatim|var|until|union|typedef|tparam|todo|throws|throw|test|tableofcontents|subsubsection|subsection|subpage|struct|startuml|snippetlineno|snippetdoc|snippet|skipline|skip|since|showinitializer|short|see|section|secreflist|sa|rtfonly|retval|returns|return|result|remarks|remark|relatesalso|relates|relatedalso|related|refitem|ref|pure|publicsection|public|protocol|protectedsection|protected|property|privatesection|private|pre|post|parblock|param|paragraph|par|page|package|p|overload|note|nosubgrouping|namespace|name|n|mscfile|msc|memberof|manonly|mainpage|link|line|li|latexonly|latexinclude|invariant|internal|interface|ingroup|includelineno|includedoc|include|implements|image|ifnot|if|idlexcept|htmlonly|htmlinclude|hideinitializer|hidecallgraph|hidecallergraph|headerfile|fn|file|f\}|f\{|f\]|f\[|f\$|extends|exception|example|enum|endxmlonly|endverbatim|enduml|endsecreflist|endrtfonly|endparblock|endmsc|endmanonly|endlink|endlatexonly|endinternal|endif|endhtmlonly|enddot|enddocbookonly|endcond|endcode|em|elseif|else|e|dotfile|dot|dontinclude|docbookonly|dir|diafile|details|deprecated|defgroup|def|date|copyright|copydoc|copydetails|copybrief|cond|code|class|cite|category|callgraph|callergraph|c|bug|brief|b|authors|author|attention|arg|anchor|addtogroup|addindex|a|\||\\|\.|\"|@|>|<|::|---|--|&|%|\$|#'
   constants: '<=>|__func__|NULL|true|false|TRUE|FALSE|NIL|EOF|SEEK_SET|SEEK_END|TODO|CLOCKS_PER_SEC'
   doxytags_w_args: 'class|def|enum|file|struct|typedef|union|a|b|c|e|em|p|param'
-  control_keywords: 'MN|rS|rK|SZ|L0|In|V0|V1|V2|XT|XD|XX|XC|XP|X1|X2|X3|XO|XF|k0|k1|k2|k3|k4|k5|xr|xt|xu|xn|xx|xy|xk|xg|xh|xi|xj|xe|xf|xs|xB|xH|xI|xJ|xE|xF|xC|xS|xK|TX|kK|kB|kG|kH|kI|kJ|kE|kF|kC|kS|SW|O|CS|CD|HALT|META|TRACE|STACK|P|Q|SS|R|DO|U|break|case|continue|default|do|else|for|goto|if|_Pragma|return|switch|while|W|FATAL|WARN|INFO|TEST|DEBUG|TRACE|R0|R1|X|P'
+  log_levels: 'FATAL|WARN|INFO|TEST|DEBUG|TRACE'
+  return: 'R|R0|R1|P|X'
+  control_keywords: 'ABS|MIN|MAX|IN|MN|rS|rK|SZ|L0|In|V0|V1|V2|XT|XD|XX|XC|XP|X1|X2|X3|XO|XF|k0|k1|k2|k3|k4|k5|xr|xt|xu|xn|xx|xy|xk|xg|xh|xi|xj|xe|xf|xs|xB|xH|xI|xJ|xE|xF|xC|xS|xK|TX|kK|kB|kG|kH|kI|kJ|kE|kF|kC|kS|SW|O|CS|CD|HALT|META|TRACE|STACK|P|Q|R|DO|U|break|case|continue|default|do|else|for|goto|if|_Pragma|return|switch|while|W|R0|R1|X|P'
   basic_types: 'asm|__asm__|auto|bool|_Bool|char|_Complex|double|float|_Imaginary|int|long|short|signed|unsigned|void'
   before_tag: 'struct|union|enum'
-  microsoft_types: 'Kg|Kc|Ki|Ks|Kb|Kh|Kf|KG|KE|KJ|KH|KC|KI|KS|KB|KF|CA|ZJ|ZF|ZK|ZS|V|ZV|ZI|S|ZC|UI|I|C|G|S|K|H|J|E|F|UJ|L|Z|Arr|sz|FILE|ID'
+  microsoft_types: 'SS|Kg|Kc|Ki|Ks|Kb|Kh|Kf|KG|KE|KJ|KH|KC|KI|KS|KB|KF|CA|ZJ|ZF|ZK|ZS|V|ZV|ZI|S|ZC|UI|I|C|G|S|K|H|J|E|F|UJ|L|Z'
   pointer_ops: '\*\*|\*'
   pointer_ops2: '\*\*|\*|\&'
   windows_types: 'APIENTRY|ATOM|BOOL|BOOLEAN|BYTE|CALLBACK|CCHAR|CHAR|COLORREF|CONST|DWORD|DWORDLONG|DWORD_PTR|DWORD32|DWORD64|FLOAT|HACCEL|HALF_PTR|HANDLE|HBITMAP|HBRUSH|HCOLORSPACE|HCONV|HCONVLIST|HCURSOR|HDC|HDDEDATA|HDESK|HDROP|HDWP|HENHMETAFILE|HFILE|HFONT|HGDIOBJ|HGLOBAL|HHOOK|HICON|HINSTANCE|HKEY|HKL|HLOCAL|HMENU|HMETAFILE|HMODULE|HMONITOR|HPALETTE|HPEN|HRESULT|HRGN|HRSRC|HSZ|HWINSTA|HWND|INT|INT_PTR|INT8|INT16|INT32|INT64|LANGID|LCID|LCTYPE|LGRPID|LONG|LONGLONG|LONG_PTR|LONG32|LONG64|LPARAM|LPBOOL|LPBYTE|LPCOLORREF|LPCSTR|LPCTSTR|LPCVOID|LPCWSTR|LPDWORD|LPHANDLE|LPINT|LPLONG|LPSTR|LPTSTR|LPVOID|LPWORD|LPWSTR|LRESULT|PBOOL|PBOOLEAN|PBYTE|PCHAR|PCSTR|PCTSTR|PCWSTR|PDWORD|PDWORDLONG|PDWORD_PTR|PDWORD32|PDWORD64|PFLOAT|PHALF_PTR|PHANDLE|PHKEY|PINT|PINT_PTR|PINT8|PINT16|PINT32|PINT64|PLCID|PLONG|PLONGLONG|PLONG_PTR|PLONG32|PLONG64|POINTER_32|POINTER_64|POINTER_SIGNED|POINTER_UNSIGNED|PSHORT|PSIZE_T|PSSIZE_T|PSTR|PTBYTE|PTCHAR|PTSTR|PUCHAR|PUHALF_PTR|PUINT|PUINT_PTR|PUINT8|PUINT16|PUINT32|PUINT64|PULONG|PULONGLONG|PULONG_PTR|PULONG32|PULONG64|PUSHORT|PVOID|PWCHAR|PWORD|PWSTR|QWORD|SC_HANDLE|SC_LOCK|SERVICE_STATUS_HANDLE|SHORT|SIZE_T|SSIZE_T|TBYTE|TCHAR|UCHAR|UHALF_PTR|UINT|UINT_PTR|UINT8|UINT16|UINT32|UINT64|ULONG|ULONGLONG|ULONG_PTR|ULONG32|ULONG64|UNICODE_STRING|USHORT|USN|VOID|WCHAR|WINAPI|WORD|WPARAM'
@@ -156,6 +160,12 @@ contexts:
       scope: invalid.illegal.placeholder.c
 
   keywords:
+    - match: \b({{return}})\b
+      scope: keyword.control.return.c
+    - match: \b({{log_control}})\b
+      scope: keyword.control.logging.c
+    - match: \b({{log_levels}})\b
+      scope: keyword.control.loglevel.c
     - match: \b({{control_keywords}})\b
       scope: keyword.control.c
     - match: \b(sizeof|printf)\b
@@ -183,7 +193,7 @@ contexts:
       scope: support.constant.mac-classic.c
 
   c99:
-    - match: \b(scnt|scmp|schr|rchr||mcpy|zseek|fsize|fexist|ftrunc|xfopen|hypot(f|l)?|s(scanf|ystem|nprintf|ca(nf|lb(n(f|l)?|ln(f|l)?))|i(n(h(f|l)?|f|l)?|gn(al|bit))|tr(s(tr|pn)|nc(py|at|mp)|c(spn|hr|oll|py|at|mp)|to(imax|d|u(l(l)?|max)|k|f|l(d|l)?)|error|pbrk|ftime|len|rchr|xfrm)|printf|et(jmp|vbuf|locale|buf)|qrt(f|l)?|w(scanf|printf)|rand)|n(e(arbyint(f|l)?|xt(toward(f|l)?|after(f|l)?))|an(f|l)?)|c(s(in(h(f|l)?|f|l)?|qrt(f|l)?)|cos(h(f)?|f|l)?|imag(f|l)?|t(ime|an(h(f|l)?|f|l)?)|o(s(h(f|l)?|f|l)?|nj(f|l)?|pysign(f|l)?)|p(ow(f|l)?|roj(f|l)?)|e(il(f|l)?|xp(f|l)?)|l(o(ck|g(f|l)?)|earerr)|a(sin(h(f|l)?|f|l)?|cos(h(f|l)?|f|l)?|tan(h(f|l)?|f|l)?|lloc|rg(f|l)?|bs(f|l)?)|real(f|l)?|brt(f|l)?)|t(ime|o(upper|lower)|an(h(f|l)?|f|l)?|runc(f|l)?|gamma(f|l)?|mp(nam|file))|i(s(space|n(ormal|an)|cntrl|inf|digit|u(nordered|pper)|p(unct|rint)|finite|w(space|c(ntrl|type)|digit|upper|p(unct|rint)|lower|al(num|pha)|graph|xdigit|blank)|l(ower|ess(equal|greater)?)|al(num|pha)|gr(eater(equal)?|aph)|xdigit|blank)|logb(f|l)?|max(div|abs))|di(v|fftime)|_Exit|unget(c|wc)|p(ow(f|l)?|ut(s|c(har)?|wc(har)?)|error|rintf)|e(rf(c(f|l)?|f|l)?|x(it|p(2(f|l)?|f|l|m1(f|l)?)?))|v(s(scanf|nprintf|canf|printf|w(scanf|printf))|printf|f(scanf|printf|w(scanf|printf))|w(scanf|printf)|a_(start|copy|end|arg))|qsort|f(s(canf|e(tpos|ek))|close|tell|open|dim(f|l)?|p(classify|ut(s|c|w(s|c))|rintf)|e(holdexcept|set(e(nv|xceptflag)|round)|clearexcept|testexcept|of|updateenv|r(aiseexcept|ror)|get(e(nv|xceptflag)|round))|flush|w(scanf|ide|printf|rite)|loor(f|l)?|abs(f|l)?|get(s|c|pos|w(s|c))|re(open|e|ad|xp(f|l)?)|m(in(f|l)?|od(f|l)?|a(f|l|x(f|l)?)?))|l(d(iv|exp(f|l)?)|o(ngjmp|cal(time|econv)|g(1(p(f|l)?|0(f|l)?)|2(f|l)?|f|l|b(f|l)?)?)|abs|l(div|abs|r(int(f|l)?|ound(f|l)?))|r(int(f|l)?|ound(f|l)?)|gamma(f|l)?)|w(scanf|c(s(s(tr|pn)|nc(py|at|mp)|c(spn|hr|oll|py|at|mp)|to(imax|d|u(l(l)?|max)|k|f|l(d|l)?|mbs)|pbrk|ftime|len|r(chr|tombs)|xfrm)|to(b|mb)|rtomb)|printf|mem(set|c(hr|py|mp)|move))|a(s(sert|ctime|in(h(f|l)?|f|l)?)|cos(h(f|l)?|f|l)?|t(o(i|f|l(l)?)|exit|an(h(f|l)?|2(f|l)?|f|l)?)|b(s|ort))|g(et(s|c(har)?|env|wc(har)?)|mtime)|r(int(f|l)?|ound(f|l)?|e(name|alloc|wind|m(ove|quo(f|l)?|ainder(f|l)?))|a(nd|ise))|b(search|towc)|m(odf(f|l)?|em(set|c(hr|py|mp)|move)|ktime|alloc|b(s(init|towcs|rtowcs)|towc|len|r(towc|len))))\b
+    - match: \b(chk|lcse|ucse|mcmp|stok|scnt|scmp|schr|rchr||mcpy|zseek|fsize|fexist|ftrunc|xfopen|hypot(f|l)?|s(scanf|ystem|nprintf|ca(nf|lb(n(f|l)?|ln(f|l)?))|i(n(h(f|l)?|f|l)?|gn(al|bit))|tr(s(tr|pn)|nc(py|at|mp)|c(spn|hr|oll|py|at|mp)|to(imax|d|u(l(l)?|max)|k|f|l(d|l)?)|error|pbrk|ftime|len|rchr|xfrm)|printf|et(jmp|vbuf|locale|buf)|qrt(f|l)?|w(scanf|printf)|rand)|n(e(arbyint(f|l)?|xt(toward(f|l)?|after(f|l)?))|an(f|l)?)|c(s(in(h(f|l)?|f|l)?|qrt(f|l)?)|cos(h(f)?|f|l)?|imag(f|l)?|t(ime|an(h(f|l)?|f|l)?)|o(s(h(f|l)?|f|l)?|nj(f|l)?|pysign(f|l)?)|p(ow(f|l)?|roj(f|l)?)|e(il(f|l)?|xp(f|l)?)|l(o(ck|g(f|l)?)|earerr)|a(sin(h(f|l)?|f|l)?|cos(h(f|l)?|f|l)?|tan(h(f|l)?|f|l)?|lloc|rg(f|l)?|bs(f|l)?)|real(f|l)?|brt(f|l)?)|t(ime|o(upper|lower)|an(h(f|l)?|f|l)?|runc(f|l)?|gamma(f|l)?|mp(nam|file))|i(s(space|n(ormal|an)|cntrl|inf|digit|u(nordered|pper)|p(unct|rint)|finite|w(space|c(ntrl|type)|digit|upper|p(unct|rint)|lower|al(num|pha)|graph|xdigit|blank)|l(ower|ess(equal|greater)?)|al(num|pha)|gr(eater(equal)?|aph)|xdigit|blank)|logb(f|l)?|max(div|abs))|di(v|fftime)|_Exit|unget(c|wc)|p(ow(f|l)?|ut(s|c(har)?|wc(har)?)|error|rintf)|e(rf(c(f|l)?|f|l)?|x(it|p(2(f|l)?|f|l|m1(f|l)?)?))|v(s(scanf|nprintf|canf|printf|w(scanf|printf))|printf|f(scanf|printf|w(scanf|printf))|w(scanf|printf)|a_(start|copy|end|arg))|qsort|f(s(canf|e(tpos|ek))|close|tell|open|dim(f|l)?|p(classify|ut(s|c|w(s|c))|rintf)|e(holdexcept|set(e(nv|xceptflag)|round)|clearexcept|testexcept|of|updateenv|r(aiseexcept|ror)|get(e(nv|xceptflag)|round))|flush|w(scanf|ide|printf|rite)|loor(f|l)?|abs(f|l)?|get(s|c|pos|w(s|c))|re(open|e|ad|xp(f|l)?)|m(in(f|l)?|od(f|l)?|a(f|l|x(f|l)?)?))|l(d(iv|exp(f|l)?)|o(ngjmp|cal(time|econv)|g(1(p(f|l)?|0(f|l)?)|2(f|l)?|f|l|b(f|l)?)?)|abs|l(div|abs|r(int(f|l)?|ound(f|l)?))|r(int(f|l)?|ound(f|l)?)|gamma(f|l)?)|w(scanf|c(s(s(tr|pn)|nc(py|at|mp)|c(spn|hr|oll|py|at|mp)|to(imax|d|u(l(l)?|max)|k|f|l(d|l)?|mbs)|pbrk|ftime|len|r(chr|tombs)|xfrm)|to(b|mb)|rtomb)|printf|mem(set|c(hr|py|mp)|move))|a(s(sert|ctime|in(h(f|l)?|f|l)?)|cos(h(f|l)?|f|l)?|t(o(i|f|l(l)?)|exit|an(h(f|l)?|2(f|l)?|f|l)?)|b(s|ort))|g(et(s|c(har)?|env|wc(har)?)|mtime)|r(int(f|l)?|ound(f|l)?|e(name|alloc|wind|m(ove|quo(f|l)?|ainder(f|l)?))|a(nd|ise))|b(search|towc)|m(odf(f|l)?|em(set|c(hr|py|mp)|move)|ktime|alloc|b(s(init|towcs|rtowcs)|towc|len|r(towc|len))))\b
       scope: support.function.C99.c
 
   types:
@@ -197,9 +207,18 @@ contexts:
         1: storage.type.c
         2: punctuation.pointer.c
 
-    - match: \b({{microsoft_types}}|{{basic_types}}|{{before_tag}})\b
+    - match: \b({{project_types}})({{pointer_ops}})
+      captures:
+        1: storage.type.project.current.c
+        2: punctuation.pointer.c
+
+
+    - match: \b({{project_types}})\b
+      scope: storage.type.project.current.c
+
+    - match: \b({{project_types}}|{{microsoft_types}}|{{basic_types}}|{{before_tag}})\b
       scope: storage.type.c
-    - match: \b(u_char|u_short|u_int|u_long|ushort|uint|u_quad_t|quad_t|qaddr_t|caddr_t|daddr_t|dev_t|fixpt_t|blkcnt_t|blksize_t|gid_t|in_addr_t|in_port_t|ino_t|key_t|mode_t|nlink_t|id_t|pid_t|off_t|segsz_t|swblk_t|uid_t|id_t|clock_t|size_t|ssize_t|time_t|useconds_t|suseconds_t|ptrdiff_t)\b
+    - match: \b(sz|u_char|u_short|u_int|u_long|ushort|uint|u_quad_t|quad_t|qaddr_t|caddr_t|daddr_t|dev_t|fixpt_t|blkcnt_t|blksize_t|gid_t|in_addr_t|in_port_t|ino_t|key_t|mode_t|nlink_t|id_t|pid_t|off_t|segsz_t|swblk_t|uid_t|id_t|clock_t|size_t|ssize_t|time_t|useconds_t|suseconds_t|ptrdiff_t)\b
       scope: support.type.sys-types.c
     - match: \b(pthread_attr_t|pthread_cond_t|pthread_condattr_t|pthread_mutex_t|pthread_mutexattr_t|pthread_once_t|pthread_rwlock_t|pthread_rwlockattr_t|pthread_t|pthread_key_t)\b
       scope: support.type.pthread.c
@@ -221,6 +240,9 @@ contexts:
       scope: constant.numeric.c
 
   operators:
+    - match: '&&'
+      scope: keyword.operator.comparison.and.c
+
     - match: '\s({{pointer_ops2}})(?={{identifier}}\s*[^(])'
       captures:
         1: punctuation.pointer.c
@@ -243,7 +265,7 @@ contexts:
       scope: keyword.operator.assignment.c
     - match: \%|\^|~|&|>>\=|<<\=|\|
       scope: keyword.operator.arithmetic.c
-    - match: <\=|>\=|\!\=|\=\=|&&|<<|>>|<|>
+    - match: <\=|>\=|\!\=|\=\=|<<|>>|<|>
       scope: keyword.operator.comparison.c
     - match: =
       scope: keyword.operator.assignment.c

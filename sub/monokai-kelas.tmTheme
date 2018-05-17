@@ -247,6 +247,19 @@
 			<key>name</key>
 			<string>or</string>
 			<key>scope</key>
+			<string>keyword.operator.comparison.and.c</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#FD971F</string> <!-- #FD971F -->
+			</dict>
+		</dict>
+
+
+		<dict>
+			<key>name</key>
+			<string>or</string>
+			<key>scope</key>
 			<string>keyword.operator.comparison.or.c</string>
 			<key>settings</key>
 			<dict>
@@ -316,6 +329,64 @@
 				<string>#F92672</string>
 			</dict>
 		</dict>
+
+		<dict>
+			<key>name</key>
+			<string>short return</string>
+			<key>scope</key>
+			<string>keyword.control.return</string>
+			<key>settings</key>
+			<dict>
+				<key>fontStyle</key>
+				<string>bold</string>
+				<!-- key>foreground</key>
+				<string>#E6DB74</string -->
+			</dict>
+		</dict>		
+
+		<dict>
+			<key>name</key>
+			<string>logging shortcuts</string>
+			<key>scope</key>
+			<string>keyword.control.logging</string>
+			<key>settings</key>
+			<dict>
+				<key>fontStyle</key>
+				<string></string>
+				<key>foreground</key>
+				<string>#F92672</string>
+			</dict>
+		</dict>		
+
+
+		<dict>
+			<key>name</key>
+			<string>short return</string>
+			<key>scope</key>
+			<string>keyword.control.loglevel</string>
+			<key>settings</key>
+			<dict>
+				<key>fontStyle</key>
+				<string>bold</string>
+				<key>foreground</key>
+				<string>#E6DB74</string>
+			</dict>
+		</dict>		
+
+
+		<dict>
+			<key>name</key>
+			<string>Storage type, current project</string>
+			<key>scope</key>
+			<string>storage.type.project.current</string>
+			<key>settings</key>
+			<dict>
+				<!--key>fontStyle</key>
+				<string></string>
+				<key>foreground</key>
+				<string>#E6DB74</string -->
+			</dict>
+		</dict>		
 		<dict>
 			<key>name</key>
 			<string>Storage type</string>
