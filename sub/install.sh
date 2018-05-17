@@ -28,3 +28,5 @@ echo "c-kelas => installed"
 
 cp monokai-kelas.tmTheme "$st3_path"
 echo "monokai => installed"
+
+#//:~
