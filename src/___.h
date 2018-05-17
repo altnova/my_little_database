@@ -66,8 +66,8 @@ typedef size_t sz;
 #define ZS Z S
 #define ZE Z E
 #define ZJ Z J
-#define R0 R 0
-#define R1 R 1
+#define R0 R 0;
+#define R1 R 1;
 
 //! error
 #define NIL 0xffffffffffffffff
