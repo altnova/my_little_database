@@ -1,8 +1,8 @@
-CC=gcc-8
+#CC=gcc-8
 CC=gcc
 CCOPTS=-mavx2 -ffast-math -march=native -flto -mfpmath=sse -funroll-loops -Ofast -g
-CCOPTS=
-VLG=/opt/valgrind/bin/valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes
+#CCOPTS=
+#VLG=/opt/valgrind/bin/valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes
 VLG=
 
 
@@ -48,10 +48,6 @@ clk:
 rnd:
 	$(CC) -DRUN_TESTS_RND $(CCOPTS) -o bin/rnd src/trc.c src/rnd.c 
 	$(VLG) ./bin/rnd
-
-kbd:
-	$(CC) -DRUN_TESTS_KBD $(CCOPTS) -o bin/kbd src/trc.c src/kbd.c 
-	$(VLG) ./bin/kbd
 
 usr:
 	$(CC) -DRUN_TESTS_USR $(CCOPTS) -o bin/usr src/trc.c src/usr.c 

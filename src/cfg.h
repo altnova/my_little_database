@@ -52,9 +52,11 @@ typedef pRec* Rec; //< use this one
 
 #define SZ_REC SZ(pRec)
 
-enum rec_fields { fld_pages, fld_year, fld_publisher, fld_title, fld_author, fld_subject };
+enum rec_fields { fld_pages, fld_year,   fld_publisher,
+                  fld_title, fld_author, fld_subject };
 
-ZS rec_field_names[] = {"pages", "year", "publisher", "title", "author", "subject"};
+ZS rec_field_names[] = {"pages", "year",   "publisher",
+                        "title", "author", "subject"};
 
 ZI csv_max_field_widths[] = { 4, 4, 100, 200, 50, 2000 };
 
