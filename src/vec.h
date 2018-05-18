@@ -20,10 +20,13 @@ typedef pVEC* VEC;
 #define  vec_at(a,i,t)		({(t*)vec_at_(a,i);})
 #define  vec_last(a,t)		({(t*)vec_last_(a);})
 
+
+ext sz vec_del_at(VEC a, sz i, sz n);  //! \param i start position, \param n how many
 ext sz   vec_size(VEC a);
 ext sz   vec_mem(VEC a);
+ext E   vec_lfactor(VEC a);
 ext V*   vec_random(VEC a);
-ext sz   vec_destroy(VEC);		//< never forget
+ext sz   vec_destroy(VEC a);		//< never forget
 
 //! underlying implementation
 ext VEC  vec_init_(sz n, sz t);
