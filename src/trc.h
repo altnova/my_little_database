@@ -29,6 +29,7 @@ ext V _stack(S msg, I d, I offset);
 //! trace
 ext I T(I lvl, const S fn, const S file, const I line, const S format, ...);
 ext V TSTART(), TEND();
+ext V BYTES_AS_STR(S str,I n);
 
 //! check malloc ptr
 #define chk(a,retval) X(!a,T(FATAL,"out of memory"),retval);

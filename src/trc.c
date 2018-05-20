@@ -23,7 +23,8 @@ I T(I lvl, const S fn, const S file, const I line, const S fmt, ...) {
 		va_start(args, fmt);
 		C buf[strlen(fn)+strlen(fmt)+strlen(file)+30];
 		if (!cont) {
-			OUT:snprintf(buf, SZ(buf), "%s %s:%d\t[%s] %s%c", loglevel_names[lvl], file, line, fn, fmt, newline?'\n':'\0');
+			OUT:snprintf(buf, SZ(buf), "%s %s:%d\t[%s] %s%c",
+				loglevel_names[lvl], file, line, fn, fmt, newline?'\n':'\0');
 			if(cont)newline = 0;
 		} else {
 			if(newline){newline=0;goto OUT;}
@@ -40,6 +41,7 @@ V TSTART() {cont=1;}
 V TEND() {O("\n");cont=0;newline=1;}
 
 #if WIN32||_WIN64
+V _stack(S msg, I d, I offset) {}
 #else
 V _stack(S msg, I d, I offset) {
  LOG("stack");
@@ -51,6 +53,8 @@ V _stack(S msg, I d, I offset) {
  DO(size-offset,O("%s %s\n",msg, strings[i+offset]));
  free(strings);}
 #endif
+
+V BYTES_AS_STR(S str,I n){DO(n,O("%c", (C)str[i]))}
 
 //! print bits
 V bits_char(C x, S dest) {
