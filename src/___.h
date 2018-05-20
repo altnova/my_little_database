@@ -52,19 +52,20 @@ typedef size_t sz;
 #define mcmp(d,s,n) memcmp((d),(s),n) 			//!< mem compare \param d dest \param s source \param n len */
 #define scpy(d,s,n) (S)mcpy((S)d,(S)s,1+MIN(scnt((S)s),n)) /*!< better strcpy \param d dest \param s source \param n limit */
 #define lcse(s,n) {DO(n,s[i]=tolower(s[i]))}
-#define stok(s,n,d,r,x) {ZC z=0,D[255]="*";if(!z){z=1;DO(scnt(d),D[d[i]]='*');}/*!< tokenize \param s,n,d,x string,len,delims,exec, reverse */\
-					     I in=0;J tok_len,tok_pos=0,j=n;S tok;C lst,endTk;I didx;\
-					     DO(n+1, j=r?j:i;lst=(j==(n));didx=lst?0:j;endTk=D[didx];if(lst){in=1;O("ORIGIN j=%ld,endTk=%d,in=%d\n",j,endTk,in);}\
-					     if(endTk){if(in){O("in\n");in=0;tok=s+tok_pos;/*s[j]='\0'*/;tok_len=j-tok_pos;{x;}}\
-					     else tok_pos=j;}else if(!in){in=1;tok_pos=j;/*s[j+1]='\0';*/}\
-					     --j;/*O("final: (%d), i=%lu, j=%ld n=%lu IN=%d\n", s[j], i,j,n,in);in=0;s[j-1]=0)*/)}
 
-/*
-#define stok(s,n,d,x) {ZC z=0,D[255]="*";if(!z){z=1;DO(scnt(d),D[d[i]]='*')}// tokenize \param s,n,d,x string,len,delims,exec\
-	   I in=0;sz tok_len,tok_pos=0;S tok;DO(n+1,
-	   if(D[s[i]]){if(in){in=0;tok=s+tok_pos;s[i]='\0';tok_len=i-tok_pos;{x;}}\
-	   else tok_pos=i;}else if(!in){in=1;tok_pos=i;})}
-*/
+//! tokenize string \param s,n,d,r,x string,len,delims,reverse,exec
+#define stok(s,n,d,r,x) {ZC z=0,D[255];if(!z){z=1;DO(scnt(d),D[d[i]]='*');}\
+		J tok_len,tok_pos=0,j=n-1;S tok;C lst,end,in=0;\
+		DO(n+1,j=r?j:i;lst=i==n;end=lst?1:D[s[j]];\
+		/*O("%ld end=%d lst=%d, pos=%ld\n", j, endTk, lst, tok_pos);*/\
+		if(end){if(in){in=0;tok_len=ABS(j-tok_pos);tok_pos-=r?tok_len-1:0;tok=s+tok_pos;{x;}}\
+		else tok_pos=j;}else if(!in){in=1;tok_pos=j;}--j)}
+
+//#define stokold(s,n,d,x) {ZC z=0,D[255]="*";if(!z){z=1;DO(scnt(d),D[d[i]]='*')}
+//	   {I in=0;sz tok_len,tok_pos=0;S tok;DO(n+1,
+//	   if(D[s[i]]){if(in){in=0;tok=s+tok_pos;s[i]='\0';tok_len=i-tok_pos;{x;}}\
+//	   else tok_pos=i;}else if(!in){in=1;tok_pos=i;})}
+
 
 //! less is more
 #define ZV Z V
