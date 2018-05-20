@@ -143,7 +143,7 @@ I cli_rec_show(S arg){
 
 	I width = cols * .7;
 	BOX_START(width);
-	str_wrap(r->subject, (width-1),
+	str_wrap(r->subject, width-1,
 		BOX_LEFT();
 		O("%.*s", line_len, r->subject+line_start);
 		BOX_RIGHT(ABS(line_len-width+1));NL();
