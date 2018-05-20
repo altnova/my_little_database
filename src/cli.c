@@ -12,11 +12,11 @@
 #include "clk.h"
 
 #define VER "0.9.5"
-#define MI(i,label) O("\t%d. %s", i, label);
+#define MI(i,label) O("\t%d. %s", i, label);	//< menu item
 #define NL() O("\n");
-#define TB() O("\t");
+#define TB() O("  "); /* left offset */
 #define CH(c,n) DO(n, O(c))
-#define LN(n) TB();CH("\u2501",n);NL();
+#define HR(n) TB();CH("\u2501",n);NL(); /* horisontal ruler */
 #define BLUE(s) O("\e[36m%s\e[0m", s)
 #define GREY(s) O("\e[37m%s\e[0m", s)
 #define YELL(s) O("\e[1;33m%s\e[0m", s)
@@ -24,7 +24,7 @@
 #define WIPE(x,n) DO(n, x[i]=0)
 
 #define CLI_DB_COMMANDS ":*+-<>"
-#define CLI_PROMPT "\t\e[1;32m$\e[0m "
+#define CLI_PROMPT "    \e[1;32m$\e[0m "
 
 V cli_hint() {
 	NL();
@@ -35,14 +35,15 @@ V cli_hint() {
 
 V cli_banner() {
 	NL();NL();
-	LN(53);
+	HR(53);
 	TB();GREEN("Amazon Kindle Database");CH(" ",25)O("v%s\n", VER);
-	LN(53);
+	HR(53);
 	NL();}
 
 V cli_help_db() {
-	GREEN("\n\tdatabase commands\n");
-    LN(53);
+	NL();
+	TB();GREEN("database commands:\n");
+    HR(53);
     TB();YELL(":");BLUE("id  "); O("show");CH(" ",9);
     	 YELL("+");BLUE("    "); O("create");CH(" ",9);
     	 YELL("<");BLUE("i.csv");O("   import");NL();
@@ -60,16 +61,16 @@ V cli_usage() {
 	TB();GREEN("indexed fields:");CH(" ",17);
 	DO(FTI_FIELD_COUNT,
 		O("\e[36m %s\e[0m", rec_field_names[i]);
-		if(!((I)(i+1)%3)){O("\n");CH(" ",40)}
-	);
+		if(!((I)(i+1)%3)){O("\n");TB();CH(" ",17+15)}
+	)
 	NL();
-	TB();O("total items:%41lu\n", fti_info->total_records);
+	TB();O("total books:%41lu\n", fti_info->total_records);
 	TB();O("total words:%41lu\n", fti_info->total_tokens);
 	TB();O("total terms:%41lu\n", fti_info->total_terms);
 	TB();O("total alloc:%41lu\n", fti_info->total_mem);
 	NL();
 	TB();GREEN("search modes:\n");
-    LN(53);
+    HR(53);
 	TB();O("fuzzy:");CH(" ", 30);BLUE("war peace tolstoy");NL();
 	TB();O("exact:");CH(" ", 32);YELL("\""); BLUE("War and Peace");YELL("\"");NL();
 	TB();O("prefix:");CH(" ", 38);BLUE("dostoev");YELL("*");NL();
@@ -97,33 +98,34 @@ I main(I av, S* ac) {
 	cli_banner();
 	cli_hint();
 
+	C q[LINE_BUF];
+
 	//! start main loop
-	C q[LINE_BUF]; USR_LOOP(usr_input_str(q, CLI_PROMPT, "inavalid characters"),
+	USR_LOOP(usr_input_str(q, CLI_PROMPT, "inavalid characters"),
 		I qlen = scnt(q);
 		if(!qlen){cli_hint();continue;}
 
 		I pos = is_db_cmd(*q);
 		if(pos>=0)O("db command: %c %d\n", *q, pos);
-
 		SW(qlen){
-		 CS(1,
-			SW(*q){
-				CS('\\',goto EXIT;) //< LF
-				CS(10, cli_hint()) //< LF
-				CS('?', cli_usage())
-			}
-			WIPE(q,qlen);
-			continue)
-		 CS(2, if(!mcmp("\\\\", q, 2))goto EXIT)
-		}		
-		if(q[qlen-1]=='?') {
+			CS(1,
+				SW(*q){
+					CS('\\',goto EXIT;)
+					CS(10, cli_hint()) //< LF
+					CS('?', cli_usage())
+				}
+				goto NEXT;
+			)
+			CS(2, if(!mcmp("\\\\", q, 2))goto EXIT;)
+		}
+		if(q[qlen-1]=='?'){
 			q[qlen-1]=0;
 			tok_print_completions_for(q);
-			WIPE(q,qlen)
-			continue;
+			goto NEXT;
 		}
-		DO(qlen,q[i]=0)
-		tok_search(q)
+		tok_search(q);
+		NEXT:
+		WIPE(q,qlen);
 	)
 
 	EXIT:
