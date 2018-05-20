@@ -1,7 +1,7 @@
 //! \file usr.h \brief user input
 
 #define LINE_BUF 2048
-#define USR_LOOP(x,y) while(!x){y;}
+#define USR_LOOP(x,y) W(!x){y;}
 
 //! read integer from the console into \c num
 //! \param prompt prompt text
