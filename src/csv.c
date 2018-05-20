@@ -49,7 +49,7 @@ ZI add_field(I fld, S val){
 
 	if (fld==COLS-1) {						//< reached last field
 		ID id = next_id();					//< allocate rec_id
-		memcpy(r, &id, SZ(ID));				//< populate rec_id
+		mcpy(r, &id, SZ(ID));				//< populate rec_id
 		if(((I)id%5000)==0)
 			rec_print(&recbuf[recbufpos]);	//< echo every 5000th record
 		recbufpos++;
