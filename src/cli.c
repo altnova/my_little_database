@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <string.h>
+#include <sys/ioctl.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <errno.h>
 #include <time.h>
 #include "___.h"
 #include "cfg.h"
@@ -10,11 +14,17 @@
 #include "tok.h"
 #include "usr.h"
 #include "clk.h"
+#include "rec.h"
+#include "str.h"
+
+#define LEFT_OFFSET "  "
+#define CLI_PROMPT  "  \e[1;32m$\e[0m "
+#define CLI_DB_COMMANDS ":*+-<>"
 
 #define VER "0.9.5"
 #define MI(i,label) O("\t%d. %s", i, label);	//< menu item
 #define NL() O("\n");
-#define TB() O("  "); /* left offset */
+#define TB() O(LEFT_OFFSET); /* left offset */
 #define CH(c,n) DO(n, O(c))
 #define HR(n) TB();CH("\u2501",n);NL(); /* horisontal ruler */
 #define BLUE(s) O("\e[36m%s\e[0m", s)
@@ -23,8 +33,16 @@
 #define GREEN(s) O("\e[1;32m%s\e[0m", s)
 #define WIPE(x,n) DO(n, x[i]=0)
 
-#define CLI_DB_COMMANDS ":*+-<>"
-#define CLI_PROMPT "    \e[1;32m$\e[0m "
+typedef I(*CLI_CMD)(S arg);
+I cli_rec_show(S arg);
+I cli_rec_edit(S arg);
+I cli_rec_add(S arg);
+I cli_rec_del(S arg); 
+I cli_csv_import(S arg);
+I cli_csv_export(S arg);
+CLI_CMD cmds[] = {cli_rec_show, cli_rec_edit, cli_rec_add, cli_rec_del, cli_csv_import, cli_csv_export};
+
+I rows, cols; //< terminal dimensions
 
 V cli_hint() {
 	NL();
@@ -38,7 +56,8 @@ V cli_banner() {
 	HR(53);
 	TB();GREEN("Amazon Kindle Database");CH(" ",25)O("v%s\n", VER);
 	HR(53);
-	NL();}
+	NL();
+}
 
 V cli_help_db() {
 	NL();
@@ -73,11 +92,18 @@ V cli_usage() {
     HR(53);
 	TB();O("fuzzy:");CH(" ", 30);BLUE("war peace tolstoy");NL();
 	TB();O("exact:");CH(" ", 32);YELL("\""); BLUE("War and Peace");YELL("\"");NL();
-	TB();O("prefix:");CH(" ", 38);BLUE("dostoev");YELL("*");NL();
 	TB();O("field:");CH(" ", 33);YELL("title:"); BLUE("algernon");NL();
+	TB();O("prefix:");CH(" ", 38);BLUE("dostoev");YELL("*");NL();
 	TB();O("completions:");CH(" ", 35);BLUE("music"); YELL("?");NL();
 	cli_help_db();
 	cli_hint();
+}
+
+ZV cli_update_dimensions() {
+	struct winsize ws;
+	ioctl(STDOUT_FILENO,TIOCGWINSZ,&ws);
+	cols = ws.ws_col;
+	rows = ws.ws_row;
 }
 
 V cli_interrupt_handler(I itr) {
@@ -88,6 +114,50 @@ ZI is_db_cmd(C c) {
 	P(!r,-1)
 	R r-CLI_DB_COMMANDS;
 }
+
+I cli_warn(S msg){
+	TB();O("%s",msg);NL();
+	R1;
+}
+
+ID cli_parse_id(S str) {
+	errno = 0;
+	J res = strtol(str, NULL, 10);
+	P(errno||res<0, NIL)
+	R(ID)res;
+}
+
+V BOX_START(I w) { TB(); CH("\u250f",1); CH("\u2501",w+2); CH("\u2513",1); NL(); }
+V BOX_END(I w) { TB(); CH("\u2517",1); CH("\u2501",w+2); CH("\u251b",1); NL(); }
+
+V BOX_LEFT() {TB();O("\u2503 ");}
+V BOX_RIGHT(I pad) {TB();CH(" ", pad);O("\u2503");}
+
+I cli_rec_show(S arg){
+	LOG("cli_rec_show");
+	P(!scnt(arg), cli_warn("missing record id"))
+	ID rec_id = cli_parse_id(arg);
+	P(rec_id==NIL, cli_warn("bad record id"))
+	Rec r = (Rec)malloc(SZ_REC);chk(r,1);
+	P(rec_get(r, rec_id)==NIL, cli_warn("no such record"))
+
+	I width = cols * .7;
+	BOX_START(width);
+	str_wrap(r->subject, (width-1),
+		BOX_LEFT();
+		O("%.*s", line_len, r->subject+line_start);
+		BOX_RIGHT(ABS(line_len-width+1));NL();
+	);
+	BOX_END(width);
+	free(r);
+	R0;}
+
+I cli_rec_edit(S arg){O("nyi cli_rec_edit\n");R0;}
+I cli_rec_add(S arg){O("nyi cli_rec_add\n");R0;}
+I cli_rec_del(S arg){O("nyi cli_rec_del\n");R0;}
+I cli_csv_import(S arg){O("nyi cli_csv_import\n");R0;}
+I cli_csv_export(S arg){O("nyi cli_csv_export\n");R0;}
+
 
 I main(I av, S* ac) {
 	LOG("cli_main");
@@ -102,11 +172,17 @@ I main(I av, S* ac) {
 
 	//! start main loop
 	USR_LOOP(usr_input_str(q, CLI_PROMPT, "inavalid characters"),
+		cli_update_dimensions();
+
 		I qlen = scnt(q);
 		if(!qlen){cli_hint();continue;}
 
 		I pos = is_db_cmd(*q);
-		if(pos>=0)O("db command: %c %d\n", *q, pos);
+		if(pos>=0){
+			I res = cmds[pos](q+1);
+			if(res){TB();O("command error\n");}
+			goto NEXT;
+		}
 		SW(qlen){
 			CS(1,
 				SW(*q){

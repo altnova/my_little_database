@@ -6,7 +6,7 @@
 /*! \c lead leading spaces in line */\
 /*! \c tail remaining length of long word (tok_len>=n) */\
 /*! \c room available space on the current line */\
-#define str_wrap(s,n,x) {I lead, line_len=0, line_start=0, line_end=0; UJ text_len=scnt(s), tail, room;\
+#define str_wrap(s,n,x) {I lead, line_len=0, line_start=0; UJ text_len=scnt(s), tail, room;\
 	stok(s,text_len," \t\n",0,\
 		I pts = 1+tok_len/n;if(pts>1){tail=tok_len;room=n-(tok_pos-line_start);tok_len=room;if(room)pts++;}\
 		for(I p=0;p<pts;++p){\
