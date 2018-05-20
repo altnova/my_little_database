@@ -89,7 +89,6 @@ ext V hsh_each(HT ht, HT_EACH fn, V*arg);
 ext V hsh_print(BKT b);
 
 //! release hash table
-//! \param destroy_payload deallocate non-empty payload pointers
 ext sz hsh_destroy(HT ht);
 
 //:~
