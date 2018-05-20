@@ -1,4 +1,4 @@
-#include "___.h"
+//!\file hsh.h \brief hash table api
 
 typedef UI HTYPE; //< hash width
 typedef HTYPE(*HSH_FN)(S val, UI len); //< hsh_each function interface
@@ -91,4 +91,7 @@ ext V hsh_print(BKT b);
 //! release hash table
 //! \param destroy_payload deallocate non-empty payload pointers
 ext sz hsh_destroy(HT ht);
+
+//:~
+
 
