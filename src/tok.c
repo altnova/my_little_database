@@ -32,20 +32,23 @@ Z HT wordbags[FTI_FIELD_COUNT]; //< hash tables: term -> stem
 Z HT wordbag_ht;
 Z TRIE wordbag; 		//< trie: global term -> stem
 Z BAG wordbag_store;
-Z VEC test_vec;
 
 ZC MEM_TRACE=0;
 ZV tok_inc_mem(S label, J bytes) {
 	LOG("tok_inc_mem");
 	if(MEM_TRACE)
-		T(TEST, "\e[33m%s alloc %lu\e[m", label, bytes);
-	fti_info->total_mem += bytes;}
+		T(TEST, "\e[33m%s alloc %lu\e[0m", label, bytes);
+	fti_info->total_mem += bytes;
+	fti_info->total_alloc_cnt++;
+}
 
 ZV tok_dec_mem(S label, J bytes) {
 	LOG("tok_dec_mem");
 	if(MEM_TRACE)	
-		T(TEST, "%s free %lu", label, bytes);
-	fti_info->total_mem -= bytes;}
+		T(TEST, "\e[37m%s free %lu\e[0m", label, bytes);
+	fti_info->total_mem -= bytes;
+	fti_info->total_alloc_cnt--;
+}
 
 Z UJ tok_load_stop_words(S fname) {
 	LOG("tok_load_stop_words");
@@ -56,8 +59,11 @@ Z UJ tok_load_stop_words(S fname) {
 	UJ bytesRead = fread(buf, 1, fsz, fd);
 	lcse(buf, scnt(buf));
 	S delim = "\n";
-	stok(buf, fsz, "\n",
-		hsh_ins(stopwords, tok, tok_len, NULL))
+
+	stok(buf, fsz, "\n", 0,
+		hsh_ins(stopwords, tok, tok_len, NULL);
+	)
+
 	fclose(fd);
 	free(buf);
 
@@ -122,7 +128,7 @@ V tok_search(S query) {
 	//T(TEST, "raw query: -> (%s)", query);
 	TSTART();
 	T(TEST, "stemmed search terms: ");
-	stok(query, qlen, FTI_TOKEN_DELIM,
+	stok(query, qlen, FTI_TOKEN_DELIM, 0,
 		if((tok_len<2||hsh_get(stopwords, tok, tok_len)))continue;
 		//! apply stemmer
 		tok_len = stm(tok, 0, tok_len-1)+1;
@@ -138,7 +144,7 @@ UJ tok_index_field(ID rec_id, I field, S s, I flen, UJ i) {
 	LOG("tok_index_field");
 	lcse(s, flen); //< lowercase
 	I tok_cnt = 0;
-	stok(s, scnt(s), FTI_TOKEN_DELIM,
+	stok(s, scnt(s), FTI_TOKEN_DELIM, 0,
 
     	//if((tok_len<2||hsh_get(stopwords, tok, tok_len)))continue;
 
@@ -150,8 +156,8 @@ UJ tok_index_field(ID rec_id, I field, S s, I flen, UJ i) {
 
 		NODE b;
        	if (USE_WORDBAG) {
-			b = tri_insert(wordbag, tok, NULL);
-			hsh_ins(wordbag_ht, tok, tok_len+1, NULL);
+			b = tri_insert(wordbag, tok, tok_len, NULL);
+			hsh_ins(wordbag_ht, tok, tok_len, NULL);
 
 			if (!b){
 				T(WARN, "skipping bad token at rec=%lu fld=%s pos=%d", rec_id, rec_field_names[field], tok_pos);
@@ -239,12 +245,6 @@ ZV tok_ftidx_destroy_each(BKT bkt, V*arg, HTYPE i) {
 	*released = (*released)+vec_destroy(a);
 }
 
-ZV tok_wordbag_inspect_each(BKT bkt, V*arg, HTYPE i) {
-	LOG("tok_wordbag_inspect_each");
-	if(bkt->n<11 && mcmp(bkt->s, "malachy", 7))
-		vec_add_((V**)&test_vec, bkt->s);
-}
-
 ZV tok_ftidx_inspect_each(BKT bkt, V*arg, HTYPE i) {
 	LOG("tok_ftidx_inspect_each");
 	VEC wordbag = (VEC)bkt->payload;
@@ -256,11 +256,12 @@ ZV tok_ftidx_inspect_each(BKT bkt, V*arg, HTYPE i) {
 
 I tok_shutdown() {
 	LOG("tok_shutdown");
+	I res=0;
+
 	tok_dec_mem("wordbag", tri_destroy(wordbag));
 	tok_dec_mem("wordbag_store", bag_destroy(wordbag_store));
 	tok_dec_mem("stopwords", hsh_destroy(stopwords));
 
-	
 	DO(FTI_FIELD_COUNT,
 		sz released = 0;
 		hsh_each(ftidx[i], tok_ftidx_destroy_each, &released);
@@ -271,75 +272,23 @@ I tok_shutdown() {
 		tok_dec_mem("fti", hsh_destroy(ftidx[i]))
 	)
 
-	tok_dec_mem("file_index",
-		db_close());
-
+	tok_dec_mem("file_index", db_close());
 	tok_dec_mem("wordbag_ht", hsh_destroy(wordbag_ht));
-	tok_dec_mem("test_vec", vec_destroy(test_vec));
 	tok_dec_mem("fti_info", SZ_FTI_INFO);
+
+	if (fti_info->total_mem){
+		T(INFO, "shutdown incomplete, \e[91mmem=%ld, cnt=%ld\e[0m", fti_info->total_mem, fti_info->total_alloc_cnt);
+		res=1;
+	}else
+		T(INFO, "shutdown complete.");
 
 	free(fti_info);
 
-	O("\n\n"); I r=0;
-	if (fti_info->total_mem){
-		T(INFO, "\tshutdown incomplete, \e[91mmem=%ld\e[0m", fti_info->total_mem);
-		r=1;
-	}else
-		T(INFO, "\tshutdown complete. good bye.");
-
-	O("\n");
-
-	R r;
-}
-
-V tok_bench() {
-	LOG("tok_bench");
-	clk_start();
-	sz ROUNDS = 10000000;
-	I HITS = 0;
-	
-	T(TEST, "trie=%lu (%lu) ht=%d (%lu)", wordbag->cnt, wordbag->mem, wordbag_ht->cnt, wordbag_ht->mem);
-
-	NODE n;
-	S needle;
-	C buf[11];
-	DO(ROUNDS,
-		needle = vec_random(test_vec);
-		if(0&&(rand()%10)==5){
-			rnd_str(buf,10,CHARSET_az);
-			n = tri_get(wordbag, buf);
-			if(n)HITS++;//else O("%s\n", buf);
-		} else {
-			n = tri_get(wordbag, needle);
-			if(n)HITS++;else O("%s\n", needle);
-		}
-	)
-	T(TEST, "trie rounds: %d hits in %lums", HITS, clk_stop());
-
-	//DO(rounds,stm(str, 0, len-1);//O("%s\n", str);)T(TEST, "stem rounds: %lums", clk_stop());
-
-	BKT b;
-	HITS = 0;
-	DO(ROUNDS,
-		needle = vec_random(test_vec);
-		if(0&&(rand()%10)==5){
-			rnd_str(buf,10,CHARSET_az);
-			b = hsh_get_bkt(wordbag_ht, buf, 11);
-			if(b)HITS++;//else O("%s\n", buf);
-		} else {
-			b = hsh_get_bkt(wordbag_ht, needle, scnt(needle)+1);
-			if(b)HITS++;//else O("%s\n", needle);
-		}
-		//O("%s\n", b->s);
-	)
-	T(TEST, "htab rounds: %d hits in %lums", HITS, clk_stop());	
+	R res;
 }
 
 I tok_init() {
 	LOG("tok_init");
-
-	test_vec = vec_init(50000, char[11]);
-	X(!test_vec, T(FATAL, "cannot initialize test vector"), 1)
 
 	fti_info = (FTI_INFO)calloc(SZ_FTI_INFO,1);chk(fti_info,1);
 	tok_inc_mem("fti_info", SZ_FTI_INFO);
@@ -397,11 +346,67 @@ I tok_init() {
 
 #ifdef RUN_TESTS_TOK
 
+VEC test_vec;
+
+ZV tok_wordbag_inspect_each(BKT bkt, V*arg, HTYPE i) {
+	LOG("tok_wordbag_inspect_each");
+	if(bkt->n<11 && mcmp(bkt->s, "malachy", 7)) {
+		//T(TEST, "test_vec add: %s", bkt->s);
+		vec_add_((V**)&test_vec, bkt->s);
+	}
+}
+
+V tok_bench() {
+	LOG("tok_bench");
+	clk_start();
+	sz ROUNDS = 10000000;
+	I HITS = 0;
+	
+	T(TEST, "trie=%lu (%lu) ht=%d (%lu)", wordbag->cnt, wordbag->mem, wordbag_ht->cnt, wordbag_ht->mem);
+
+	NODE n;
+	S needle;
+	C buf[11];
+	DO(ROUNDS,
+		needle = vec_random(test_vec);
+		if(0&&(rand()%10)==5){
+			rnd_str(buf,10,CHARSET_az);
+			n = tri_get(wordbag, buf);
+			if(n)HITS++;//else O("%s\n", buf);
+		} else {
+			n = tri_get(wordbag, needle);
+			if(n)HITS++;//else O("%s\n", needle);
+		}
+	)
+	T(TEST, "trie rounds: %d hits in %lums", HITS, clk_stop());
+
+	//DO(rounds,stm(str, 0, len-1);//O("%s\n", str);)T(TEST, "stem rounds: %lums", clk_stop());
+
+	BKT b;
+	HITS = 0;
+	DO(ROUNDS,
+		needle = vec_random(test_vec);
+		if(0&&(rand()%10)==5){
+			rnd_str(buf,10,CHARSET_az);
+			b = hsh_get_bkt(wordbag_ht, buf, 11);
+			if(b)HITS++;//else O("%s\n", buf);
+		} else {
+			b = hsh_get_bkt(wordbag_ht, needle, scnt(needle));
+			if(b)HITS++;//else O("%s\n", needle);
+		}
+		//O("%s\n", b->s);
+	)
+	T(TEST, "htab rounds: %d hits in %lums", HITS, clk_stop());	
+}
+
 I main() {
 	LOG("tok_test");
 	srand(time(NULL));
 
 	P(tok_init(),1);
+
+	test_vec = vec_init(50000, char[11]);
+	X(!test_vec, T(FATAL, "cannot initialize test vector"), 1)
 
 	//! test tokenizer
 	S c = "a aaron abaissiez abandon aaron aaron abandoned abase abash abate abated abatement abatements abates abbess abbey abbeys abbominable abbot a";
@@ -420,6 +425,7 @@ I main() {
 	//tri_dump(wordbag);
 	//tri_dump_from(wordbag, tri_get(wordbag, "music"));
 
+	tok_dec_mem("test_vec", vec_destroy(test_vec));
 	tok_shutdown();
 	
 	R0;
