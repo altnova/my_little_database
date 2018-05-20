@@ -1,10 +1,9 @@
-#CC=gcc-8
-CC=gcc
+CC=gcc-8
+#CC=gcc
 CCOPTS=-mavx2 -ffast-math -march=native -flto -mfpmath=sse -funroll-loops -Ofast -g
-#CCOPTS=
+CCOPTS=-Og -g
 #VLG=/opt/valgrind/bin/valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes
 VLG=
-
 
 all: app
 
@@ -30,8 +29,8 @@ hsh: clean
 	$(VLG) ./bin/hsh
 
 bin: clean
-	$(CC) -DRUN_TESTS_BIN $(CCOPTS) -o bin/binsearch src/trc.c src/bin.c 
-	$(VLG) ./bin/binsearch
+	$(CC) -DRUN_TESTS_BIN $(CCOPTS) -o bin/bin src/trc.c src/bin.c 
+	$(VLG) ./bin/bin
 
 vec: clean
 	$(CC) -DRUN_TESTS_VEC $(CCOPTS) -o bin/vec src/trc.c src/vec.c 
@@ -65,8 +64,16 @@ bag:
 	$(CC) -DRUN_TESTS_BAG $(CCOPTS) -o bin/bag src/trc.c src/bag.c
 	$(VLG) ./bin/bag
 
+str:
+	$(CC) -DRUN_TESTS_STR $(CCOPTS) -o bin/str src/hsh.c src/trc.c src/str.c
+	$(VLG) ./bin/str
+
+vim:
+	$(CC) -DRUN_TESTS_VIM $(CCOPTS) -o bin/vim src/vec.c src/trc.c src/vim.c
+	$(VLG) ./bin/vim
+
 tok:
-	$(CC) -DRUN_TESTS_TOK $(CCOPTS) -o bin/tok src/tui.c src/rnd.c src/bag.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/vec.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/tok.c 
+	$(CC) -DRUN_TESTS_TOK $(CCOPTS) -o bin/tok src/rnd.c src/bag.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/vec.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/tok.c 
 	$(VLG) ./bin/tok
 
 app: 
