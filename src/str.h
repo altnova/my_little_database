@@ -17,5 +17,5 @@
 			line_len=tok_pos-line_start+tok_len;\
 			if(pts>1){tail-=tok_len; tok_pos+=tok_len; room=(n); tok_len=MIN(tail, room);}\
 		}\
-	){x;}/* flush remainder */}
+	){x;}/* flush remainder */};
 

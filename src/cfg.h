@@ -16,13 +16,13 @@
 #define IDX_FILE "dat/books.idx"
 
 //! csv parser config
-#define COLS 6				//< csv column count
-#define BUF 2000000			//< csv read buffer
-#define QUO '"'				//< quote char
-#define DELIM ';'			//< csv delimiter
-#define NUL '\0'			//< null char
-#define LF '\n'				//< newline char
-#define FLDMAX 2000			//< longest field len
+#define COLS 6				/*< csv column count */
+#define BUF 2000000			/*< csv read buffer */
+#define QUO '"'				/*< quote char */
+#define DELIM ';'			/*< csv delimiter */
+#define NUL '\0'			/*< null char */
+#define LF '\n'				/*< newline char */
+#define FLDMAX 2000			/*< longest field len*/
 #define RECBUFLEN 4096		//< record r/w buffer
 
 #define MAX_FNAME_LEN 200	//< db and idx files
