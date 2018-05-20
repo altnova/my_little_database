@@ -242,7 +242,7 @@ ZV vim_move_cursor(I key) {
 	}
 }
 
-ZS vim_prompt(S prompt, I x_offset, S initial_value) {
+ZS vim_prompt(S prompt, S initial_value) {
 	LOG("vim_prompt");
 	S result = "TODO";
 	
@@ -253,7 +253,9 @@ ZS vim_prompt(S prompt, I x_offset, S initial_value) {
 
 	I currpos = len;
 	vim_set_cursor_position(CFG.screenrows+2, x_offset+currpos); // jump to end
-	CFG.prompt_offset = x_offset;
+	CFG.prompt_len = scnt(prompt);
+
+	S prompt_terminated = vsnprintf("%s\%.*s", CFG.prompt_len+4, fmt, ap);
 
 	EVENTLOOP(
 		vim_set_line(CFG.message, prompt, (S)buffer->data);
@@ -262,20 +264,28 @@ ZS vim_prompt(S prompt, I x_offset, S initial_value) {
 
 		SW(c){
 			CS(CTRL_KEY('a'),
-				vim_set_line(CFG.status, "Ctrl+a line start (nyi)");
+				vim_set_line(CFG.status, "Ctrl+a line start");
 				currpos = 0;
-				CFG.cx = x_offset;
+				CFG.cx = CFG.prompt_len;
 				continue;
 			) 
 			CS(CTRL_KEY('e'),
-				vim_set_line(CFG.status, "Ctrl+e line end (nyi)");
+				vim_set_line(CFG.status, "Ctrl+e line end");
 				currpos = vec_size(buffer);
-				CFG.cx = x_offset + currpos;
-				continue;				
+				CFG.cx = CFG.prompt_len + currpos;
+				continue;
 			)
 			CS(CTRL_KEY('w'),
-				vim_set_line(CFG.status, "Ctrl+w zap last word (nyi)");
-				
+				stok(buffer->data, vec_size(buffer), " \t", 1,
+					CFG.cx = CFG.prompt_len + tok_pos;
+					vim_set_line(CFG.status, "Ctrl+w killed (%s)", buffer->data + tok_pos);
+					vec_del_at(buffer, tok_pos, vec_size(buffer));
+
+					currpos = vec_size(buffer);
+					break;
+				)
+				//vim_set_line(CFG.status, "Ctrl+w kill last word (nyi)");
+				continue;
 			) // TODO 
 			CS(CTRL_KEY('k'),
 				vim_set_line(CFG.status, "Ctrl+k kill tail (nyi)");
@@ -322,7 +332,7 @@ ZS vim_prompt(S prompt, I x_offset, S initial_value) {
 			goto DONE;
 
 		} else if(!iscntrl(c)&&c<128){			// detect printable better?
-			vec_add(buffer,c);					// TODO should be insert_at
+			vec_add(buffer, c);					// TODO should be insert_at
 			vim_move_cursor(ARROW_RIGHT);
 			currpos++;
 		}
@@ -333,7 +343,8 @@ ZS vim_prompt(S prompt, I x_offset, S initial_value) {
 		//TODO
 		// do something meaningful with the line bufer
 	}
-	CFG.prompt_offset = 0; // reset to default
+
+	CFG.prompt_len = 0; // reset to default
 	vim_clear_line(CFG.message); 
 	vim_set_cursor_position(0,0);
 	vim_redraw();
@@ -381,7 +392,7 @@ ZV vim_ins_char(I c) {
 
 ZV vim_save_changes() {
 	//todo
-	S answer = vim_prompt("Save changes? (Y/N): %s", 21, "");
+	S answer = vim_prompt("Save changes? (Y/N): ", "");
 	if(answer==NULL) {	
 		vim_set_line(CFG.status, "Save aborted.");
 		R;
@@ -458,7 +469,7 @@ I main() {
 	vim_init();
 	vim_set_line(CFG.status, "HELP: Ctrl-Q = quit");
 
-	S cmd = vim_prompt("    $ %s", 6, "mary had a little lamb");
+	S cmd = vim_prompt("    $ ", "mary had a little lamb");
 
 	EVENTLOOP(
 		vim_redraw();

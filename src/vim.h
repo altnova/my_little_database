@@ -20,7 +20,7 @@ typedef struct config {
   I cx, cy;
   I screenrows;
   I screencols;
-  I prompt_offset; //< from the left edge
+  I prompt_len; //< from the left edge
   C status[80];  //< one up  
   C message[80]; //< bottom line
   struct termios orig_termios;
