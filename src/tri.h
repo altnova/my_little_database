@@ -27,8 +27,8 @@ typedef pNODE* NODE;
 
 ext TRIE tri_init();
 
-ext NODE tri_insert(TRIE t, S key, V*payload);
-ext NODE tri_upsert(TRIE t, S key, V*payload);
+ext NODE tri_insert(TRIE t, S key, UJ n, V*payload);
+ext NODE tri_upsert(TRIE t, S key, UJ n, V*payload);
 ext NODE tri_get(TRIE t, S key);
 ext C tri_is_leaf(NODE n);
 ext V tri_dump(TRIE t);
