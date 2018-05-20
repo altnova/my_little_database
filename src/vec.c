@@ -90,8 +90,12 @@ sz vec_del_at(VEC a, sz i, sz n){
 		a->used -= n;
 		T(TEST, "deleted %lu elements", n);
 	}
-	T(TEST, "load factor %0.3f, alloc=%lu alloc/2=%lu usage=%lu", vec_lfactor(a), a->mem, a->mem>>1, a->used * a->el_size);
+	//T(TEST, "load factor %0.3f, alloc=%lu alloc/2=%lu usage=%lu", vec_lfactor(a), a->mem, a->mem>>1, a->used * a->el_size);
 	R a->used;} //< new size
+
+sz vec_clear(VEC a) {
+	R vec_del_at(a, 0, vec_size(a));
+}
 
 //! test
 typedef UJ TT; //< type
