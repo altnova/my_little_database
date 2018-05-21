@@ -67,6 +67,6 @@ ZI rec_field_offsets[] = {
 
 #define FTI_FIELD_COUNT 6 //< count of full-text search fields
 //! delimiters for text tokenizer
-#define FTI_TOKEN_DELIM " %$`^0123456789#@_?~;&/\\,!|+-.:()[]{}<>*=\"\t\n\r" 
+#define FTI_TOKEN_DELIM " %$`^0123456789#@_?~;&/\\,!|+-.:()[]{}<>*='\"\t\n\r" 
 
 //:~

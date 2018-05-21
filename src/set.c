@@ -13,7 +13,7 @@
 SET set_init(sz el_size, CMP cmpfn) {
 	LOG("set_init");
 	SET s = (SET)calloc(SZ_SET,1);chk(s,NULL);
-	s->items = vec_init_(10,el_size);
+	s->items = vec_init_(1,el_size);
 	s->cmpfn = cmpfn;
 	R s;
 }
@@ -38,7 +38,7 @@ V*set_add(SET s, V*key) {
 		//T(TEST, "comparison result=%d", res);
 	}
 
-	vec_add_(&s->items, key);
+	vec_add_((V**)&s->items, key);
 	R vec_last_(s->items);;
 }
 
