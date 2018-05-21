@@ -4,9 +4,8 @@ typedef struct vector {
 	UJ hdr;			//< reserved
 	sz used;		//< occupied
 	sz size;		//< current capacity
-	sz mem;			//< memory utilization
 	C grow_factor;	//< size multiplier on realloc, defaults to 2, never set to <2
-	sz el_size;		//< element size
+	UI el_size;		//< element size
 	G data[0];		//< struct hack
 } pVEC;
 
@@ -30,7 +29,7 @@ ext sz vec_compact(VEC*aptr);
 ext sz vec_destroy(VEC a); //< never forget
 
 //! underlying implementation
-ext VEC  vec_init_(sz n, sz t);
+ext VEC  vec_init_(sz n, UI t);
 ext VEC  vec_add_(V**a, V*el);
 ext V*   vec_at_(VEC a, UJ i);
 ext V*   vec_last_(VEC a);

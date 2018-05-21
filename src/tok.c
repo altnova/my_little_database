@@ -94,7 +94,7 @@ ZV tok_ftidx_sort_each(BKT bkt, V*arg, UJ i) {
 	LOG("tok_ftidx_sort_each");
 	VEC a = (VEC)bkt->payload;
 	sz*allocated = (sz*)arg;
-	*allocated = (*allocated)+a->mem;
+	*allocated = (*allocated) + vec_mem(a);
 	if(a->used<2)R;
 	qsort(a->data, a->used, SZ(ID), tok_cmp_qsort);
 	//T(TEST, "%lu %s index sorted %lu items", i, bkt->s, a->used);
@@ -250,37 +250,26 @@ V tok_print_memmap() {
 	hsh_each(fti_info->memmap, tok_memmap_print_each, NULL);
 }
 
-ZV tok_ftidx_repack_each(BKT bkt, V*arg, HTYPE i) {
-	HT wordbag = (HT)(bkt->payload);
-	hsh_pack(wordbag);
-	//hsh_info(wordbag);
-}
-
 ZV tok_terms_inspect_each(BKT bkt, V*arg, HTYPE i) {
 	LOG("terms_each");
 	SET docset = (SET)(bkt->payload);
 	UJ save = vec_compact(&docset->items);
 	UJ* alloc = (UJ*)arg;
-	*alloc += docset->items->mem;
-	T(TRACE, "%s -> [%lu %lu %lu %.2f]", bkt->s,
-		docset->items->used, docset->items->size, docset->items->mem, vec_lfactor(docset->items));
+	*alloc += vec_mem(docset->items);
+	T(TRACE, "%s -> [used=%lu size=%lu mem=%lu lf=%.2f save=%lu]", bkt->s,
+		docset->items->used, docset->items->size, vec_mem(docset->items), vec_lfactor(docset->items), save);
 }
 
 ZV tok_terms_destroy_each(BKT bkt, V*arg, HTYPE i) {
 	SET docset = (SET)(bkt->payload);
 	UJ* alloc = (UJ*)arg;
-	*alloc += docset->items->mem;
+	*alloc += vec_mem(docset->items);
 	vec_destroy(docset->items);
 }
-
 
 ZV tok_pack() {
 	LOG("tok_pack");
 	clk_start();
-	DO(FTI_FIELD_COUNT,
-		hsh_each(ftidx[i], tok_ftidx_repack_each, NULL);
-		hsh_pack(ftidx[i]);//hsh_info(ftidx[i]);
-	)
 	T(TEST, "packed indexes in %lums", clk_stop());
 }
 
@@ -381,6 +370,9 @@ I tok_init() {
 	tok_inc_mem("wordbag_ht", wordbag_ht->mem);
 	tok_inc_mem("terms", terms->mem);
 
+	hsh_pack(terms);
+	T(TEST, "packed terms in %lums", clk_stop());
+
 	sz docvectors_alloc = 0;
 	hsh_each(terms, (HT_EACH)tok_terms_inspect_each, &docvectors_alloc);
 	tok_inc_mem("docvectors", docvectors_alloc);
@@ -402,7 +394,6 @@ I tok_init() {
 	hsh_pack(wordbag_ht);
 	hsh_info(wordbag_ht);
 
-	hsh_pack(terms);
 	//hsh_dump(terms);
 	hsh_info(terms);
 
@@ -483,7 +474,7 @@ I main() {
 
 	hsh_each(ftidx[5], tok_ftidx_inspect_each, NULL);
 	hsh_each(wordbag_ht, tok_wordbag_inspect_each, NULL);
-	tok_inc_mem("test_vec", test_vec->mem);
+	tok_inc_mem("test_vec", vec_mem(test_vec));
 
 	//tok_bench();
 

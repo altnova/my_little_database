@@ -6,12 +6,11 @@
 #include "trc.h"
 #include "vec.h"
 
-VEC vec_init_(sz n, sz t) {
+VEC vec_init_(sz n, UI t) {
 	LOG("arr_init");
 	X(!t, T(WARN, "zero element width"), NULL);
 	sz init_size = SZ_HDR + n * t;
 	VEC a = (VEC)malloc(init_size); chk(a,0);
-	a->mem = init_size;
 	a->used = 0;
 	a->size = n;
 	a->el_size = t;
@@ -33,14 +32,14 @@ V* vec_last_(VEC a){
 sz vec_destroy(VEC a){
 	LOG("vec_destroy");
 	T(DEBUG, "destroy at %p", a);
-	sz released = a->mem;
+	sz released = vec_mem(a);
 	free(a);
 	a = NULL;
 	R released;
 }
 
 sz vec_mem(VEC a){
-	R a->mem;
+	R SZ_HDR + a->el_size * a->size;
 }
 
 sz vec_size(VEC a){
@@ -60,7 +59,6 @@ VEC vec_add_(V** aptr, V* el){
 		a->size *= a->grow_factor;
 		sz new_size = SZ_HDR + a->el_size * a->size;
 		a = realloc(a, new_size);chk(a,NULL);
-		a->mem = new_size;
 		*aptr = a;
 		T(DEBUG, "realloc to %lu (%p)", a->size, *aptr);
 	}
@@ -72,17 +70,17 @@ sz  vec_compact(VEC*aptr) {
 	LOG("vec_compact");
 	VEC a = *aptr;
 	a->size = a->used;
+	sz mem = vec_mem(a);
 	sz new_size = SZ_HDR + a->el_size * a->size;
 	a = realloc(a, new_size);chk(a,0);
-	sz save = a->mem - new_size;
-	a->mem = new_size;
+	sz save = mem - new_size;
 	*aptr = a;
 	if(save)T(TRACE, "compacted %lu bytes", save);
 	R save;
 }
 
 E vec_lfactor(VEC a) {
-	R a->mem/(a->used * a->el_size);
+	R vec_mem(a)/(a->used * a->el_size);
 }
 
 sz vec_del_at(VEC a, sz i, sz n){
