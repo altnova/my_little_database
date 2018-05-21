@@ -116,16 +116,22 @@ ZV cli_help_db() {
 	TB();GREEN("database commands:\n");
     HR(53);
     TB();YELL(":");BLUE("id  "); O("show");CH(" ",9);
-    	 YELL("+");BLUE("    "); O("create");CH(" ",9);
-    	 YELL("<");BLUE("i.csv");O("   import");NL();
+    	 YELL("+");BLUE("        "); O("create");CH(" ",9);
+    	 //YELL("<");BLUE("i.csv");O("   import");NL();
+    	 NL();
     TB();YELL("*");BLUE("id  "); O("edit");CH(" ",9);
-    	 YELL("-");BLUE("id  "); O("delete");CH(" ",9);
-    	 YELL(">");BLUE("o.csv");O("   export");NL();
-    TB();YELL("!");BLUE("    "); O("list");CH(" ",9);
-    	 //YELL("-");BLUE("id  "); O("delete");CH(" ",9);
+    	 YELL("-");BLUE("id      "); O("delete");CH(" ",9);
     	 //YELL(">");BLUE("o.csv");O("   export");NL();
+    	 NL();
+    TB();YELL("!");BLUE("    "); O("list");CH(" ",9);
+    	 YELL("<");BLUE("i.csv");O("   import");
+    	 //YELL("^");BLUE("    "); O("resort");CH(" ",9);
+    	 //YELL(">");BLUE("o.csv");O("   export");
+    	 NL();
 
-	NL();
+    TB();YELL("^");BLUE("    "); O("sort");CH(" ",9);
+    	 YELL(">");BLUE("o.csv");O("   export");
+		 NL();
 }
 
 ZV cli_usage() {
@@ -191,13 +197,7 @@ ZI cli_fld_format(S fmt, ...) {
 	R len;
 }
 
-I cli_rec_show(S arg){
-	LOG("cli_rec_show");
-	P(!scnt(arg), cli_warn("missing record id"))
-	ID rec_id = cli_parse_id(arg);
-	P(rec_id==NIL, cli_warn("bad record id"))
-	Rec r = (Rec)malloc(SZ_REC);chk(r,1);
-	P(rec_get(r, rec_id)==NIL, cli_warn("no such record"))
+I cli_rec_print(Rec r){
 
 	I width = cols * .7;
 	I clen, gap, line_cnt=0;
@@ -244,14 +244,105 @@ I cli_rec_show(S arg){
 
 	// terminate table
 	BOX_END(width, "");
-
-	// release record
-	free(r);
 	R0;}
 
-ZI cli_rec_edit(S arg){O("nyi cli_rec_edit\n");R0;}
-ZI cli_rec_add(S arg){O("nyi cli_rec_add\n");R0;}
-ZI cli_rec_del(S arg){O("nyi cli_rec_del\n");R0;}
+I cli_rec_show(S arg){
+	LOG("cli_rec_show");
+	P(!scnt(arg), cli_warn("missing record id"))
+	ID rec_id = cli_parse_id(arg);
+	P(rec_id==NIL, cli_warn("bad record id"))
+	Rec r = (Rec)malloc(SZ_REC);chk(r,1);
+	P(rec_get(r, rec_id)==NIL, cli_warn("no such record"))
+	I res = cli_rec_print(r);
+	free(r);
+	R res;
+}
+
+ZI cli_rec_edit_loop(Rec r, S prompt, S mode, REC_FN rec_fn){
+	I res;C q[LINE_BUF];
+
+	AGAIN:
+	WIPE(q, LINE_BUF);
+	res = cli_rec_print(r);
+
+	NL();TB();
+	DO(FTI_FIELD_COUNT,
+		COLOR_START_BOLD(C_YELL);O("%lu: ", i+1);COLOR_END();
+		COLOR_START(C_BLUE);O("%s   ", rec_field_names[i]);COLOR_END();
+	)
+	NL();
+	TB();
+	I pad = 6;
+	YELL("field:");BLUE("value");O(" - update field");
+	CH(" ", pad);YELL("=");O(" - save changes");
+	CH(" ", pad);YELL("\\");O(" - cancel ");O("%s", mode);
+	NL();NL();
+
+	USR_LOOP(usr_input_str(q, prompt, "inavalid characters"),
+		cli_update_dimensions();
+		I qlen = scnt(q);
+		if(!qlen||*q==10){goto AGAIN;break;}
+		if(qlen==1&&*q=='='){
+			UJ res = rec_fn(r);
+			NL();TB();O("record %lu: %s %s", r->rec_id, mode, (res==NIL)?"fail":"ok");NL();NL();
+			goto DONE;break;}
+		if(qlen==1&&*q=='\\'){
+			NL();TB();O("record %lu: %s %s", r->rec_id, mode, "cancelled");NL();NL();
+			goto DONE;break;}
+		S colon_pos = schr(q, ':');
+		if(!colon_pos){goto AGAIN;break;}
+		*colon_pos='\0';
+		I fld_id = atoi(q);
+		if(!fld_id){goto AGAIN;break;}
+		fld_id--;
+		if(!rec_field_names[fld_id]){goto AGAIN;break;}
+		TB();O("%s -> (%s)\n", rec_field_names[fld_id], colon_pos+1);
+		H num;
+		if(fld_id<2) {
+			num = (H)atoi(colon_pos+1);	
+			rec_set(r, fld_id, &num);
+		} else
+			rec_set(r, fld_id, colon_pos+1);
+		goto AGAIN;break;
+	)
+	DONE:
+	R res;
+}
+
+ZI cli_rec_edit(S arg){
+	LOG("cli_rec_edit");
+	P(!scnt(arg), cli_warn("missing record id"));
+	ID rec_id = cli_parse_id(arg);
+	P(rec_id==NIL, cli_warn("bad record id"));
+	Rec r = (Rec)malloc(SZ_REC);chk(r,1);
+	P(rec_get(r, rec_id)==NIL, cli_warn("no such record"));
+
+	I res = cli_rec_edit_loop(r, "  edit$ ", "update", rec_update);
+	free(r);
+	R res;	
+}
+
+ZI cli_rec_add(S arg){
+	LOG("cli_rec_add");
+	Rec r = (Rec)malloc(SZ_REC);chk(r,1);
+	I res = cli_rec_edit_loop(r, "  add$ ", "create", rec_create);
+	free(r);
+	R res;}
+
+ZI cli_rec_del(S arg){
+	LOG("cli_rec_del");
+	P(!scnt(arg), cli_warn("missing record id"));
+	ID rec_id = cli_parse_id(arg);
+	P(rec_id==NIL, cli_warn("bad record id"));
+	Rec r = (Rec)malloc(SZ_REC);chk(r,1);
+	P(rec_get(r, rec_id)==NIL, cli_warn("no such record"));
+
+	UJ res = rec_delete(rec_id);
+	NL();TB();O("record %lu: delete %s", r->rec_id, (res==NIL)?"failed":"ok");NL();NL();
+	
+	free(r); //< can still undo deletion!
+	R0;}
+
 ZI cli_csv_import(S arg){O("nyi cli_csv_import\n");R0;}
 ZI cli_csv_export(S arg){O("nyi cli_csv_export\n");R0;}
 
@@ -282,29 +373,30 @@ ZI cli_rec_list(S arg){
 	UJ total_recs = idx_size();
 	UJ total_pages = 1+total_recs/CLI_PAGE_SIZE;
 	if(scnt(arg) < 1)
-		page_id = ++current_page_id;
-	else if(scnt(arg)==1&&arg[0]=='!') {
+		page_id = ++current_page_id; // ! - next
+	else if(scnt(arg)==1&&arg[0]=='!') { // !! - prev 
 		if(current_page_id>1)
 			page_id = --current_page_id;
 		else
-			page_id = total_pages; //wrap
+			page_id = total_pages; // wrap to last
 	} else {
-		page_id = cli_parse_id(arg);
-		if(page_id==NIL||page_id<1){page_id=1;}
+		page_id = cli_parse_id(arg);	// !number - jump
+		if(page_id==NIL||page_id<1)
+			page_id=current_page_id;; // stay where we are
 	}
 	if(page_id > total_pages)
 		page_id = total_pages; // do not wrap
 
-	current_page_id = page_id;
+	current_page_id = page_id; // save
 
-	// start table
 	I width = cols * .7;
 	I title_max = width * .6;
 	I author_max = width-title_max-5;
 	C cols[4] = {5, (C)title_max, (C)author_max, 0};
 
+	// start table
 	BOX_START(width, cols);
-	UJ res = idx_page(cli_list_rec, NULL, page_id-1, CLI_PAGE_SIZE);
+	UJ res = idx_page(cli_list_rec, NULL, page_id-1, CLI_PAGE_SIZE); // read records
 	BOX_END(width, cols);
 	TB();I len = O("       [%lu/%lu]", page_id, total_pages);
 	I pad = 3;

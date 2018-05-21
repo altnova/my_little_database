@@ -124,9 +124,10 @@ UJ rec_update(Rec r) {
 V rec_set(Rec r, I fld, V* val) {
 	LOG("rec_set");
 	I offset = rec_field_offsets[fld];
-	I len = fld<3?SZ(H)-1:MIN(csv_max_field_widths[fld],strlen(val));
-	memcpy(((V*)r)+offset, val, len+1);
-	T(TRACE, "rec_id=%lu, fld=%d, len=%d", r->rec_id, fld, len);
+	I len = fld<2?SZ(H)-1:MIN(csv_max_field_widths[fld],scnt(val));
+	if(fld>=2)r->lengths[fld-2]=len;
+	mcpy(((V*)r)+offset, val, len+1);
+	T(DEBUG, "rec_id=%lu, fld=%d, len=%d", r->rec_id, fld, len);
 }
 
 

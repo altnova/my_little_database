@@ -3,8 +3,11 @@
 //! basic operations on records
 //! \return NIL in case of failure
 ext UJ rec_get(Rec dest, ID rec_id);
+
+typedef UJ(*REC_FN)(Rec);
 ext UJ rec_create(Rec src);
 ext UJ rec_update(Rec src);
+
 ext UJ rec_delete(ID rec_id);
 
 //! update a field with given value
