@@ -178,6 +178,9 @@ I cli_rec_show(S arg){
 		}
 		BOX_RIGHT(1);NL();
 	})
+	BOX_LEFT();
+	CH(" ", width);
+	BOX_RIGHT(1);NL();
 
 	BOX_LEFT();
 	COLOR_START(C_GREY);len1 = O("by ");COLOR_END();
@@ -206,7 +209,7 @@ ZI cli_csv_import(S arg){O("nyi cli_csv_import\n");R0;}
 ZI cli_csv_export(S arg){O("nyi cli_csv_export\n");R0;}
 
 
-I main(I av, S* ac) {
+I main(I ac, S* av) {
 	LOG("cli_main");
 	srand(time(NULL));
 	signal(SIGINT, cli_interrupt_handler);
