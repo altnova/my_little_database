@@ -138,12 +138,14 @@ Z ID cli_parse_id(S str) {
 	R(ID)res;
 }
 
-ZV BOX_START(I w) { TB(); CH("\u250f",1); CH("\u2501",w+2); CH("\u2513",1); NL(); }
-ZV BOX_END(I w) { TB(); CH("\u2517",1); CH("\u2501",w+2); CH("\u251b",1); NL(); }
-ZV BOX_SPAN(I w) { TB(); CH("\u2523",1); CH("\u2501",w+2); CH("\u252b",1); NL(); }
-
-ZV BOX_LEFT() {TB();O("\u2503 ");}
-ZV BOX_RIGHT(I pad) {CH(" ", pad);O("\u2503");}
+//! \see https://en.wikipedia.org/wiki/Box-drawing_character
+ZI BOX_BOLD = 0;
+ZV BOX_LEFT() {TB();O(BOX_BOLD?"\u2503 ":"\u2502 ");}
+ZV BOX_RIGHT(I pad) {CH(" ", pad+1);O(BOX_BOLD?"\u2503":"\u2502");}
+ZV BOX_START(I w) {TB(); CH(BOX_BOLD?"\u250f":"\u250c",1); CH(BOX_BOLD?"\u2501":"\u2500",w+2);CH(BOX_BOLD?"\u2513":"\u2510",1); NL();}
+ZV BOX_END(I w) {TB(); CH(BOX_BOLD?"\u2517":"\u2514",1); CH(BOX_BOLD?"\u2501":"\u2500",w+2); CH(BOX_BOLD?"\u251b":"\u2518",1); NL();}
+ZV BOX_SPAN(I w) {TB(); CH(BOX_BOLD?"\u2523":"\u251c",1); CH(BOX_BOLD?"\u2501":"\u2500",w+2); CH(BOX_BOLD?"\u252b":"\u2524",1); NL();}
+ZV BOX_EMPTY_LINE(I w) {BOX_LEFT();CH(" ", w);BOX_RIGHT(0);NL();}
 
 ZI cli_fld_format(S fmt, ...) {
 	va_list ap;
@@ -162,43 +164,52 @@ I cli_rec_show(S arg){
 	P(rec_get(r, rec_id)==NIL, cli_warn("no such record"))
 
 	I width = cols * .7;
+	I clen, gap, line_cnt=0;
+	// start table
 	BOX_START(width);
 
-	I len1, gap, line_cnt=0;
-	str_wrap(r->title, width/2, {
-		BOX_LEFT();COLOR_START_BOLD(C_YELL);
-		len1 = O("%.*s", line_len, r->title+line_start);COLOR_END();
+	// rec_id: wrapped title + publisher, year
+	str_wrap(r->title, width/2,
+		BOX_LEFT();
+		COLOR_START_BOLD(C_YELL);
+		clen = O("%.*s", line_len, r->title+line_start);COLOR_END();
+		
 		if(!line_cnt++) {
-			len1 += cli_fld_format("%s, %hd", r->publisher, r->year);
-			gap = width-len1;
+			clen += cli_fld_format("%s, %hd", r->publisher, r->year);
+			gap = width-clen;
 			CH(" ", gap);COLOR_START(C_GREY);O("%s", fldbuf);COLOR_END();
 		} else {
-			gap = width-len1;	
+			gap = width-clen;	
 			CH(" ",gap);
 		}
-		BOX_RIGHT(1);NL();
-	})
-	BOX_LEFT();
-	CH(" ", width);
-	BOX_RIGHT(1);NL();
+		BOX_RIGHT(0);NL();
+	)
 
+	BOX_EMPTY_LINE(width);
+
+	// author + pagecount
 	BOX_LEFT();
-	COLOR_START(C_GREY);len1 = O("by ");COLOR_END();
-	COLOR_START_BOLD(C_GREY);len1 += O("%s", r->author);COLOR_END();
-	I len2 = cli_fld_format("%hd pages", r->pages);
-	gap = width-len1-len2;
+	COLOR_START(C_GREY);clen = O("by ");COLOR_END();
+	COLOR_START_BOLD(C_GREY);clen += O("%s", r->author);COLOR_END();
+	clen += cli_fld_format("%hd pages", r->pages);
+	gap = width-clen;
 	CH(" ", gap);COLOR_START(C_GREY);O("%s", fldbuf);COLOR_END();
-	//I len = COLOR_START(C_GREY);O("%s, %d", r->publisher, r->year);COLOR_END();
-	BOX_RIGHT(1);NL();
+	BOX_RIGHT(0);NL();
 
+	// divider
 	BOX_SPAN(width);
 
+	// subject, wrapped to width
 	str_wrap(r->subject, width,
 		BOX_LEFT();
 		O("%.*s", line_len, r->subject+line_start);
-		BOX_RIGHT(ABS(line_len-width)+1);NL();
+		BOX_RIGHT(width-line_len);NL();
 	)
+
+	// terminate table
 	BOX_END(width);
+
+	// release record
 	free(r);
 	R0;}
 
@@ -246,12 +257,12 @@ I main(I ac, S* av) {
 		}
 		if(q[qlen-1]=='?'){
 			q[qlen-1]=0;
-			tok_print_completions_for(q);
+			NL();TB();tok_print_completions_for(q);NL();NL();
 			goto NEXT;
 		}
 		tok_search(q);
 		NEXT:
-		WIPE(q,qlen);
+		WIPE(q, qlen);
 	)
 
 	EXIT:

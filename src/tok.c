@@ -97,6 +97,7 @@ ZV tok_ftidx_sort_each(BKT bkt, V*arg, UJ i) {
 ZV tok_wordbag_adjust_ptr(NODE bkt, V*diff, I depth) { bkt->payload -= (J)diff; }
 
 ZV tok_store_completion(NODE n, VEC**vec, I depth) {
+	LOG("tok_store_completion");
 	if(n&&n->payload)
 		vec_add(*vec, n);
 }
@@ -105,7 +106,7 @@ V tok_print_completions_for(S query) {
 	LOG("tok_get_completions_for");
 	VEC results = vec_init(10,NODE);
 	tri_each_from(wordbag, tri_get(wordbag, query), (TRIE_EACH)tok_store_completion, &results);
-	O("\n\t%s:", query);
+	O("%s:", query);
 	I rlen = scnt(query);
 	if(!vec_size(results))
 		O(" \e[91m%s\e[0m", "no completions");
@@ -118,7 +119,6 @@ V tok_print_completions_for(S query) {
 		if(len)
 			O(" -\e[33m%s\e[0m", cpl))
 	vec_destroy(results);
-	O("\n\n");
 }
 
 V tok_search(S query) {
