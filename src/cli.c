@@ -94,6 +94,7 @@ CLI_CMD cmds[] =        {cli_rec_show, cli_rec_edit, cli_rec_add, cli_rec_del, c
 
 ZI rows, cols; //< terminal dimensions
 ZC fldbuf[FLDMAX];
+Z UJ current_page_id = 0;
 
 ZV cli_hint() {
 	NL();
@@ -273,18 +274,28 @@ Z UJ cli_list_rec(Rec r, V*arg, UJ i) {
 	gap = width-clen;
 	//CH(" ", gap);COLOR_START(C_GREY);O("%s", fldbuf);COLOR_END();
 	BOX_RIGHT(gap);NL();
-
-	//rec_print_dbg(r);
 	R0;
 }
 ZI cli_rec_list(S arg){
 	LOG("cli_rec_list");
-	UJ page_id = cli_parse_id(arg);
-	if(page_id==NIL||page_id<1){page_id=1;}
+	UJ page_id;
 	UJ total_recs = idx_size();
 	UJ total_pages = 1+total_recs/CLI_PAGE_SIZE;
+	if(scnt(arg) < 1)
+		page_id = ++current_page_id;
+	else if(scnt(arg)==1&&arg[0]=='!') {
+		if(current_page_id>1)
+			page_id = --current_page_id;
+		else
+			page_id = total_pages; //wrap
+	} else {
+		page_id = cli_parse_id(arg);
+		if(page_id==NIL||page_id<1){page_id=1;}
+	}
 	if(page_id > total_pages)
-		page_id = total_pages;
+		page_id = 1; // wrap
+
+	current_page_id = page_id;
 
 	// start table
 	I width = cols * .7;
@@ -295,7 +306,12 @@ ZI cli_rec_list(S arg){
 	BOX_START(width, cols);
 	UJ res = idx_page(cli_list_rec, NULL, page_id-1, CLI_PAGE_SIZE);
 	BOX_END(width, cols);
-	TB();O("page %lu/%lu", page_id, total_pages);NL();NL();
+	TB();I len = O("       [%lu/%lu]", page_id, total_pages);
+	I pad = 3;
+	CH(" ", pad);YELL("!");O(" next");
+	CH(" ", pad);YELL("!!");O(" prev");
+	CH(" ", pad);YELL("!");BLUE("page");O(" jump");
+	NL();NL();
 	R0;
 }
 
