@@ -26,6 +26,7 @@ ext sz vec_size(VEC a);
 ext sz vec_mem(VEC a);
 ext E  vec_lfactor(VEC a);
 ext V* vec_random(VEC a);
+ext sz vec_compact(VEC*aptr);
 ext sz vec_destroy(VEC a); //< never forget
 
 //! underlying implementation

@@ -68,6 +68,19 @@ VEC vec_add_(V** aptr, V* el){
 	R a;
 }
 
+sz  vec_compact(VEC*aptr) {
+	LOG("vec_compact");
+	VEC a = *aptr;
+	a->size = a->used;
+	sz new_size = SZ_HDR + a->el_size * a->size;
+	a = realloc(a, new_size);chk(a,0);
+	sz save = a->mem - new_size;
+	a->mem = new_size;
+	*aptr = a;
+	if(save)T(TRACE, "compacted %lu bytes", save);
+	R save;
+}
+
 E vec_lfactor(VEC a) {
 	R a->mem/(a->used * a->el_size);
 }

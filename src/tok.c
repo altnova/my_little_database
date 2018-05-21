@@ -259,10 +259,18 @@ ZV tok_ftidx_repack_each(BKT bkt, V*arg, HTYPE i) {
 ZV tok_terms_inspect_each(BKT bkt, V*arg, HTYPE i) {
 	LOG("terms_each");
 	SET docset = (SET)(bkt->payload);
+	UJ save = vec_compact(&docset->items);
 	UJ* alloc = (UJ*)arg;
 	*alloc += docset->items->mem;
 	T(TRACE, "%s -> [%lu %lu %lu %.2f]", bkt->s,
 		docset->items->used, docset->items->size, docset->items->mem, vec_lfactor(docset->items));
+}
+
+ZV tok_terms_destroy_each(BKT bkt, V*arg, HTYPE i) {
+	SET docset = (SET)(bkt->payload);
+	UJ* alloc = (UJ*)arg;
+	*alloc += docset->items->mem;
+	vec_destroy(docset->items);
 }
 
 
@@ -311,6 +319,10 @@ I tok_shutdown() {
 
 	tok_dec_mem("file_index", db_close());
 	tok_dec_mem("wordbag_ht", hsh_destroy(wordbag_ht));
+
+	UJ docvectors_dealloc = 0;
+	hsh_each(terms, tok_terms_destroy_each, &docvectors_dealloc);
+	tok_dec_mem("docvectors", docvectors_dealloc);
 	tok_dec_mem("terms", hsh_destroy(terms));
 
 	if (fti_info->total_mem){
