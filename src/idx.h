@@ -22,7 +22,7 @@ ext UJ    idx_size();
 typedef UJ(*IDX_EACH)(Rec r, V*arg, UJ i); //< idx_each function interface
 ext UJ idx_each(IDX_EACH fn, V*arg);
 ext UJ idx_page(IDX_EACH fn, V*arg, I page, I page_sz);
-
+ext V idx_dump(UJ head); // debug
 ext C     cmp_binsearch(V* a, V* b, sz t);
 
 ext sz    db_close(); //< don't forget

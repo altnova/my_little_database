@@ -48,15 +48,10 @@ Z UJ idx_save() {
 //! \return NIL on error, new index size on success
 UJ idx_shift(UJ pos) {
 	LOG("idx_shift");
-	Pair* s = vec_at(idx, pos, Pair);
-	UJ to_move = idx->used-pos-1;
-	memcpy(s, s+1, SZ(Pair) * to_move);
-	T(DEBUG, "shifted %lu entries, squashed db_pos=%lu", to_move, pos);
-
-	idx->used--;
+	vec_del_at(idx, pos, 1);
+	T(TEST, "squashed idx_pos=%lu", pos);
 	UJ b_written = idx_save();
 	X(b_written==NIL, T(WARN, "idx_save failed"), NIL);
-
 	R idx_size();
 }
 
@@ -106,14 +101,14 @@ ZV idx_sort() {
 }
 
 //! dump index to stdout
-ZV idx_dump(UJ head) {
+V idx_dump(UJ head) {
 	LOG("idx_dump");
 	Pair* e;
 	TSTART();
 	T(TEST, "{ last_id=%lu, used=%lu } =>", idx->hdr, idx_size());
 	DO(head?head:idx_size(),
 		e = vec_at(idx, i, Pair);
-		T(TEST, " (%lu -> %lu)", e->rec_id, e->pos);
+		T(TEST, " %lu:(%lu -> %lu)", i, e->rec_id, e->pos);
 	)
 	if(head&&head<idx_size())T(TEST,"...");
 	TEND();
