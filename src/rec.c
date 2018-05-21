@@ -32,7 +32,7 @@ UJ rec_get_db_pos(ID rec_id) {
 	LOG("rec_get_db_pos");
 
 	UJ idx_pos = rec_get_idx_pos(rec_id);
-	X(idx_pos==NIL, T(WARN, "rec_get_idx_pos returned nil"), NIL);
+	X(idx_pos==NIL, T(TEST, "rec_get_idx_pos returned nil"), NIL);
 
 	Pair *e = idx_get_entry(idx_pos);
 	T(TRACE, "{ rec_id=%lu, idx_pos=%lu, db_pos=%lu }", e->rec_id, idx_pos, e->pos);
@@ -43,7 +43,7 @@ UJ rec_get_db_pos(ID rec_id) {
 UJ rec_get(Rec dest, ID rec_id) {
 	LOG("rec_get");
 	UJ db_pos = rec_get_db_pos(rec_id);
-	X(db_pos==NIL, T(WARN, "rec_get_db_pos returned nil"), NIL);
+	X(db_pos==NIL, T(TEST, "rec_get_db_pos returned nil"), NIL);
 	T(TRACE, "{ rec_id=%lu, db_pos=%lu }", rec_id, db_pos);
 
 	FILE* db;
