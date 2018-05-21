@@ -1,5 +1,5 @@
 CC=gcc-8
-#CC=gcc
+CC=gcc
 CCOPTS=-mavx2 -ffast-math -march=native -flto -mfpmath=sse -funroll-loops -Ofast -g
 CCOPTS=-Og -g
 #VLG=/opt/valgrind/bin/valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes
