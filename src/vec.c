@@ -77,7 +77,7 @@ sz vec_del_at(VEC a, sz i, sz n){
 	P(!n||i>=a->used,0)
 	sz old_size = a->used;
 	C truncate=0;
-	if((i+n+1)>=a->used)truncate=1;
+	if((i+n)>=a->used)truncate=1;
 	if(truncate){
 		// truncate!
 		a->used = i;
