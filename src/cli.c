@@ -31,7 +31,7 @@ enum colors {
 #define MI(i,label) O("\t%d. %s", i, label);	//< menu item
 #define NL() O("\n");
 #define TB() O(LEFT_OFFSET); /* left offset */
-#define CH(c,n) DO(n, O(c))
+#define CH(c,n) (DO(n, O(c)))
 #define HR(n) TB();CH("\u2501",n);NL(); /* horisontal ruler */
 #define BLUE(s) O("\e[36m%s\e[0m", s)
 #define GREY(s) O("\e[37m%s\e[0m", s)
@@ -65,7 +65,7 @@ ZV cli_hint() {
 ZV cli_banner() {
 	NL();NL();
 	HR(53);
-	TB();GREEN("Amazon Kindle Database");CH(" ",25)O("v%s\n", VER);
+	TB();GREEN("Amazon Kindle Database");CH(" ",25);O("v%s\n", VER);
 	HR(53);
 	NL();
 }
@@ -91,7 +91,7 @@ ZV cli_usage() {
 	TB();GREEN("indexed fields:");CH(" ",17);
 	DO(FTI_FIELD_COUNT,
 		COLOR_START(C_BLUE);O(" %s", rec_field_names[i]);COLOR_END();
-		if(!((I)(i+1)%3)){O("\n");TB();CH(" ",17+15)}
+		if(!((I)(i+1)%3)){O("\n");TB();CH(" ",17+15);}
 	)
 	NL();
 	TB();O("total books:%41lu\n", fti_info->total_records);
@@ -164,12 +164,20 @@ I cli_rec_show(S arg){
 	I width = cols * .7;
 	BOX_START(width);
 
-	BOX_LEFT();
-	COLOR_START_BOLD(C_YELL);I len1 = O("%s",r->title);COLOR_END();
-	len1 += cli_fld_format("%s, %hd", r->publisher, r->year);
-	I gap = width-len1;
-	CH(" ", gap);COLOR_START(C_GREY);O("%s", fldbuf);COLOR_END();
-	BOX_RIGHT(1);NL();
+	I len1, gap, line_cnt=0;
+	str_wrap(r->title, width/2, {
+		BOX_LEFT();COLOR_START_BOLD(C_YELL);
+		len1 = O("%.*s", line_len, r->title+line_start);COLOR_END();
+		if(!line_cnt++) {
+			len1 += cli_fld_format("%s, %hd", r->publisher, r->year);
+			gap = width-len1;
+			CH(" ", gap);COLOR_START(C_GREY);O("%s", fldbuf);COLOR_END();
+		} else {
+			gap = width-len1;	
+			CH(" ",gap);
+		}
+		BOX_RIGHT(1);NL();
+	})
 
 	BOX_LEFT();
 	COLOR_START(C_GREY);len1 = O("by ");COLOR_END();
