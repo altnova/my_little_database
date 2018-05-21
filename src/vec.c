@@ -32,9 +32,9 @@ V* vec_last_(VEC a){
 
 sz vec_destroy(VEC a){
 	LOG("vec_destroy");
-	T(TRACE, "destroy at %p", a);
+	T(DEBUG, "destroy at %p", a);
 	sz released = a->mem;
-	if(a)free(a);
+	free(a);
 	a = NULL;
 	R released;
 }
@@ -62,9 +62,9 @@ VEC vec_add_(V** aptr, V* el){
 		a = realloc(a, new_size);chk(a,NULL);
 		a->mem = new_size;
 		*aptr = a;
-		T(TRACE, "realloc to %lu (%p)", a->size, *aptr);
+		T(DEBUG, "realloc to %lu (%p)", a->size, *aptr);
 	}
-	memcpy((V*)(a->data + a->el_size * a->used++), el, a->el_size);
+	mcpy((V*)(a->data + a->el_size * a->used++), el, a->el_size);
 	R a;
 }
 
