@@ -160,11 +160,13 @@ UJ tok_index_field(ID rec_id, I field, S s, I flen, UJ DOC_ID) {
 		//if(STOK_TRACE&&!mcmp(tok,STOK_VAL, STOK_VAL_LEN))
 		//	T(TEST, "TOK %s -> (%s %d)", STOK_VAL, tok, tok_len);
        	C from_wordbag = 0;
+       	//BKT term;
 
        	if (USE_WORDBAG) {
 
 			//NODE b =
 			//tri_insert(wordbag, tok, tok_len, 1);
+			
 			BKT b = hsh_ins(wordbag_ht, tok, tok_len, NULL);
 
 			if (!b){
@@ -190,10 +192,13 @@ UJ tok_index_field(ID rec_id, I field, S s, I flen, UJ DOC_ID) {
 					hsh_each(wordbag_ht, (HT_EACH)tok_wordbag_ht_adjust_ptr, (V*)wordbag_store->offset);
 				//! link stem to word
 				b->payload = bagtok;
+
 				fti_info->total_tokens++;
 			} else {
 				tok = b->payload;
+				tok_len = scnt(tok);
 				from_wordbag = 1;
+				//term = hsh_get(terms, tok, scnt(tok)+1);
 			}
 		} else {
 			//! apply stemmer
@@ -202,13 +207,13 @@ UJ tok_index_field(ID rec_id, I field, S s, I flen, UJ DOC_ID) {
 		}
 
 		BKT term = hsh_ins(terms, tok, tok_len, NULL);
+		//T(TEST, "term => %p %s", term, term->s);
 		if(!term->payload)
-			term->payload = set_init(SZ(UJ), (CMP)cmp_);
+			term->payload = set_init(SZ(UI), (CMP)cmp_);
+		set_add(term->payload, (UI*)&DOC_ID);
 
-		set_add(term->payload, &DOC_ID);
-
-		if(STOK_TRACE&&!mcmp(tok,STOK_VAL,STOK_VAL_LEN))
-			T(TEST, "INS %s -> (%s %d) from_bag=%d", STOK_VAL, tok, tok_len, from_wordbag);
+		//if(STOK_TRACE&&!mcmp(tok,STOK_VAL,STOK_VAL_LEN))
+		//	T(TEST, "INS %s -> (%s %d) from_bag=%d", STOK_VAL, tok, tok_len, from_wordbag);
 
 		//tok[tok_len+1]=0;
     	//BKT fti = hsh_ins(ftidx[field], tok, tok_len+1, 0);
@@ -367,6 +372,7 @@ I tok_init() {
 	sz docvectors_alloc = 0;
 	hsh_each(terms, (HT_EACH)tok_terms_inspect_each, &docvectors_alloc);
 	tok_inc_mem("docvectors", docvectors_alloc);
+	T(TEST, "inspected docvectors in %lums", clk_stop());
 
 	//! sort document buckets	
 	DO(FTI_FIELD_COUNT,
@@ -467,7 +473,7 @@ I main() {
 	hsh_each(wordbag_ht, tok_wordbag_inspect_each, NULL);
 	tok_inc_mem("test_vec", test_vec->mem);
 
-	tok_bench();
+	//tok_bench();
 
 	//tri_dump(wordbag);
 	//tri_dump_from(wordbag, tri_get(wordbag, "music"));

@@ -28,18 +28,20 @@ V*set_get(SET s, V*key) {
 V*set_add(SET s, V*key) {
 	LOG("set_add");
 
-	V*existing = set_get(s, key);
+	//V*existing = set_get(s, key);
 	//if(existing){T(TEST, "key is already in the set");}
-	P(existing, existing);
+	//P(existing, existing);
 
 	if(s->items->used>0) {
 		C res = s->cmpfn(key, vec_last_(s->items), s->items->el_size);
-		X(res<0, T(WARN, "inserting an unordered item is not supported"), NULL);
+		P(res<=0, NULL)
+		//X(res<=0, T(WARN, "inserting an unordered item is not supported"), NULL);
 		//T(TEST, "comparison result=%d", res);
 	}
 
 	vec_add_((V**)&s->items, key);
-	R vec_last_(s->items);;
+	//R vec_last_(s->items);
+	R0;
 }
 
 V set_destroy(SET s) {
@@ -62,7 +64,7 @@ I main() {
 	//TSTART();
 	DO(7,
 		obj = set_add(s, &keys[i]);
-		X(!obj, T(FATAL, "can't add to set"), 1);
+		//X(!obj, T(FATAL, "can't add to set"), 1);
 		T(TEST, "added %ld", keys[i]);
 	)
 
