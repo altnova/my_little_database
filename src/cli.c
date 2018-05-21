@@ -12,6 +12,7 @@
 #include "___.h"
 #include "cfg.h"
 #include "trc.h"
+#include "hsh.h"
 #include "tok.h"
 #include "usr.h"
 #include "clk.h"
@@ -83,17 +84,17 @@ ZV BOX_EMPTY_LINE(I w) {BOX_LEFT();CH(" ", w);BOX_RIGHT(0);NL();}
 typedef I(*CLI_CMD)(S arg);
 
 //! database commands
-ZI cli_rec_show(S arg);
-ZI cli_rec_edit(S arg);
-ZI cli_rec_add(S arg);
-ZI cli_rec_del(S arg); 
-ZI cli_csv_import(S arg);
-ZI cli_csv_export(S arg);
-ZI cli_rec_list(S arg);
-ZI cli_rec_sort(S arg);
-ZI cli_debug(S arg);
-//                       :             *             +            -            <               >               !             ^             ~
-CLI_CMD cmds[] =        {cli_rec_show, cli_rec_edit, cli_rec_add, cli_rec_del, cli_csv_import, cli_csv_export, cli_rec_list, cli_rec_sort, cli_debug};
+ZI cli_cmd_rec_show(S arg);
+ZI cli_cmd_rec_edit(S arg);
+ZI cli_cmd_rec_add(S arg);
+ZI cli_cmd_rec_del(S arg); 
+ZI cli_cmd_csv_import(S arg);
+ZI cli_cmd_csv_export(S arg);
+ZI cli_cmd_rec_list(S arg);
+ZI cli_cmd_rec_sort(S arg);
+ZI cli_cmd_debug(S arg);
+//!                      :             *             +            -            <               >               !             ^             ~
+CLI_CMD cmds[] =        {cli_cmd_rec_show, cli_cmd_rec_edit, cli_cmd_rec_add, cli_cmd_rec_del, cli_cmd_csv_import, cli_cmd_csv_export, cli_cmd_rec_list, cli_cmd_rec_sort, cli_cmd_debug};
 #define CLI_DB_COMMANDS ":*+-<>!^~"
 
 ZI rows, cols; //< terminal dimensions
@@ -238,8 +239,8 @@ ZI cli_rec_print(Rec r){
 	BOX_END(width, NULL,0);
 	R0;}
 
-ZI cli_rec_show(S arg){
-	LOG("cli_rec_show");
+ZI cli_cmd_rec_show(S arg){
+	LOG("cli_cmd_rec_show");
 	P(!scnt(arg), cli_warn("missing record id"))
 	ID rec_id = cli_parse_id(arg);
 	P(rec_id==NIL, cli_warn("bad record id"))
@@ -249,7 +250,7 @@ ZI cli_rec_show(S arg){
 	free(r);
 	R res;}
 
-ZI cli_rec_edit_loop(Rec r, S prompt, S mode, REC_FN rec_fn){
+ZI cli_cmd_rec_edit_loop(Rec r, S prompt, S mode, REC_FN rec_fn){
 	I res;C q[LINE_BUF];
 
 	AGAIN:
@@ -299,19 +300,19 @@ ZI cli_rec_edit_loop(Rec r, S prompt, S mode, REC_FN rec_fn){
 	DONE:
 	R res;}
 
-ZI cli_rec_edit(S arg){
-	LOG("cli_rec_edit");
+ZI cli_cmd_rec_edit(S arg){
+	LOG("cli_cmd_rec_edit");
 	P(!scnt(arg), cli_warn("missing record id"));
 	ID rec_id = cli_parse_id(arg);
 	P(rec_id==NIL, cli_warn("bad record id"));
 	Rec r = (Rec)malloc(SZ_REC);chk(r,1);
 	P(rec_get(r, rec_id)==NIL, cli_warn("no such record"));
-	I res = cli_rec_edit_loop(r, "  edit$ ", "update", rec_update);
+	I res = cli_cmd_rec_edit_loop(r, "  update$ ", "update", rec_update);
 	free(r);
 	R res;}
 
-ZI cli_rec_add(S arg){
-	LOG("cli_rec_add");
+ZI cli_cmd_rec_add(S arg){
+	LOG("cli_cmd_rec_add");
 	Rec r = (Rec)calloc(1, SZ_REC);chk(r,1);
 	r->year = 2018;
 	r->pages = 0;
@@ -320,12 +321,12 @@ ZI cli_rec_add(S arg){
 	scpy(r->title, "title", 5);
 	scpy(r->subject, "subject", 7);
 
-	I res = cli_rec_edit_loop(r, "  add$ ", "create", rec_create);
+	I res = cli_cmd_rec_edit_loop(r, "  create$ ", "create", rec_create);
 	free(r);
 	R res;}
 
-ZI cli_rec_del(S arg){
-	LOG("cli_rec_del");
+ZI cli_cmd_rec_del(S arg){
+	LOG("cli_cmd_rec_del");
 	P(!scnt(arg), cli_warn("missing record id"));
 	ID rec_id = cli_parse_id(arg);
 	P(rec_id==NIL, cli_warn("bad record id"));
@@ -336,11 +337,11 @@ ZI cli_rec_del(S arg){
 	free(r); //< can still undo deletion here.
 	R0;}
 
-ZI cli_csv_import(S arg){O("nyi cli_csv_import\n");R0;}
-ZI cli_csv_export(S arg){O("nyi cli_csv_export\n");R0;}
+ZI cli_cmd_csv_import(S arg){O("nyi cli_cmd_csv_import\n");R0;}
+ZI cli_cmd_csv_export(S arg){O("nyi cli_cmd_csv_export\n");R0;}
 
-ZI cli_rec_sort(S arg){
-	LOG("cli_rec_sort");
+ZI cli_cmd_rec_sort(S arg){
+	LOG("cli_cmd_rec_sort");
 	T(TEST, "nyi");
 	R0;}
 
@@ -363,8 +364,8 @@ Z UJ cli_list_rec(Rec r, V*arg, UJ i) {
 	BOX_RIGHT(gap);NL();
 	R0;}
 
-ZI cli_rec_list(S arg){
-	LOG("cli_rec_list");
+ZI cli_cmd_rec_list(S arg){
+	LOG("cli_cmd_rec_list");
 	UJ page_id;
 	UJ total_recs = idx_size();
 	UJ total_pages = 1+total_recs/CLI_PAGE_SIZE;
@@ -404,8 +405,9 @@ ZI cli_rec_list(S arg){
 	NL();NL();
 	R0;}
 
-ZI cli_debug(S arg){
+ZI cli_cmd_debug(S arg){
 	idx_dump(0);
+	tok_print_memmap();
 	R0;
 }
 
