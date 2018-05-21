@@ -40,6 +40,8 @@ ZV tok_inc_mem(S label, J bytes) {
 		T(TEST, "\e[33m%s alloc %lu\e[0m", label, bytes);
 	fti_info->total_mem += bytes;
 	fti_info->total_alloc_cnt++;
+
+	hsh_ins(fti_info->memmap, label, scnt(label), (V*)bytes);
 }
 
 ZV tok_dec_mem(S label, J bytes) {
@@ -109,7 +111,7 @@ V tok_print_completions_for(S query) {
 	O("%s:", query);
 	I rlen = scnt(query);
 	if(!vec_size(results))
-		O(" \e[91m%s\e[0m", "no completions");
+		O("\e[91m%s\e[0m", "no completions");
 	DO(vec_size(results),
 		NODE n = *vec_at(results, i, NODE);
 		I len = n->depth - rlen;
@@ -117,7 +119,8 @@ V tok_print_completions_for(S query) {
 		DO(len, cpl[len-i-1]=n->key; n=n->parent;) //< bubble up to root
 		cpl[len]=0; //< terminate
 		if(len)
-			O(" -\e[33m%s\e[0m", cpl))
+			O(" %s\e[33m%s\e[0m", query, cpl)
+	)
 	vec_destroy(results);
 }
 
@@ -156,6 +159,7 @@ UJ tok_index_field(ID rec_id, I field, S s, I flen, UJ i) {
 
 		NODE b;
        	if (USE_WORDBAG) {
+       		
 			b = tri_insert(wordbag, tok, tok_len, NULL);
 			hsh_ins(wordbag_ht, tok, tok_len, NULL);
 
@@ -223,6 +227,15 @@ Z UJ tok_index_rec(Rec r, V*arg, UJ i) {
 	R0;
 }
 
+ZV tok_memmap_print_each(BKT bkt, V*arg, HTYPE i) {
+	LOG("tok_mem");
+	T(TEST, "%s\t\t%lu", bkt->s, (UJ)bkt->payload);
+}
+
+V tok_print_memmap() {
+	hsh_each(fti_info->memmap, tok_memmap_print_each, NULL);
+}
+
 ZV tok_ftidx_repack_each(BKT bkt, V*arg, HTYPE i) {
 	HT wordbag = (HT)(bkt->payload);
 	hsh_pack(wordbag);
@@ -274,7 +287,6 @@ I tok_shutdown() {
 
 	tok_dec_mem("file_index", db_close());
 	tok_dec_mem("wordbag_ht", hsh_destroy(wordbag_ht));
-	tok_dec_mem("fti_info", SZ_FTI_INFO);
 
 	if (fti_info->total_mem){
 		T(INFO, "shutdown incomplete, \e[91mmem=%ld, cnt=%ld\e[0m", fti_info->total_mem, fti_info->total_alloc_cnt);
@@ -282,6 +294,7 @@ I tok_shutdown() {
 	}else
 		T(INFO, "shutdown complete.");
 
+	hsh_destroy(fti_info->memmap);
 	free(fti_info);
 
 	R res;
@@ -291,7 +304,7 @@ I tok_init() {
 	LOG("tok_init");
 
 	fti_info = (FTI_INFO)calloc(SZ_FTI_INFO,1);chk(fti_info,1);
-	tok_inc_mem("fti_info", SZ_FTI_INFO);
+	fti_info->memmap = hsh_init(2,1);
 
 	tok_inc_mem("file_index",
 		db_init(DAT_FILE, IDX_FILE));
@@ -312,7 +325,7 @@ I tok_init() {
 	stopwords = hsh_init(2,3);
 	UJ swcnt = tok_load_stop_words("dat/stopwords.txt");
 	X(swcnt==NIL,T(FATAL, "cannot load stopwords"), 1);
-	T(TEST, "loaded %lu stopwords", stopwords->cnt);
+	T(INFO, "loaded %lu stopwords", stopwords->cnt);
 	tok_inc_mem("stopwords", stopwords->mem);
 
 	//! build inverted index

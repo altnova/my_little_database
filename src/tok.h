@@ -2,12 +2,12 @@
 
 
 typedef struct fti_info {
-	UJ total_records;
-	UJ total_tokens;
-	UJ total_terms;
-	J  total_mem;
-	J  total_alloc_cnt;
-
+	UJ   total_records;
+	UJ   total_tokens;
+	UJ   total_terms;
+	J    total_mem;
+	J    total_alloc_cnt;
+	HT   memmap;
 } pFTI_INFO;
 
 #define SZ_FTI_INFO SZ(pFTI_INFO)
@@ -16,6 +16,7 @@ typedef pFTI_INFO* FTI_INFO;
 ext I tok_init();
 ext V tok_search(S query);
 ext V tok_print_completions_for(S query);
+ext V tok_print_memmap();
 
 ext FTI_INFO tok_info();
 ext V tok_bench();
