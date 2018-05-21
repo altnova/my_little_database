@@ -1,7 +1,7 @@
 CC=gcc-8
 CC=gcc
 CCOPTS=-mavx2 -ffast-math -march=native -flto -mfpmath=sse -funroll-loops -Ofast -g
-CCOPTS=-Og -g
+#CCOPTS=-Og -g
 #VLG=/opt/valgrind/bin/valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes
 VLG=
 
@@ -17,11 +17,11 @@ idx: clean
 
 csv: clean nodatafiles
 	$(CC) -DRUN_TESTS_CSV $(CCOPTS) -o bin/csv src/trc.c src/csv.c
-	#$(VLG) ./bin/csv csv/books.csv dat/books.dat
-	$(VLG) ./bin/csv csv/sample.csv dat/books.dat
+	$(VLG) ./bin/csv csv/books.csv dat/books.dat
+	#$(VLG) ./bin/csv csv/sample.csv dat/books.dat
 
 set: clean
-	$(CC) -DRUN_TESTS_SET $(CCOPTS) -o bin/set src/trc.c src/hsh.c src/bag.c src/set.c
+	$(CC) -DRUN_TESTS_SET $(CCOPTS) -o bin/set src/trc.c src/bin.c src/vec.c src/set.c
 	$(VLG) ./bin/set
 
 hsh: clean
