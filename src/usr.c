@@ -6,7 +6,7 @@
 #include "___.h"
 #include "usr.h"
 
-#define STR_SET "%[a-zA-Z0-9\"'-,.$%*/+-=^#?|!():;<> \\]\n\r"
+#define STR_SET "%[a-zA-Z0-9\"'-,.$%*/+-=^~#?|!():;<> \\]\n\r"
 
 ext I usr_input_num(I *num, S prompt, S errmsg){
     C line[LINE_BUF];
