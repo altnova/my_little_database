@@ -293,7 +293,7 @@ ZI cli_rec_list(S arg){
 		if(page_id==NIL||page_id<1){page_id=1;}
 	}
 	if(page_id > total_pages)
-		page_id = 1; // wrap
+		page_id = total_pages; // do not wrap
 
 	current_page_id = page_id;
 
