@@ -242,7 +242,7 @@ ZI cli_rec_print(Rec r){
 	)
 
 	// terminate table
-	BOX_END(width, NULL,9);
+	BOX_END(width, NULL,0);
 	R0;}
 
 ZI cli_rec_show(S arg){
