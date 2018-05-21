@@ -44,30 +44,32 @@ enum colors { C_GREY = 37, C_BLUE = 36, C_YELL = 33, C_GREEN = 32 };
 ZI BOX_BOLD = 0; //< \see https://en.wikipedia.org/wiki/Box-drawing_character
 ZV BOX_LEFT() {TB();O(BOX_BOLD?"\u2503 ":"\u2502 ");}
 ZV BOX_RIGHT(I pad) {CH(" ", pad+1);O(BOX_BOLD?"\u2503":"\u2502");}
-ZV BOX_START(I w,S cols) {
+ZV BOX_START(I w,I*cols, I col_cnt) {
+	LOG("BOX_START");
 	TB(); CH(BOX_BOLD?"\u250f":"\u250c",1);
-	I pos = 0, cnt = 0, col_cnt = scnt(cols)-1;
+	I pos = 0, cnt = 0;
 	if(col_cnt>0) {
-		DO(col_cnt,
-			pos = (I)cols[i]+1;
+		DO(col_cnt-1,
+			pos = cols[i]+1;
+			//T(TEST, "colwidth[%d] = %d", i, pos);
 			CH(BOX_BOLD?"\u2501":"\u2500",pos);
 			O(BOX_BOLD?"\u2533":"\u252c");
 			cnt += pos;)
-		CH(BOX_BOLD?"\u2501":"\u2500",(I)cols[col_cnt]-2);
+		CH(BOX_BOLD?"\u2501":"\u2500",cols[col_cnt-1]-2);
 	} else {
 		CH(BOX_BOLD?"\u2501":"\u2500",w+2);
 	}
 	CH(BOX_BOLD?"\u2513":"\u2510",1); NL();}
-ZV BOX_END(I w,S cols) {
+ZV BOX_END(I w,I*cols, I col_cnt) {
 	TB(); CH(BOX_BOLD?"\u2517":"\u2514",1);
-	I pos = 0, cnt = 0, col_cnt = scnt(cols)-1;
+	I pos = 0, cnt = 0;
 	if(col_cnt>0) {
-		DO(col_cnt,
-			pos = (I)cols[i]+1;
+		DO(col_cnt-1,
+			pos = cols[i]+1;
 			CH(BOX_BOLD?"\u2501":"\u2500",pos);
 			O(BOX_BOLD?"\u253b":"\u2534");
 			cnt += pos;)
-		CH(BOX_BOLD?"\u2501":"\u2500",(I)cols[col_cnt]-2);
+		CH(BOX_BOLD?"\u2501":"\u2500",cols[col_cnt-1]-2);
 	} else {
 		CH(BOX_BOLD?"\u2501":"\u2500",w+2);
 	}
@@ -89,9 +91,10 @@ ZI cli_csv_import(S arg);
 ZI cli_csv_export(S arg);
 ZI cli_rec_list(S arg);
 ZI cli_rec_sort(S arg);
-//                       :             *             +            -            <               >               !   
-CLI_CMD cmds[] =        {cli_rec_show, cli_rec_edit, cli_rec_add, cli_rec_del, cli_csv_import, cli_csv_export, cli_rec_list, cli_rec_sort};
-#define CLI_DB_COMMANDS ":*+-<>!^"
+ZI cli_debug(S arg);
+//                       :             *             +            -            <               >               !             ^             ~
+CLI_CMD cmds[] =        {cli_rec_show, cli_rec_edit, cli_rec_add, cli_rec_del, cli_csv_import, cli_csv_export, cli_rec_list, cli_rec_sort, cli_debug};
+#define CLI_DB_COMMANDS ":*+-<>!^~"
 
 ZI rows, cols; //< terminal dimensions
 ZC fldbuf[FLDMAX];
@@ -197,7 +200,7 @@ ZI cli_rec_print(Rec r){
 	I width = cols * .9;
 	I clen, gap, line_cnt=0;
 	// start table
-	BOX_START(width,"");
+	BOX_START(width,NULL,0);
 
 	// rec_id: wrapped title + publisher, year
 	str_wrap(r->title, width/2,
@@ -239,7 +242,7 @@ ZI cli_rec_print(Rec r){
 	)
 
 	// terminate table
-	BOX_END(width, "");
+	BOX_END(width, NULL,9);
 	R0;}
 
 ZI cli_rec_show(S arg){
@@ -385,19 +388,26 @@ ZI cli_rec_list(S arg){
 	I width = cols * .9;
 	I title_max = width * .7;
 	I author_max = width-title_max-6;
-	C cols[4] = {6, (C)title_max, (C)author_max, 0};
+	//T(TEST, "colwidths: %d %d %d", width, title_max, author_max);
+	//R1;
+	UI cols[3] = {6, title_max, author_max};
 
 	// start table
-	BOX_START(width, cols);
+	BOX_START(width, (I*)&cols, 3);
 	UJ res = idx_page(cli_list_rec, NULL, page_id-1, CLI_PAGE_SIZE); // read records
-	BOX_END(width, cols);
-	TB();I len = O("       [%lu/%lu]", page_id, total_pages);
+	BOX_END(width, (I*)&cols, 3);
+	TB();I len = O("        [%lu/%lu]", page_id, total_pages);
 	I pad = 3;
 	CH(" ", pad);YELL("!");O(" next");
 	CH(" ", pad);YELL("!!");O(" prev");
 	CH(" ", pad);YELL("!");BLUE("page");O(" jump");
 	NL();NL();
 	R0;}
+
+ZI cli_debug(S arg){
+	idx_dump(0);
+	R0;
+}
 
 I main(I ac, S* av) {
 	LOG("cli_main");
