@@ -72,14 +72,16 @@ UJ rec_delete(ID rec_id) {
 	zseek(db, offset, SEEK_SET);
 	fread(b, SZ_REC, 1, db);	//< read last record
 	T(DEBUG, "loaded tail record { rec_id=%lu, pos=%lu, offset=%ld }", b->rec_id, last_pos, offset);
-	zseek(db, db_pos * SZ_REC, SEEK_SET);
-	fwrite(b, SZ_REC, 1, db); //< overwrite deleted record
+	if(b->rec_id!=rec_id) {
+		zseek(db, db_pos * SZ_REC, SEEK_SET);
+		fwrite(b, SZ_REC, 1, db); //< overwrite deleted record
+		idx_update_pos(rec_id, NIL);
+		T(TEST, "overwritten record { rec_id=%lu, db_pos=%lu }", rec_id, db_pos);
+	}
 	idx_update_pos(b->rec_id, db_pos);
-	idx_update_pos(rec_id, NIL);
-	T(DEBUG, "overwritten record { rec_id=%lu, db_pos=%lu }", rec_id, db_pos);
 	free(b);
 
-	UJ new_size = idx_shift(db_pos);
+	UJ new_size = idx_shift(rec_get_idx_pos(rec_id));
 	ftrunc(db, SZ_REC * new_size);
 	T(TRACE, "db file truncated");
 
