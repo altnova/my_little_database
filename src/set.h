@@ -1,10 +1,9 @@
-//! \file set.c \brief set api
+//! \file set.c \brief ordered set api
 
 
 typedef struct set {
-	UJ cnt;
-	HT table;
-	BAG bag;
+	VEC items;
+	CMP cmpfn;
 } pSET;
 
 #define SZ_SET SZ(pSET)
