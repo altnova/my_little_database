@@ -201,13 +201,11 @@ ZI cli_rec_print(Rec r){
 	I clen, gap, line_cnt=0;
 	// start table
 	BOX_START(width,NULL,0);
-
 	// rec_id: wrapped title + publisher, year
 	str_wrap(r->title, width/2,
 		BOX_LEFT();
 		COLOR_START_BOLD(C_YELL);
-		clen = O("%.*s", line_len, r->title+line_start);COLOR_END();
-		
+		clen = O("%.*s", line_len, r->title+line_start);COLOR_END();	
 		if(!line_cnt++) {
 			clen += cli_fld_format("%s, %hd", r->publisher, r->year);
 			gap = width-clen;
@@ -218,9 +216,7 @@ ZI cli_rec_print(Rec r){
 		}
 		BOX_RIGHT(0);NL();
 	)
-
 	BOX_EMPTY_LINE(width);
-
 	// author + pagecount
 	BOX_LEFT();
 	COLOR_START(C_GREY);clen = O("by ");COLOR_END();
@@ -229,10 +225,8 @@ ZI cli_rec_print(Rec r){
 	gap = width-clen;
 	CH(" ", gap);COLOR_START(C_GREY);O("%s", fldbuf);COLOR_END();
 	BOX_RIGHT(0);NL();
-
 	// divider
 	BOX_SPAN(width);
-
 	// subject, wrapped to width
 	str_wrap(r->subject, width,
 		BOX_LEFT();
@@ -240,7 +234,6 @@ ZI cli_rec_print(Rec r){
 		O("%.*s", line_len, r->subject+line_start);
 		BOX_RIGHT(width-line_len);NL();
 	)
-
 	// terminate table
 	BOX_END(width, NULL,0);
 	R0;}
@@ -319,7 +312,14 @@ ZI cli_rec_edit(S arg){
 
 ZI cli_rec_add(S arg){
 	LOG("cli_rec_add");
-	Rec r = (Rec)malloc(SZ_REC);chk(r,1);
+	Rec r = (Rec)calloc(1, SZ_REC);chk(r,1);
+	r->year = 2018;
+	r->pages = 0;
+	scpy(r->author, "author", 6);
+	scpy(r->publisher, "publisher", 9);
+	scpy(r->title, "title", 5);
+	scpy(r->subject, "subject", 7);
+
 	I res = cli_rec_edit_loop(r, "  add$ ", "create", rec_create);
 	free(r);
 	R res;}
