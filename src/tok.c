@@ -18,6 +18,8 @@
 #include "tri.h"
 #include "bag.h"
 #include "rnd.h"
+#include "bin.h"
+#include "set.h"
 #include "tok.h"
 
 #define PACK_EVERY_N_RECS (2*4096)
@@ -32,6 +34,8 @@ Z HT wordbags[FTI_FIELD_COUNT]; //< hash tables: term -> stem
 Z HT wordbag_ht;
 Z TRIE wordbag; 		//< trie: global term -> stem
 Z BAG wordbag_store;
+
+Z HT terms;
 
 ZC MEM_TRACE=0;
 ZV tok_inc_mem(S label, J bytes) {
@@ -97,6 +101,7 @@ ZV tok_ftidx_sort_each(BKT bkt, V*arg, UJ i) {
 }
 
 ZV tok_wordbag_adjust_ptr(NODE bkt, V*diff, I depth) { bkt->payload -= (J)diff; }
+ZV tok_wordbag_ht_adjust_ptr(BKT bkt, V*diff, UJ i) { bkt->payload -= (J)diff; }
 
 ZV tok_store_completion(NODE n, VEC**vec, I depth) {
 	LOG("tok_store_completion");
@@ -143,25 +148,24 @@ V tok_search(S query) {
 
 ZC USE_WORDBAG = 1;
 const ZI STOK_TRACE=0, STOK_VAL_LEN=5; ZS STOK_VAL = "aaron";
-UJ tok_index_field(ID rec_id, I field, S s, I flen, UJ i) {
+UJ tok_index_field(ID rec_id, I field, S s, I flen, UJ DOC_ID) {
 	LOG("tok_index_field");
 	lcse(s, flen); //< lowercase
 	I tok_cnt = 0;
-	stok(s, scnt(s), FTI_TOKEN_DELIM, 0,
+	stok(s, flen, FTI_TOKEN_DELIM, 0,
 
-    	//if((tok_len<2||hsh_get(stopwords, tok, tok_len)))continue;
-
-    	//continue;
+    	if(tok_len<2||hsh_get(stopwords, tok, tok_len)){
+    		fti_info->stopword_matches++;continue;}
 
 		//if(STOK_TRACE&&!mcmp(tok,STOK_VAL, STOK_VAL_LEN))
 		//	T(TEST, "TOK %s -> (%s %d)", STOK_VAL, tok, tok_len);
        	C from_wordbag = 0;
 
-		NODE b;
        	if (USE_WORDBAG) {
-       		
-			b = tri_insert(wordbag, tok, tok_len, NULL);
-			hsh_ins(wordbag_ht, tok, tok_len, NULL);
+
+			//NODE b =
+			//tri_insert(wordbag, tok, tok_len, 1);
+			BKT b = hsh_ins(wordbag_ht, tok, tok_len, NULL);
 
 			if (!b){
 				T(WARN, "skipping bad token at rec=%lu fld=%s pos=%d", rec_id, rec_field_names[field], tok_pos);
@@ -179,9 +183,11 @@ UJ tok_index_field(ID rec_id, I field, S s, I flen, UJ i) {
 				//! add stem to wordbag
 				S bagtok = (S)bag_add(wordbag_store, tok, tok_len+1);
 
-				if(wordbag_store->offset){
-					tri_each(wordbag, tok_wordbag_adjust_ptr, (V*)wordbag_store->offset);
-		    	}
+				//if(wordbag_store->offset)
+				//	tri_each(wordbag, tok_wordbag_adjust_ptr, (V*)wordbag_store->offset);
+
+				if(wordbag_store->offset)
+					hsh_each(wordbag_ht, (HT_EACH)tok_wordbag_ht_adjust_ptr, (V*)wordbag_store->offset);
 				//! link stem to word
 				b->payload = bagtok;
 				fti_info->total_tokens++;
@@ -195,20 +201,23 @@ UJ tok_index_field(ID rec_id, I field, S s, I flen, UJ i) {
 			tok[tok_len] = 0;
 		}
 
-		continue;
+		BKT term = hsh_ins(terms, tok, tok_len, NULL);
+		if(!term->payload)
+			term->payload = set_init(SZ(UJ), (CMP)cmp_);
+
+		set_add(term->payload, &DOC_ID);
 
 		if(STOK_TRACE&&!mcmp(tok,STOK_VAL,STOK_VAL_LEN))
 			T(TEST, "INS %s -> (%s %d) from_bag=%d", STOK_VAL, tok, tok_len, from_wordbag);
 
-		tok[tok_len+1]=0;
-
+		//tok[tok_len+1]=0;
     	//BKT fti = hsh_ins(ftidx[field], tok, tok_len+1, 0);
 		//if(!fti->payload) fti->payload = vec_init(10, ID);
 		//vec_add(fti->payload, rec_id);
 		tok_cnt++;
 	)
 
-	if(((I)i%PACK_EVERY_N_RECS)==0) {
+	if(((I)DOC_ID%PACK_EVERY_N_RECS)==0) {
 		//clk_start();
 		//hsh_pack(ftidx[field]);
 		//T(DEBUG, "packed in %lums", clk_stop());
@@ -241,6 +250,16 @@ ZV tok_ftidx_repack_each(BKT bkt, V*arg, HTYPE i) {
 	hsh_pack(wordbag);
 	//hsh_info(wordbag);
 }
+
+ZV tok_terms_inspect_each(BKT bkt, V*arg, HTYPE i) {
+	LOG("terms_each");
+	SET docset = (SET)(bkt->payload);
+	UJ* alloc = (UJ*)arg;
+	*alloc += docset->items->mem;
+	T(TRACE, "%s -> [%lu %lu %lu %.2f]", bkt->s,
+		docset->items->used, docset->items->size, docset->items->mem, vec_lfactor(docset->items));
+}
+
 
 ZV tok_pack() {
 	LOG("tok_pack");
@@ -287,6 +306,7 @@ I tok_shutdown() {
 
 	tok_dec_mem("file_index", db_close());
 	tok_dec_mem("wordbag_ht", hsh_destroy(wordbag_ht));
+	tok_dec_mem("terms", hsh_destroy(terms));
 
 	if (fti_info->total_mem){
 		T(INFO, "shutdown incomplete, \e[91mmem=%ld, cnt=%ld\e[0m", fti_info->total_mem, fti_info->total_alloc_cnt);
@@ -309,6 +329,8 @@ I tok_init() {
 	tok_inc_mem("file_index",
 		db_init(DAT_FILE, IDX_FILE));
 
+	terms = hsh_init(2,1);
+
 	//! init hash tables
 	DO(FTI_FIELD_COUNT,
 		ftidx[i]=hsh_init(2,3);
@@ -324,19 +346,27 @@ I tok_init() {
 	//! load stop words
 	stopwords = hsh_init(2,3);
 	UJ swcnt = tok_load_stop_words("dat/stopwords.txt");
-	X(swcnt==NIL,T(FATAL, "cannot load stopwords"), 1);
+	X(swcnt==NIL, T(FATAL, "cannot load stopwords"), 1);
 	T(INFO, "loaded %lu stopwords", stopwords->cnt);
 	tok_inc_mem("stopwords", stopwords->mem);
 
-	//! build inverted index
 	clock_t idx_start = clk_start();
+
+	//! build inverted index
 	UJ res = idx_each(tok_index_rec, NULL);
+
 	X(res==NIL,T(FATAL, "unable to index records"), 1);
 	T(TEST, "indexed %lu records in %lums", res, clk_diff(idx_start, clk_start()));
+	T(TEST, "stopword hits %lu", fti_info->stopword_matches);
 
 	tok_inc_mem("wordbag", wordbag->mem);
 	tok_inc_mem("wordbag_store", wordbag_store->size);
 	tok_inc_mem("wordbag_ht", wordbag_ht->mem);
+	tok_inc_mem("terms", terms->mem);
+
+	sz docvectors_alloc = 0;
+	hsh_each(terms, (HT_EACH)tok_terms_inspect_each, &docvectors_alloc);
+	tok_inc_mem("docvectors", docvectors_alloc);
 
 	//! sort document buckets	
 	DO(FTI_FIELD_COUNT,
@@ -351,8 +381,12 @@ I tok_init() {
 	//	hsh_info(ftidx[i])
 	)
 
-	hsh_info(wordbag_ht);
 	hsh_pack(wordbag_ht);
+	hsh_info(wordbag_ht);
+
+	hsh_pack(terms);
+	//hsh_dump(terms);
+	hsh_info(terms);
 
 	R0;
 }

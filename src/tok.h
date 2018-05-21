@@ -7,6 +7,7 @@ typedef struct fti_info {
 	UJ   total_terms;
 	J    total_mem;
 	J    total_alloc_cnt;
+	UJ   stopword_matches;
 	HT   memmap;
 } pFTI_INFO;
 
