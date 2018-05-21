@@ -21,10 +21,10 @@ I T(I lvl, const S fn, const S file, const I line, const S fmt, ...) {
 	if(lvl<=LOGLEVEL) {
 		va_list args;
 		va_start(args, fmt);
-		C buf[strlen(fn)+strlen(fmt)+strlen(file)+30];
+		C buf[strlen(fn)+strlen(fmt)+strlen(file)+100];
 		if (!cont) {
-			OUT:snprintf(buf, SZ(buf), "%s %s:%d\t[%s] %s%c",
-				loglevel_names[lvl], file, line, fn, fmt, newline?'\n':'\0');
+			OUT:snprintf(buf, SZ(buf), "  %s%s\e[0m \e[37m%s:%d\t[%s] %s%c\e[0m",
+				lvl<L_INFO?"\e[1;33m":"\e[37m", loglevel_names[lvl], file, line, fn, fmt, newline?'\n':'\0');
 			if(cont)newline = 0;
 		} else {
 			if(newline){newline=0;goto OUT;}

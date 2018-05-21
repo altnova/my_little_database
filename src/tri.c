@@ -31,7 +31,7 @@ Z NODE tri_paste(TRIE t, S key, UJ n, V*payload, C overwrite) {
 	LOG("tri_ins");
 	P(!n,NULL)
 	DO(n,P(!IN(0,key[i]-TRI_RANGE_OFFSET,TRI_RANGE-1),
-		(T(WARN,"unsupported characters in (%.*s)", n, key),NULL)))
+		(T(WARN,"unsupported characters in \e[1;32m(%.*s)\e[0m", n, key), NULL)))
 	NODE curr = t->root;
 	DO(n,curr = tri_ins_at(t, curr, key[i]))
 	if(overwrite||!curr->payload){
