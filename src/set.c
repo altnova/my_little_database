@@ -18,14 +18,14 @@ SET set_init(sz el_size, CMP cmpfn) {
 	R s;
 }
 
-V*set_get(SET s, V*key) {
+V* set_get(SET s, V*key) {
 	LOG("set_get");
 	UJ i = binx_(s->items->data, key, s->items->el_size, s->items->used, (CMP)s->cmpfn);
 	P(i==NIL, NULL);
 	R vec_at_(s->items, i);
 }
 
-V*set_add(SET s, V*key) {
+V* set_add(SET s, V*key) {
 	LOG("set_add");
 
 	//V*existing = set_get(s, key);
@@ -44,9 +44,23 @@ V*set_add(SET s, V*key) {
 	R0;
 }
 
+UJ set_size(SET s) {
+	R s->items->used;
+}
+
 V set_destroy(SET s) {
 	vec_destroy(s->items);
 	free(s);
+}
+
+I set_intersection(SET a, SET b, SET dest) {
+	C r = set_size(a)<set_size(b);
+	SET needles = r?a:b; SET haystack = r?b:a;
+	DO(set_size(needles),
+		V*ndl = vec_at_(needles->items, i);
+		if(set_get(haystack, ndl))
+			set_add(dest, ndl);
+	)
 }
 
 #ifdef RUN_TESTS_SET
@@ -77,13 +91,46 @@ I main() {
 		T(TEST, "got %ld", res);
 	)
 
-	J v1 = 9, v2 = 8, v3 = 2;
+	J v1 = 9, v2 = 8, v3 = 2, v4 = 11;
 	set_add(s, &v1); // ok
 	set_add(s, &v2); // ok - already there
 	set_add(s, &v3); // fail - out of order
 	//TEND();
 
+	SET s1 = set_init(SZ(J), (CMP)cmp_);
+	//set_add(s1, &keys[0]);
+	set_add(s1, &v3); // fail - out of order
+	set_add(s1, &keys[1]);
+	set_add(s1, &keys[2]);
+	set_add(s1, &v1);
+	set_add(s1, &v2);
+	set_add(s1, &v3);
+	set_add(s1, &v4);
+
+	SET interx = set_init(SZ(J), (CMP)cmp_);
+	set_intersection(s,s1,interx);
+
+	TSTART();T(TEST,"(");
+		DO(set_size(s),T(TEST, "%2ld ", *vec_at(s->items,i,J)));
+		T(TEST, ") = %lu", set_size(s));
+	TEND();
+
+	TSTART();T(TEST,"(");
+		DO(set_size(s1),T(TEST, "%2ld ", *vec_at(s1->items,i,J)));
+		T(TEST, ") = %lu", set_size(s1));
+	TEND();
+
+	TSTART();T(TEST,"(");
+		DO(set_size(interx),T(TEST, "%2ld ", *vec_at(interx->items,i,J)));
+		T(TEST, ") = %lu", set_size(interx));
+	TEND();
+
+
+	T(TEST, "intersection len=%lu", set_size(interx));
+
 	set_destroy(s);
+	set_destroy(s1);
+	set_destroy(interx);
 	R0;
 }
 
