@@ -22,6 +22,7 @@
 //! general config
 #define CLI_PROMPT  "  \e[1;32m$\e[0m "
 #define VER "0.9.5"
+#define CLI_PAGE_SIZE 10
 
 //! printing utilities
 enum colors { C_GREY = 37, C_BLUE = 36, C_YELL = 33, C_GREEN = 32 };
@@ -281,7 +282,7 @@ ZI cli_rec_list(S arg){
 	UJ page_id = cli_parse_id(arg);
 	if(page_id==NIL||page_id<1){page_id=1;}
 	UJ total_recs = idx_size();
-	UJ total_pages = 1+total_recs/10;
+	UJ total_pages = 1+total_recs/CLI_PAGE_SIZE;
 	if(page_id > total_pages)
 		page_id = total_pages;
 
@@ -292,7 +293,7 @@ ZI cli_rec_list(S arg){
 	C cols[4] = {5, (C)title_max, (C)author_max, 0};
 
 	BOX_START(width, cols);
-	UJ res = idx_page(cli_list_rec, NULL, page_id-1, 10);
+	UJ res = idx_page(cli_list_rec, NULL, page_id-1, CLI_PAGE_SIZE);
 	BOX_END(width, cols);
 	TB();O("page %lu/%lu", page_id, total_pages);NL();NL();
 	R0;
