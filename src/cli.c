@@ -22,7 +22,7 @@
 //! general config
 #define CLI_PROMPT  "  \e[1;32m$\e[0m "
 #define VER "0.9.5"
-#define CLI_PAGE_SIZE 10
+#define CLI_PAGE_SIZE 30
 
 //! printing utilities
 enum colors { C_GREY = 37, C_BLUE = 36, C_YELL = 33, C_GREEN = 32 };
@@ -88,9 +88,10 @@ ZI cli_rec_del(S arg);
 ZI cli_csv_import(S arg);
 ZI cli_csv_export(S arg);
 ZI cli_rec_list(S arg);
+ZI cli_rec_sort(S arg);
 //                       :             *             +            -            <               >               !   
-CLI_CMD cmds[] =        {cli_rec_show, cli_rec_edit, cli_rec_add, cli_rec_del, cli_csv_import, cli_csv_export, cli_rec_list};
-#define CLI_DB_COMMANDS ":*+-<>!"
+CLI_CMD cmds[] =        {cli_rec_show, cli_rec_edit, cli_rec_add, cli_rec_del, cli_csv_import, cli_csv_export, cli_rec_list, cli_rec_sort};
+#define CLI_DB_COMMANDS ":*+-<>!^"
 
 ZI rows, cols; //< terminal dimensions
 ZC fldbuf[FLDMAX];
@@ -131,8 +132,7 @@ ZV cli_help_db() {
 
     TB();YELL("^");BLUE("    "); O("sort");CH(" ",9);
     	 YELL(">");BLUE("o.csv");O("   export");
-		 NL();
-}
+		 NL();}
 
 ZV cli_usage() {
 
@@ -165,41 +165,36 @@ ZV cli_update_dimensions() {
 	struct winsize ws;
 	ioctl(STDOUT_FILENO,TIOCGWINSZ,&ws);
 	cols = ws.ws_col;
-	rows = ws.ws_row;
-}
+	rows = ws.ws_row;}
 
-ZV cli_interrupt_handler(I itr) {
-    tok_shutdown(); exit(0);}
+ZV cli_shutdown(I itr) {
+    I res = tok_shutdown();exit(res);}
 
 ZI is_db_cmd(C c) {
 	S r=schr(CLI_DB_COMMANDS,c);
 	P(!r,-1)
-	R r-CLI_DB_COMMANDS;
-}
+	R r-CLI_DB_COMMANDS;}
 
 ZI cli_warn(S msg){
 	TB();O("%s",msg);NL();
-	R1;
-}
+	R1;}
 
 Z ID cli_parse_id(S str) {
 	errno = 0;
 	J res = strtol(str, NULL, 10);
 	P(errno||res<0, NIL)
-	R(ID)res;
-}
+	R(ID)res;}
 
 ZI cli_fld_format(S fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
 	I len = vsnprintf(fldbuf, FLDMAX, fmt, ap);
 	va_end(ap);
-	R len;
-}
+	R len;}
 
-I cli_rec_print(Rec r){
-
-	I width = cols * .7;
+ZI cli_rec_print(Rec r){
+	LOG("cli_rec_print");
+	I width = cols * .9;
 	I clen, gap, line_cnt=0;
 	// start table
 	BOX_START(width,"");
@@ -238,6 +233,7 @@ I cli_rec_print(Rec r){
 	// subject, wrapped to width
 	str_wrap(r->subject, width,
 		BOX_LEFT();
+		//T(TEST, "str_wrap line_start=%lu line_len=%d", line_start, line_len);
 		O("%.*s", line_len, r->subject+line_start);
 		BOX_RIGHT(width-line_len);NL();
 	)
@@ -246,7 +242,7 @@ I cli_rec_print(Rec r){
 	BOX_END(width, "");
 	R0;}
 
-I cli_rec_show(S arg){
+ZI cli_rec_show(S arg){
 	LOG("cli_rec_show");
 	P(!scnt(arg), cli_warn("missing record id"))
 	ID rec_id = cli_parse_id(arg);
@@ -255,8 +251,7 @@ I cli_rec_show(S arg){
 	P(rec_get(r, rec_id)==NIL, cli_warn("no such record"))
 	I res = cli_rec_print(r);
 	free(r);
-	R res;
-}
+	R res;}
 
 ZI cli_rec_edit_loop(Rec r, S prompt, S mode, REC_FN rec_fn){
 	I res;C q[LINE_BUF];
@@ -306,8 +301,7 @@ ZI cli_rec_edit_loop(Rec r, S prompt, S mode, REC_FN rec_fn){
 		goto AGAIN;break;
 	)
 	DONE:
-	R res;
-}
+	R res;}
 
 ZI cli_rec_edit(S arg){
 	LOG("cli_rec_edit");
@@ -316,11 +310,9 @@ ZI cli_rec_edit(S arg){
 	P(rec_id==NIL, cli_warn("bad record id"));
 	Rec r = (Rec)malloc(SZ_REC);chk(r,1);
 	P(rec_get(r, rec_id)==NIL, cli_warn("no such record"));
-
 	I res = cli_rec_edit_loop(r, "  edit$ ", "update", rec_update);
 	free(r);
-	R res;	
-}
+	R res;}
 
 ZI cli_rec_add(S arg){
 	LOG("cli_rec_add");
@@ -336,37 +328,38 @@ ZI cli_rec_del(S arg){
 	P(rec_id==NIL, cli_warn("bad record id"));
 	Rec r = (Rec)malloc(SZ_REC);chk(r,1);
 	P(rec_get(r, rec_id)==NIL, cli_warn("no such record"));
-
 	UJ res = rec_delete(rec_id);
 	NL();TB();O("record %lu: delete %s", r->rec_id, (res==NIL)?"failed":"ok");NL();NL();
-	
-	free(r); //< can still undo deletion!
+	free(r); //< can still undo deletion here.
 	R0;}
 
 ZI cli_csv_import(S arg){O("nyi cli_csv_import\n");R0;}
 ZI cli_csv_export(S arg){O("nyi cli_csv_export\n");R0;}
 
-Z UJ cli_list_rec(Rec r, V*arg, UJ i) {
-	I width = cols * .7;
-	I clen, tlen, gap, line_cnt=0;
-	I title_max = width * .6;
-	I author_max = width-title_max;
+ZI cli_rec_sort(S arg){
+	LOG("cli_rec_sort");
+	T(TEST, "nyi");
+	R0;}
 
+Z UJ cli_list_rec(Rec r, V*arg, UJ i) {
+	I width = cols * .9;
+	I clen, tlen, gap, line_cnt=0;
+	I title_max = width * .7;
+	I author_max = width-title_max;
 	BOX_LEFT();
-	COLOR_START_BOLD(C_GREY);clen = O("%4lu", r->rec_id);COLOR_END();
+	COLOR_START_BOLD(C_GREY);clen = O("%5lu", r->rec_id);COLOR_END();
 	BOX_RIGHT(0);clen+=2;
 	COLOR_START(C_YELL);clen += tlen = O("%.*s", title_max-3, r->title);COLOR_END();
-	if(tlen==(title_max-3)) {
-		COLOR_START(C_GREY);CH(".", 3); tlen+=3;COLOR_END();clen+=3;
-	}
+	if(tlen==(title_max-3)){ //< title truncated, append "..."
+		COLOR_START(C_GREY);CH(".", 3); tlen+=3;COLOR_END();clen+=3;}
 	CH(" ", title_max-tlen); clen += title_max-tlen;
 	BOX_RIGHT(0);clen+=2;
 	COLOR_START(C_GREY);clen += O("%.*s", author_max, r->author);COLOR_END();
 	gap = width-clen;
 	//CH(" ", gap);COLOR_START(C_GREY);O("%s", fldbuf);COLOR_END();
 	BOX_RIGHT(gap);NL();
-	R0;
-}
+	R0;}
+
 ZI cli_rec_list(S arg){
 	LOG("cli_rec_list");
 	UJ page_id;
@@ -389,10 +382,10 @@ ZI cli_rec_list(S arg){
 
 	current_page_id = page_id; // save
 
-	I width = cols * .7;
-	I title_max = width * .6;
-	I author_max = width-title_max-5;
-	C cols[4] = {5, (C)title_max, (C)author_max, 0};
+	I width = cols * .9;
+	I title_max = width * .7;
+	I author_max = width-title_max-6;
+	C cols[4] = {6, (C)title_max, (C)author_max, 0};
 
 	// start table
 	BOX_START(width, cols);
@@ -404,15 +397,15 @@ ZI cli_rec_list(S arg){
 	CH(" ", pad);YELL("!!");O(" prev");
 	CH(" ", pad);YELL("!");BLUE("page");O(" jump");
 	NL();NL();
-	R0;
-}
+	R0;}
 
 I main(I ac, S* av) {
 	LOG("cli_main");
-	srand(time(NULL));
-	signal(SIGINT, cli_interrupt_handler);
+	srand(time(NULL)); //< random seed
+	signal(SIGINT, cli_shutdown); //< catch SIGINT and cleanup nicely
 
 	tok_init();
+
 	cli_banner();
 	cli_hint();
 
@@ -420,7 +413,7 @@ I main(I ac, S* av) {
 
 	//! start main loop
 	USR_LOOP(usr_input_str(q, CLI_PROMPT, "inavalid characters"),
-		cli_update_dimensions();
+		cli_update_dimensions(); //< adjust cols/rows
 
 		I qlen = scnt(q);
 		if(!qlen){cli_hint();continue;}
@@ -451,7 +444,6 @@ I main(I ac, S* av) {
 		NEXT:
 		WIPE(q, qlen);
 	)
-
 	EXIT:
-	R tok_shutdown();
+	cli_shutdown(0);
 }
