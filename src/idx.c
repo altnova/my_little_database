@@ -74,7 +74,8 @@ Z UJ db_touch(S fname) {
 ZJ _c(const V*a, const V*b) {
 	ID x = ((Pair*)a)->rec_id;
 	ID y = ((Pair*)b)->rec_id;
-	R x-y;
+	P(x==y,0)
+	R x>y?1:-1;
 }
 
 //! comparator for binfn()
@@ -86,11 +87,11 @@ C cmp_binsearch(V* a, V* b, sz t) {
 }
 
 //! comparator for qsort()
-ZI cmp_qsort(const V* a, const V* b) {
+ZI cmp_qsort(const V*a, const V*b) {
 	LOG("cmp_qsort");
 	J r = _c(a,b);
 	T(TRACE, "%ld\n", r);
-	R r;
+	R(I)r;
 }
 
 //! sort index by rec_id
@@ -108,7 +109,8 @@ V idx_dump(UJ head) {
 	T(TEST, "{ last_id=%lu, used=%lu } =>", idx->hdr, idx_size());
 	DO(head?head:idx_size(),
 		e = vec_at(idx, i, Pair);
-		T(TEST, " %lu:(%lu -> %lu)", i, e->rec_id, e->pos);
+		if (!e->rec_id)
+			T(TEST, " %lu:(%lu -> %lu)", i, e->rec_id, e->pos);
 	)
 	if(head&&head<idx_size())T(TEST,"...");
 	TEND();
@@ -169,7 +171,9 @@ Z UJ idx_rebuild() {
 	}
 
 	fclose(in);
+
 	idx_sort();
+	idx_dump(0);
 
 	Pair last = e;
 	idx->hdr = last.rec_id; 	//< use VEC header field to store last_id
@@ -183,7 +187,7 @@ Z sz idx_close() {
 	R vec_destroy(idx);
 }
 
-//! load index from a file
+//! map index into memory from file
 //! \return number of entries, NIL on error
 Z UJ idx_load() {
 	LOG("idx_load");
@@ -191,8 +195,7 @@ Z UJ idx_load() {
 	xfopen(in, idx_file, "r", NIL);
 	idx_close();
 	J size = fsize(in);
-	VEC* tmp = &idx; //< replace pointer
-	*tmp = vec_init((size-SZ_HDR)/SZ(Pair), Pair); //< reinit idx
+	idx = malloc(size);
 	fread(idx, size, 1, in); //< TODO check error
 	fclose(in);
 	T(INFO, "%lu bytes, %lu entries, capacity=%lu, last_id=%lu", \
@@ -233,7 +236,7 @@ UJ idx_update_pos(UJ rec_id, UJ new_pos) {
 	zseek(out, SZ(VEC)+SZ(Pair)*(idx_pos-1), SEEK_SET);
 	fwrite(i, SZ(Pair), 1, out);
 	fclose(out);
-	T(DEBUG, "rec_id=%lu, new_pos=%lu", rec_id, new_pos);
+	T(TEST, "rec_id=%lu, idx_pos=%lu, new_pos=%lu", rec_id, idx_pos, new_pos);
 	R new_pos;
 }
 
@@ -307,7 +310,7 @@ Z UJ idx_open() {
 		X(b_written==NIL, T(WARN,"idx_save reports error"), NIL);
 		T(WARN, "synchronized index file");
 	} else
-		T(WARN, "loaded existing index, idx_size=%lu", idx_count);
+		T(INFO, "loaded existing index, idx_size=%lu", idx_count);
 
 	R idx_size();
 }
@@ -348,10 +351,12 @@ ZI idx_test() {
 	T(TEST, "after update: "); rec_print_dbg(b);
 
 	//db_dump(); idx_dump(0);
-	DO(3, rec_create(b);)
+	DO(3,
+		rec_create(b);
+	)
 	rec_delete(17);
 	//db_dump();
-	idx_dump(10);
+	//idx_dump(10);
 
 	//rec_delete(20); //< delete last
 	//db_dump(); idx_dump(0);
