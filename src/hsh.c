@@ -279,7 +279,7 @@ sz hsh_destroy(HT ht) {
 
 V hsh_info(HT ht) {
 	LOG("hsh_info");
-	T(DEBUG, "cap=%8d, cnt=%8d, bcnt=%8d, bavg=%4.2f, lf=%4.2f, spl=%8d, mem=%8lu",
+	T(TEST, "cap=%8d, cnt=%8d, bcnt=%8d, bavg=%4.2f, lf=%4.2f, spl=%8d, mem=%8lu",
 		hsh_capacity(ht), ht->cnt, hsh_bcnt(ht), hsh_bavg(ht), hsh_factor(ht), ht->split, hsh_mem(ht));
 }
 
@@ -298,9 +298,7 @@ V hsh_dump(HT ht) {
 		}
 		T(TEST, STR_EMPTY_SET);
 		TEND();
-	);
-
-	hsh_info(ht);
+	)
 }
 
 V hsh_each(HT ht, HT_EACH fn, V*arg) {
