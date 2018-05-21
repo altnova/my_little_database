@@ -17,7 +17,7 @@
 
 vim_conf CFG;
 
-ZS vim_prompt(S prompt, I x_offset, S initial_value);
+ZS vim_prompt(S prompt, S initial_value);
 ZV vim_die(S err);
 
 //! screen buffer
@@ -157,7 +157,7 @@ ZV vim_draw_rows(SCR s) {
 		if(i==CFG.screenrows/3){
 			C banner[80];
 			I len = snprintf(banner, SZ(banner),
-				"editor -- version %s", VERSION);
+				"record editor -- version %s", VERSION);
 			I padding = (CFG.screencols - len) / 2;
 			if(padding){
 				vim_draw(s, "~", 1);
@@ -224,7 +224,7 @@ ZV vim_redraw() {
 ZV vim_move_cursor(I key) {
 	SW(key){
 		CS(ARROW_LEFT,
-			if(CFG.cx!=MAX(CFG.prompt_offset,0)) {
+			if(CFG.cx!=MAX(CFG.prompt_len,0)) {
 				CFG.cx--;
 			})
 		CS(ARROW_RIGHT,
@@ -252,13 +252,11 @@ ZS vim_prompt(S prompt, S initial_value) {
 	DO(len, vec_add(buffer, initial_value[i]))
 
 	I currpos = len;
-	vim_set_cursor_position(CFG.screenrows+2, x_offset+currpos); // jump to end
-	CFG.prompt_len = scnt(prompt);
-
-	S prompt_terminated = vsnprintf("%s\%.*s", CFG.prompt_len+4, fmt, ap);
-
+	CFG.prompt_len = scnt(prompt) + 1;
+	vim_set_cursor_position(CFG.screenrows+2, CFG.prompt_len+currpos); // jump to end
+	
 	EVENTLOOP(
-		vim_set_line(CFG.message, prompt, (S)buffer->data);
+		vim_set_line(CFG.message, "%s %s", prompt, (S)buffer->data);
 		//mcpy(CFG.message+x_offset, (S)buffer->data, CFG.screenrows-x_offset); // echo changes
 		vim_redraw(); I c = vim_read_key();
 
@@ -324,7 +322,7 @@ ZS vim_prompt(S prompt, S initial_value) {
 		}
 
 		else if (c == '\x1b') { 				// escape:
-			vec_del_all(buffer);				// truncate input
+			vec_clear(buffer);					// truncate input
 			currpos = 0;
 			goto DONE;
 
