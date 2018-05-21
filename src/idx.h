@@ -20,7 +20,8 @@ ext UJ    idx_size();
 //! \param arg argument to be passed to each fn() call
 //! \return 0 on ok, NIL on error
 typedef UJ(*IDX_EACH)(Rec r, V*arg, UJ i); //< idx_each function interface
-ext UJ idx_each(IDX_EACH fn, V*arg, C halt_on_err);
+ext UJ idx_each(IDX_EACH fn, V*arg);
+ext UJ idx_page(IDX_EACH fn, V*arg, I page, I page_sz);
 
 ext C     cmp_binsearch(V* a, V* b, sz t);
 

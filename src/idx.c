@@ -119,7 +119,7 @@ ZV idx_dump(UJ head) {
 	TEND();
 }
 
-UJ idx_each(IDX_EACH fn, V*arg, C halt_on_err) {
+UJ idx_each(IDX_EACH fn, V*arg) {
 	LOG("idx_each")
 	FILE* in;
 	xfopen(in, db_file, "r", NIL);
@@ -129,9 +129,26 @@ UJ idx_each(IDX_EACH fn, V*arg, C halt_on_err) {
 		DO(rcnt,
 			Rec b = &buf[i];
 			UJ res = fn(b, arg, pos++);
-			P(halt_on_err&&res==NIL, NIL)
 		)
 	}
+	fclose(in);
+	R pos;
+}
+
+UJ idx_page(IDX_EACH fn, V*arg, I page, I page_sz) {
+	LOG("idx_page")
+	FILE* in;
+	xfopen(in, db_file, "r", NIL);
+	UJ fpos = SZ_REC * page * page_sz;
+	zseek(in, fpos, SEEK_SET);
+	UJ rcnt, pos = 0;
+	rcnt = fread(buf, SZ_REC, page_sz, in);
+	T(DEBUG, "read page: %lu records", rcnt);
+	DO(rcnt,
+		Rec b = &buf[i];
+		UJ res = fn(b, arg, pos++);
+	)
+	fclose(in);
 	R pos;
 }
 

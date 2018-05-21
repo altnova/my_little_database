@@ -17,40 +17,79 @@
 #include "clk.h"
 #include "rec.h"
 #include "str.h"
+#include "idx.h"
 
-#define LEFT_OFFSET "  "
+//! general config
 #define CLI_PROMPT  "  \e[1;32m$\e[0m "
-#define CLI_DB_COMMANDS ":*+-<>"
-enum colors {
-	C_GREY = 37,
-	C_BLUE = 36,
-	C_YELL = 33,
-	C_GREEN = 32
-};
 #define VER "0.9.5"
-#define MI(i,label) O("\t%d. %s", i, label);	//< menu item
+
+//! printing utilities
+enum colors { C_GREY = 37, C_BLUE = 36, C_YELL = 33, C_GREEN = 32 };
+#define LEFT_OFFSET "  "
 #define NL() O("\n");
 #define TB() O(LEFT_OFFSET); /* left offset */
 #define CH(c,n) (DO(n, O(c)))
 #define HR(n) TB();CH("\u2501",n);NL(); /* horisontal ruler */
 #define BLUE(s) O("\e[36m%s\e[0m", s)
 #define GREY(s) O("\e[37m%s\e[0m", s)
-#define GREY(s) O("\e[37m%s\e[0m", s)
 #define YELL(s) O("\e[1;33m%s\e[0m", s)
 #define GREEN(s) O("\e[1;32m%s\e[0m", s)
 #define COLOR_START_BOLD(col) O("\e[1;%dm", col)
 #define COLOR_START(col) O("\e[%dm", col)
 #define COLOR_END() O("\e[0m")
+#define MI(i,label) O("\t%d. %s", i, label);
+
+//! boxing utilities
+ZI BOX_BOLD = 0; //< \see https://en.wikipedia.org/wiki/Box-drawing_character
+ZV BOX_LEFT() {TB();O(BOX_BOLD?"\u2503 ":"\u2502 ");}
+ZV BOX_RIGHT(I pad) {CH(" ", pad+1);O(BOX_BOLD?"\u2503":"\u2502");}
+ZV BOX_START(I w,S cols) {
+	TB(); CH(BOX_BOLD?"\u250f":"\u250c",1);
+	I pos = 0, cnt = 0, col_cnt = scnt(cols)-1;
+	if(col_cnt>0) {
+		DO(col_cnt,
+			pos = (I)cols[i]+1;
+			CH(BOX_BOLD?"\u2501":"\u2500",pos);
+			O(BOX_BOLD?"\u2533":"\u252c");
+			cnt += pos;)
+		CH(BOX_BOLD?"\u2501":"\u2500",(I)cols[col_cnt]-2);
+	} else {
+		CH(BOX_BOLD?"\u2501":"\u2500",w+2);
+	}
+	CH(BOX_BOLD?"\u2513":"\u2510",1); NL();}
+ZV BOX_END(I w,S cols) {
+	TB(); CH(BOX_BOLD?"\u2517":"\u2514",1);
+	I pos = 0, cnt = 0, col_cnt = scnt(cols)-1;
+	if(col_cnt>0) {
+		DO(col_cnt,
+			pos = (I)cols[i]+1;
+			CH(BOX_BOLD?"\u2501":"\u2500",pos);
+			O(BOX_BOLD?"\u253b":"\u2534");
+			cnt += pos;)
+		CH(BOX_BOLD?"\u2501":"\u2500",(I)cols[col_cnt]-2);
+	} else {
+		CH(BOX_BOLD?"\u2501":"\u2500",w+2);
+	}
+	CH(BOX_BOLD?"\u251b":"\u2518",1); NL();}	
+ZV BOX_SPAN(I w) {TB(); CH(BOX_BOLD?"\u2523":"\u251c",1); CH(BOX_BOLD?"\u2501":"\u2500",w+2); CH(BOX_BOLD?"\u252b":"\u2524",1); NL();}
+ZV BOX_EMPTY_LINE(I w) {BOX_LEFT();CH(" ", w);BOX_RIGHT(0);NL();}
+
 #define WIPE(x,n) DO(n, x[i]=0)
 
+//! command function interface
 typedef I(*CLI_CMD)(S arg);
+
+//! database commands
 ZI cli_rec_show(S arg);
 ZI cli_rec_edit(S arg);
 ZI cli_rec_add(S arg);
 ZI cli_rec_del(S arg); 
 ZI cli_csv_import(S arg);
 ZI cli_csv_export(S arg);
-CLI_CMD cmds[] = {cli_rec_show, cli_rec_edit, cli_rec_add, cli_rec_del, cli_csv_import, cli_csv_export};
+ZI cli_rec_list(S arg);
+//                       :             *             +            -            <               >               !   
+CLI_CMD cmds[] =        {cli_rec_show, cli_rec_edit, cli_rec_add, cli_rec_del, cli_csv_import, cli_csv_export, cli_rec_list};
+#define CLI_DB_COMMANDS ":*+-<>!"
 
 ZI rows, cols; //< terminal dimensions
 ZC fldbuf[FLDMAX];
@@ -80,6 +119,10 @@ ZV cli_help_db() {
     TB();YELL("*");BLUE("id  "); O("edit");CH(" ",9);
     	 YELL("-");BLUE("id  "); O("delete");CH(" ",9);
     	 YELL(">");BLUE("o.csv");O("   export");NL();
+    TB();YELL("!");BLUE("    "); O("list");CH(" ",9);
+    	 //YELL("-");BLUE("id  "); O("delete");CH(" ",9);
+    	 //YELL(">");BLUE("o.csv");O("   export");NL();
+
 	NL();
 }
 
@@ -138,15 +181,6 @@ Z ID cli_parse_id(S str) {
 	R(ID)res;
 }
 
-//! \see https://en.wikipedia.org/wiki/Box-drawing_character
-ZI BOX_BOLD = 0;
-ZV BOX_LEFT() {TB();O(BOX_BOLD?"\u2503 ":"\u2502 ");}
-ZV BOX_RIGHT(I pad) {CH(" ", pad+1);O(BOX_BOLD?"\u2503":"\u2502");}
-ZV BOX_START(I w) {TB(); CH(BOX_BOLD?"\u250f":"\u250c",1); CH(BOX_BOLD?"\u2501":"\u2500",w+2);CH(BOX_BOLD?"\u2513":"\u2510",1); NL();}
-ZV BOX_END(I w) {TB(); CH(BOX_BOLD?"\u2517":"\u2514",1); CH(BOX_BOLD?"\u2501":"\u2500",w+2); CH(BOX_BOLD?"\u251b":"\u2518",1); NL();}
-ZV BOX_SPAN(I w) {TB(); CH(BOX_BOLD?"\u2523":"\u251c",1); CH(BOX_BOLD?"\u2501":"\u2500",w+2); CH(BOX_BOLD?"\u252b":"\u2524",1); NL();}
-ZV BOX_EMPTY_LINE(I w) {BOX_LEFT();CH(" ", w);BOX_RIGHT(0);NL();}
-
 ZI cli_fld_format(S fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
@@ -166,7 +200,7 @@ I cli_rec_show(S arg){
 	I width = cols * .7;
 	I clen, gap, line_cnt=0;
 	// start table
-	BOX_START(width);
+	BOX_START(width,"");
 
 	// rec_id: wrapped title + publisher, year
 	str_wrap(r->title, width/2,
@@ -207,7 +241,7 @@ I cli_rec_show(S arg){
 	)
 
 	// terminate table
-	BOX_END(width);
+	BOX_END(width, "");
 
 	// release record
 	free(r);
@@ -219,6 +253,50 @@ ZI cli_rec_del(S arg){O("nyi cli_rec_del\n");R0;}
 ZI cli_csv_import(S arg){O("nyi cli_csv_import\n");R0;}
 ZI cli_csv_export(S arg){O("nyi cli_csv_export\n");R0;}
 
+Z UJ cli_list_rec(Rec r, V*arg, UJ i) {
+	I width = cols * .7;
+	I clen, tlen, gap, line_cnt=0;
+	I title_max = width * .6;
+	I author_max = width-title_max;
+
+	BOX_LEFT();
+	COLOR_START_BOLD(C_GREY);clen = O("%4lu", r->rec_id);COLOR_END();
+	BOX_RIGHT(0);clen+=2;
+	COLOR_START(C_YELL);clen += tlen = O("%.*s", title_max-3, r->title);COLOR_END();
+	if(tlen==(title_max-3)) {
+		COLOR_START(C_GREY);CH(".", 3); tlen+=3;COLOR_END();clen+=3;
+	}
+	CH(" ", title_max-tlen); clen += title_max-tlen;
+	BOX_RIGHT(0);clen+=2;
+	COLOR_START(C_GREY);clen += O("%.*s", author_max, r->author);COLOR_END();
+	gap = width-clen;
+	//CH(" ", gap);COLOR_START(C_GREY);O("%s", fldbuf);COLOR_END();
+	BOX_RIGHT(gap);NL();
+
+	//rec_print_dbg(r);
+	R0;
+}
+ZI cli_rec_list(S arg){
+	LOG("cli_rec_list");
+	UJ page_id = cli_parse_id(arg);
+	if(page_id==NIL||page_id<1){page_id=1;}
+	UJ total_recs = idx_size();
+	UJ total_pages = 1+total_recs/10;
+	if(page_id > total_pages)
+		page_id = total_pages;
+
+	// start table
+	I width = cols * .7;
+	I title_max = width * .6;
+	I author_max = width-title_max-5;
+	C cols[4] = {5, (C)title_max, (C)author_max, 0};
+
+	BOX_START(width, cols);
+	UJ res = idx_page(cli_list_rec, NULL, page_id-1, 10);
+	BOX_END(width, cols);
+	TB();O("page %lu/%lu", page_id, total_pages);NL();NL();
+	R0;
+}
 
 I main(I ac, S* av) {
 	LOG("cli_main");

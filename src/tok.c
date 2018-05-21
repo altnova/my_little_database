@@ -317,7 +317,7 @@ I tok_init() {
 
 	//! build inverted index
 	clock_t idx_start = clk_start();
-	UJ res = idx_each(tok_index_rec, NULL, 1);
+	UJ res = idx_each(tok_index_rec, NULL);
 	X(res==NIL,T(FATAL, "unable to index records"), 1);
 	T(TEST, "indexed %lu records in %lums", res, clk_diff(idx_start, clk_start()));
 
