@@ -53,7 +53,7 @@ V set_destroy(SET s) {
 	free(s);
 }
 
-I set_intersection(SET a, SET b, SET dest) {
+V set_intersection(SET a, SET b, SET dest) {
 	C r = set_size(a)<set_size(b);
 	SET needles = r?a:b; SET haystack = r?b:a;
 	DO(set_size(needles),
