@@ -11,15 +11,16 @@
 #define DBG 	T(TRACE, "l=%lu m=%lu h=%lu needle=%d hay(%lu)=%d r=%d\n", \
 					l, m, h, val(ndl,I), m, val(hst+m * t,I), r)
 //! compare
-C cmp_(V*x, V*y, sz t){				 //< sw/cs?
+inline C cmp_(V*x, V*y, sz t){		 //< sw/cs?
 	J r =							 //< compare:
-		t==SZ(SS) ?scmp(x,y):		 //< strs
-		t==SZ(C)  ?diff(C): 		 //< chars
-		t==SZ(H)  ?diff(H): 		 //< shorts
 		t==SZ(I)  ?diff(I): 		 //< ints
 		t==SZ(J)  ?diff(J): 		 //< longs
+		t==SZ(C)  ?diff(C): 		 //< chars
+		t==SZ(H)  ?diff(H): 		 //< shorts
+		t==SZ(SS) ?scmp(x,y):		 //< strs
 				   memcmp(x,y,t); //< everything
-	R!r?r:r<0?-1:1;}		//< (lt,eq,gt)
+	P(!r,0)
+	R r<0?-1:1;}		//< (lt,eq,gt)
 
 //! \brief haystack, needle, type, length, comparator
 UJ binx_(V*hst, V*ndl, sz t, sz n, CMP cfn){
