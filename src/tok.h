@@ -1,6 +1,5 @@
 //! \file tok.h \brief tokenizer definitions
 
-
 typedef struct fti_info {
 	UJ   total_records;
 	UJ   total_tokens;
@@ -15,7 +14,10 @@ typedef struct fti_info {
 typedef pFTI_INFO* FTI_INFO;
 
 ext I tok_init();
-ext V tok_search(S query);
+
+typedef V(*FTI_SEARCH_CALLBACK)(Rec);
+ext V tok_search(S query, FTI_SEARCH_CALLBACK fn);
+
 ext V tok_print_completions_for(S query);
 ext V tok_print_memmap();
 
