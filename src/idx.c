@@ -12,7 +12,7 @@
 #include "fio.h"
 #include "clk.h"
 
-Z VEC idx;		//< in-memory instance of the index
+Z IDX idx;		//< in-memory instance of the index
 Z bufRec buf;	//< readbuffer RECBUFLEN records
 
 Z sz mem=0;		//< total allocated memory
@@ -22,12 +22,12 @@ C idx_file[MAX_FNAME_LEN+1];
 
 //! current idx size
 UJ idx_size() {
-	R vec_size(idx);
+	R vec_size(idx->pairs);
 }
 
 //! returns specific index entry
 Pair* idx_get_entry(UJ idx_pos) {
-	R vec_at(idx, idx_pos, Pair);
+	R vec_at(idx->pairs, idx_pos, Pair);
 }
 
 //! persist index in a file
@@ -36,10 +36,13 @@ Z UJ idx_save() {
 	LOG("idx_save");
 	FILE*out;
 	xfopen(out, idx_file, "w+", NIL);
-	fwrite(idx, SZ(VEC)+idx->size*SZ(Pair), 1, out); //< TODO check error
+	VEC p = idx->pairs;
+	vec_compact(&p);
+	fwrite(idx, SZ_IDX, 1, out);
+	fwrite(idx->pairs, vec_mem(p), 1, out);
 	UJ idx_fsize = fsize(out);
 	fclose(out);
-	mem=idx_fsize;
+	mem = idx_fsize;
 	T(TRACE, "saved %lu bytes", idx_fsize);
 	R idx_fsize;
 }
@@ -48,7 +51,7 @@ Z UJ idx_save() {
 //! \return NIL on error, new index size on success
 UJ idx_shift(UJ pos) {
 	LOG("idx_shift");
-	vec_del_at(idx, pos, 1);
+	vec_del_at(idx->pairs, pos, 1);
 	T(TEST, "squashed idx_pos=%lu", pos);
 	UJ b_written = idx_save();
 	X(b_written==NIL, T(WARN, "idx_save failed"), NIL);
@@ -57,13 +60,14 @@ UJ idx_shift(UJ pos) {
 
 //! returns pointer to indexes' data section
 Pair* idx_data() {
-	R(Pair*)idx->data;
+	VEC p = idx->pairs;
+	R(Pair*)p->data;
 }
 
 //! create db file if not exists \returns number of records
 Z UJ db_touch(S fname) {
 	LOG("db_touch");
-	FILE* f;
+	FILE*f;
 	xfopen(f, fname, "a", NIL);
 	UJ size = fsize(f)/SZ_REC;
 	fclose(f);
@@ -97,7 +101,8 @@ ZI cmp_qsort(const V*a, const V*b) {
 //! sort index by rec_id
 ZV idx_sort() {
 	LOG("idx_sort");
-	qsort(idx->data, idx->used, SZ(Pair), cmp_qsort);
+	VEC p = idx->pairs;
+	qsort(p->data, p->used, SZ(Pair), cmp_qsort);
 	T(DEBUG, "index sorted");
 }
 
@@ -106,9 +111,9 @@ V idx_dump(UJ head) {
 	LOG("idx_dump");
 	Pair* e;
 	TSTART();
-	T(TEST, "{ last_id=%lu, used=%lu } =>", idx->hdr, idx_size());
+	T(TEST, "{ last_id=%lu, used=%lu } =>", idx->last_id, idx_size());
 	DO(head?head:idx_size(),
-		e = vec_at(idx, i, Pair);
+		e = vec_at(idx->pairs, i, Pair);
 		if (!e->rec_id)
 			T(TEST, " %lu:(%lu -> %lu)", i, e->rec_id, e->pos);
 	)
@@ -118,7 +123,7 @@ V idx_dump(UJ head) {
 
 UJ idx_each(IDX_EACH fn, V*arg) {
 	LOG("idx_each")
-	FILE* in;
+	FILE*in;
 	xfopen(in, db_file, "r", NIL);
 	UJ rcnt, pos = 0;
 	W((rcnt = fread(buf, SZ_REC, RECBUFLEN, in))) {
@@ -149,12 +154,11 @@ UJ idx_page(IDX_EACH fn, V*arg, I page, I page_sz) {
 	R pos;
 }
 
-
 //! rebuild index from scratch
 //! \return # recs loaded, NIL on error
 Z UJ idx_rebuild() {
 	LOG("idx_rebuild");
-	FILE* in;
+	FILE*in;
 	xfopen(in, db_file, "r", NIL);
 
 	UJ rcnt, pos=0;
@@ -166,40 +170,44 @@ Z UJ idx_rebuild() {
 			Rec b = &buf[i];
 			e.rec_id = b->rec_id;
 			e.pos = pos++;
-			vec_add(idx, e);
-		)
+			vec_add(idx->pairs, e);)
 	}
 
 	fclose(in);
 
 	idx_sort();
-	idx_dump(0);
+	idx_dump(0); // show zero pairs
 
 	Pair last = e;
-	idx->hdr = last.rec_id; 	//< use VEC header field to store last_id
+	idx->last_id = last.rec_id;
 
-	T(INFO, "rebuilt, entries=%lu, last_id=%lu", idx->used, idx->hdr);
+	T(INFO, "rebuilt, entries=%lu, last_id=%lu", idx_size(), idx->last_id);
 	R idx_size();
 }
 
 //! free memory
 Z sz idx_close() {
-	R vec_destroy(idx);
+	sz mem = vec_destroy(idx->pairs);
+	free(idx);
+	R mem;
 }
 
 //! map index into memory from file
 //! \return number of entries, NIL on error
 Z UJ idx_load() {
 	LOG("idx_load");
-	FILE* in;
+	FILE*in;
 	xfopen(in, idx_file, "r", NIL);
 	idx_close();
 	J size = fsize(in);
-	idx = malloc(size);
-	fread(idx, size, 1, in); //< TODO check error
+	idx = malloc(SZ_IDX); chk(idx, NIL);
+	fread(idx, SZ_IDX, 1, in);
+	idx->pairs = malloc(size-SZ_IDX); chk(idx->pairs, NIL);
+	fread(idx->pairs, size-SZ_IDX, 1, in);
 	fclose(in);
+	VEC p = idx->pairs;
 	T(INFO, "%lu bytes, %lu entries, capacity=%lu, last_id=%lu", \
-		size, idx->used, idx->size, idx->hdr);
+		size, p->used, p->size, idx->last_id);
 	mem = size;
 	R idx_size();
 }
@@ -209,16 +217,15 @@ UJ idx_update_hdr() {
 	LOG("idx_update_hdr");
 	FILE*out;
 	xfopen(out, idx_file, "r+", NIL);
-	zseek(out, 0L, SEEK_SET);
-	fwrite(idx, SZ(VEC), 1, out);
+	fwrite(idx, SZ_IDX, 1, out);
 	fclose(out);
 	T(DEBUG, "idx header updated");
-	R 0;
+	R0;
 }
 
 //! get next available id and store it on disk
 UJ next_id() {
-	ID id = ++idx->hdr;
+	ID id = ++idx->last_id;
 	idx_update_hdr();
 	R id;
 }
@@ -228,12 +235,12 @@ UJ idx_update_pos(UJ rec_id, UJ new_pos) {
 	LOG("idx_update_pos");
 	UJ idx_pos = rec_get_idx_pos(rec_id);
 	X(idx_pos==NIL, T(WARN, "rec_get_idx_pos failed"), NIL); //< no such record
-	Pair *i = vec_at(idx, idx_pos, Pair);
+	Pair *i = vec_at(idx->pairs, idx_pos, Pair);
 	i->pos = new_pos;
 
 	FILE*out;
 	xfopen(out, idx_file, "r+", NIL);
-	zseek(out, SZ(VEC)+SZ(Pair)*(idx_pos-1), SEEK_SET);
+	zseek(out, SZ_IDX + SZ_VEC + SZ(Pair) * (idx_pos-1), SEEK_SET);
 	fwrite(i, SZ(Pair), 1, out);
 	fclose(out);
 	T(TEST, "rec_id=%lu, idx_pos=%lu, new_pos=%lu", rec_id, idx_pos, new_pos);
@@ -246,7 +253,7 @@ UJ idx_add(ID rec_id, UJ db_pos) {
 	Pair e = (Pair){0,0};
 	e.rec_id = rec_id;
 	e.pos = db_pos;
-	vec_add(idx, e);
+	vec_add(idx->pairs, e);
 	T(DEBUG, "rec_id=%lu, pos=%lu", rec_id, db_pos);
 	R idx_save(); //< TODO append single item instead of full rewrite
 }
@@ -268,7 +275,7 @@ Z UJ db_dump() {
 	FILE*in;
 	xfopen(in, db_file, "r", NIL);
 	UJ rcnt;
-	while((rcnt = fread(buf, SZ_REC, RECBUFLEN, in))) {
+	W((rcnt = fread(buf, SZ_REC, RECBUFLEN, in))) {
 		T(DEBUG, "read %lu records", rcnt);
 		DO(rcnt, rec_print_dbg(&buf[i]);)
 	}
@@ -290,8 +297,9 @@ Z UJ idx_open() {
 	X(idx_fsize==NIL, T(WARN, "fsize(%d) reports error", idx_file), NIL);
 	fclose(in);
 
-	idx = vec_init(RECBUFLEN, Pair);
-	X(idx==NULL, T(WARN, "cannot initialize memory for index"), NIL);
+	idx = (IDX)malloc(SZ_IDX);chk(idx,NIL);
+	idx->pairs = vec_init(RECBUFLEN, Pair);
+	X(idx->pairs==NULL, T(WARN, "cannot initialize memory for index"), NIL);
 
 	if (!idx_fsize) { //! empty index
 		UJ b_written = idx_save();
@@ -316,12 +324,12 @@ Z UJ idx_open() {
 }
 
 UJ db_init(S d, S i) {
-	LOG("db_init");
+	LOG(" db_init");
 	scpy(db_file, d, MAX_FNAME_LEN);
 	scpy(idx_file, i, MAX_FNAME_LEN);
 	UJ idx_size = idx_open();
-	T(INFO, "database initialized");
-	R vec_mem(idx);
+	T(DEBUG, "database initialized");
+	R vec_mem(idx->pairs);
 }
 
 sz db_close() {
