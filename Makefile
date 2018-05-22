@@ -1,6 +1,6 @@
 CC=gcc-8
 CC=gcc
-CCOPTS=-mavx2 -ffast-math -march=native -flto -mfpmath=sse -funroll-loops -Ofast -g
+#CCOPTS=-mavx2 -ffast-math -march=native -flto -mfpmath=sse -funroll-loops -Ofast
 CCOPTS=-Og -g
 #VLG=/opt/valgrind/bin/valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes
 VLG=
@@ -86,4 +86,6 @@ clean:
 
 nodatafiles:
 	rm -f dat/books.*
+
+#:~
 
