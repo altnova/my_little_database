@@ -13,11 +13,15 @@
 #include "cfg.h"
 #include "trc.h"
 #include "hsh.h"
+#include "vec.h"
+#include "bin.h"
+#include "set.h"
 #include "tok.h"
 #include "usr.h"
 #include "clk.h"
 #include "rec.h"
 #include "str.h"
+#include "cli.h"
 #include "idx.h"
 
 //! general config
@@ -401,7 +405,7 @@ ZI cli_cmd_rec_list(S arg){
 	I pad = 3;
 	CH(" ", pad);YELL("!");O(" next");
 	CH(" ", pad);YELL("!!");O(" prev");
-	CH(" ", pad);YELL("!");BLUE("page");O(" jump");
+	CH(" ", pad+1);YELL("!");BLUE("page");O(" jump");
 	NL();NL();
 	R0;}
 
@@ -452,7 +456,10 @@ I main(I ac, S* av) {
 			NL();TB();tok_print_completions_for(q);NL();NL();
 			goto NEXT;
 		}
-		tok_search(q);
+
+		SET res = set_init(SZ(UH), (CMP)cmp_);
+		tok_search(q, res);
+		set_destroy(res);
 		NEXT:
 		WIPE(q, qlen);
 	)
