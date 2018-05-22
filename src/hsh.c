@@ -380,7 +380,6 @@ ZI hsh_test(sz rand_cnt, sz rand_len) {
 
 	//! test each
 	VEC out = vec_init(1, UJ);
-	out->grow_factor = 100;
 	hsh_each(ht, hsh_test_each_fn, (V*)&out);
 	TSTART();
 	T(TEST, "vec_each result -> ");

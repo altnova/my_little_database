@@ -53,8 +53,8 @@ ext BKT hsh_ins(HT ht, V*k, sz n, V*payload);
 //! lookup key,payload,bucket by key
 //! \param s,n key,len
 //! \return ptr to str, NULL if not found
-ext V* hsh_get(HT ht, V*k, sz n);
-ext V* hsh_get_payload(HT ht, V*k, sz n);
+ext V*  hsh_get(HT ht, V*k, sz n);
+ext V*  hsh_get_payload(HT ht, V*k, sz n);
 ext BKT hsh_get_bkt(HT ht, V*k, sz n);
 
 //! dump hash table metrics
@@ -66,30 +66,31 @@ ext V hsh_dump(HT ht);
 //! \brief average bucket tail length
 //! better performance when closer to 1
 //! \see HT->rounds
-ext E hsh_bavg(HT ht);
+ext E  hsh_bavg(HT ht);
 
 //! \brief load factor
 //! better keyspace utilization when closer to 1
-ext E hsh_factor(HT ht);
+ext E  hsh_factor(HT ht);
 
 //! total bytes
 ext sz hsh_mem(HT ht);
 
 //! pack values into a contiguous heap to improve data locality
 //! \return 1 if ok, 0 if error
-ext C hsh_pack(HT ht);
+ext C  hsh_pack(HT ht);
 
 //! apply fn() to each bucket in the table
 //! \param fn function that takes (BT bkt, V* arg, HTYPE i)
 //! \param arg argument to be passed to each fn() call
 typedef V(*HT_EACH)(BKT bkt, V*arg, HTYPE i); //< hsh_each function interface
-ext V hsh_each(HT ht, HT_EACH fn, V*arg);
+ext V  hsh_each(HT ht, HT_EACH fn, V*arg);
 
-//! debug print bucket
-ext V hsh_print(BKT b);
+//! print bucket contents
+ext V  hsh_print(BKT b);
 
-//! release hash table
+//! release memory
 ext sz hsh_destroy(HT ht);
+
 
 //:~
 
