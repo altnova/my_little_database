@@ -1,16 +1,15 @@
 //!\file vec.h \brief vector api
 
 typedef struct vector {
-	UJ hdr;			//< reserved
-	sz used;		//< occupied
+//	 C grow_factor;	//< size multiplier on realloc, defaults to 2, never set to <2
 	sz size;		//< current capacity
-	C grow_factor;	//< size multiplier on realloc, defaults to 2, never set to <2
+	sz used;		//< occupied
 	UI el_size;		//< element size
-	G data[0];		//< struct hack
-} pVEC;
+	 G data[0];		//< struct hack
+} __attribute__((packed)) pVEC;
 
 typedef pVEC* VEC;
-#define SZ_HDR SZ(pVEC) //< vector header size
+#define SZ_VEC SZ(pVEC) //< vector header size
 
 //! public api
 //! \param a,el,t,n,i vector, element, type, count, index

@@ -9,12 +9,12 @@
 VEC vec_init_(sz n, UI t) {
 	LOG("arr_init");
 	X(!t, T(WARN, "zero element width"), NULL);
-	sz init_size = SZ_HDR + n * t;
+	sz init_size = SZ_VEC + n * t;
 	VEC a = (VEC)malloc(init_size); chk(a,0);
 	a->used = 0;
 	a->size = n;
 	a->el_size = t;
-	a->grow_factor = 2;
+	//a->grow_factor = 2;
 	T(TRACE, "at %p", a);
 	R a;}
 
@@ -39,7 +39,7 @@ sz vec_destroy(VEC a){
 }
 
 sz vec_mem(VEC a){
-	R SZ_HDR + a->el_size * a->size;
+	R SZ_VEC + a->el_size * a->size;
 }
 
 sz vec_size(VEC a){
@@ -55,9 +55,9 @@ VEC vec_add_(V** aptr, V* el){
 	LOG("vec_add");
 	VEC a = *aptr;
 	if(vec_full(a)) {
-		X(a->grow_factor<2, T(FATAL,"grow_factor is less than 2"), NULL)
-		a->size *= a->grow_factor;
-		sz new_size = SZ_HDR + a->el_size * a->size;
+		//X(a->grow_factor<2, T(FATAL,"grow_factor is less than 2"), NULL)
+		a->size *= 2;//a->grow_factor;
+		sz new_size = SZ_VEC + a->el_size * a->size;
 		a = realloc(a, new_size);chk(a,NULL);
 		*aptr = a;
 		T(DEBUG, "realloc to %lu (%p)", a->size, *aptr);
@@ -71,7 +71,7 @@ sz  vec_compact(VEC*aptr) {
 	VEC a = *aptr;
 	a->size = a->used;
 	sz mem = vec_mem(a);
-	sz new_size = SZ_HDR + a->el_size * a->size;
+	sz new_size = SZ_VEC + a->el_size * a->size;
 	a = realloc(a, new_size);chk(a,0);
 	sz save = mem - new_size;
 	*aptr = a;
