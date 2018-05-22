@@ -37,15 +37,15 @@ typedef struct idx_entry {
 
 //! database record
 typedef struct record {
-	ID rec_id;
+   ID rec_id;
 	H pages;
 	H year;
 	C publisher[101];
 	C title[201];
 	C author[51];
 	C subject[2001];
-	I lengths[4];
-} pRec;
+	H lengths[4];
+} __attribute__((packed)) pRec;
 
 typedef pRec bufRec[RECBUFLEN];
 typedef pRec* Rec; //< use this one
@@ -67,6 +67,6 @@ ZI rec_field_offsets[] = {
 
 #define FTI_FIELD_COUNT 6 //< count of full-text search fields
 //! delimiters for text tokenizer
-#define FTI_TOKEN_DELIM " %$`^0123456789#@_?~;&/\\,!|+-.:()[]{}<>*=\"\t\n\r" 
+#define FTI_TOKEN_DELIM "' %$`^0123456789#@_?~;&/\\,!|+-.:()[]{}<>*=\"\t\n\r\0" 
 
 //:~
