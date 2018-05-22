@@ -48,10 +48,10 @@ UJ set_size(SET s) {
 	R s->items->used;
 }
 
-V set_destroy(SET s) {
-	vec_destroy(s->items);
+sz set_destroy(SET s) {
+	sz rel = vec_destroy(s->items);
 	free(s);
-}
+	R rel;}
 
 V set_intersection(SET a, SET b, SET dest) {
 	C r = set_size(a)<set_size(b);
@@ -69,7 +69,6 @@ I main() {
 	LOG("set_test");
 
 	J keys[] = {1,3,4,5,6,7,8};
-	//S payloads[] = {"ABBOT", "ABBEY", "ABACUS", "ABOLITION", "ABOLITIONS", "ABORTION", "ABORT", "ZERO"};
 
 	SET s=set_init(SZ(J), (CMP)cmp_);
 	X(!s,T(FATAL,"cannot init set"),1);
@@ -124,7 +123,6 @@ I main() {
 		DO(set_size(interx),T(TEST, "%2ld ", *vec_at(interx->items,i,J)));
 		T(TEST, ") = %lu", set_size(interx));
 	TEND();
-
 
 	T(TEST, "intersection len=%lu", set_size(interx));
 
