@@ -6,7 +6,7 @@
 
 //! type system
 typedef char C;
-typedef char* S;
+typedef char*S;
 typedef int I;
 typedef short H;
 typedef void V;
@@ -14,6 +14,7 @@ typedef float E;
 typedef unsigned long UJ;
 typedef long J;
 typedef unsigned int UI;
+typedef unsigned short UH;
 typedef unsigned char G;
 typedef size_t sz;
 
