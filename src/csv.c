@@ -17,7 +17,7 @@ Z UJ currline;
 
 ZV rec_print(Rec r){
 	LOG("rec_print");
-	T(TEST, "id=(%lu) pages=(%d) year=(%d) title=(%s) author=(%s)",
+	T(DEBUG, "id=(%lu) pages=(%d) year=(%d) title=(%s) author=(%s)",
 		r->rec_id, r->pages, r->year, r->title, r->author);
 }
 
@@ -159,9 +159,15 @@ Z UJ csv_test(S csv_file, S db_file) {
 I main(I argc, S*argv){
 	LOG("csv_main");
 	UJ res;
-	X((res=csv_test(argv[1], argv[2]))==NIL,
-		T(FATAL, "csv parser test failed"), 1)
-	T(TEST, "loaded %d records", res);
+
+	ASSERT(argc==4, "should have 3 arguments")
+	ASSERT(fexist(argv[1]), "source csv file should exist")
+	UJ expected = atoi(argv[3]);
+	ASSERT(expected>0, "3rd argument should be a number greater than 0")
+
+	res = csv_test(argv[1], argv[2]);
+	ASSERT(res!=NIL, "csv parser should complete normally")
+	ASSERT(res==expected, "imported record count should match expected value")
 	R0;
 }
 #endif

@@ -16,9 +16,9 @@ idx: clean
 	$(VLG) ./bin/idx
 
 csv: clean nodatafiles
-	$(CC) -DRUN_TESTS_CSV $(CCOPTS) -o bin/csv src/trc.c src/csv.c
-	$(VLG) ./bin/csv csv/books.csv dat/books.dat
-	#$(VLG) ./bin/csv csv/sample.csv dat/books.dat
+	$(CC) -DRUN_TESTS_CSV $(CCOPTS) -o bin/csv src/trc.c src/fio.c src/csv.c
+	#$(VLG) ./bin/csv csv/books.csv dat/books.dat 39673
+	$(VLG) ./bin/csv csv/sample.csv dat/books.dat 17
 
 set: clean
 	$(CC) -DRUN_TESTS_SET $(CCOPTS) -o bin/set src/trc.c src/bin.c src/vec.c src/set.c
