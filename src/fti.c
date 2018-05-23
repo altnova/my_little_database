@@ -385,9 +385,7 @@ I main() {
 
 	fti_dec_mem("test_vec", vec_destroy(test_vec));
 
-	fti_shutdown();
-
-	R0;}
+	R fti_shutdown();}
 
 #endif
 
