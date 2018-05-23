@@ -5,15 +5,6 @@
 //! 97 ascii lowercase, 65 ascii uppercase
 #define TRI_RANGE_OFFSET 97
 
-typedef struct trie {
-	UJ cnt;
-	sz mem;
-	struct node* root;
-} pTRIE;
-
-#define SZ_TRIE SZ(pTRIE)
-typedef pTRIE* TRIE;
-
 typedef struct node {
 	C key;
 	V* payload;
@@ -24,6 +15,15 @@ typedef struct node {
 
 #define SZ_NODE SZ(pNODE)
 typedef pNODE* NODE;
+
+typedef struct trie {
+	UJ cnt;
+	sz mem;
+	NODE root;
+} pTRIE;
+
+#define SZ_TRIE SZ(pTRIE)
+typedef pTRIE* TRIE;
 
 ext TRIE tri_init();
 
