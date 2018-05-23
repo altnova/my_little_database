@@ -1,7 +1,6 @@
 //!\file vec.h \brief vector api
 
 typedef struct vector {
-//	 C grow_factor;	//< size multiplier on realloc, defaults to 2, never set to <2
 	sz size;		//< current capacity
 	sz used;		//< occupied
 	UI el_size;		//< element size
