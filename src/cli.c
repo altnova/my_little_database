@@ -143,9 +143,7 @@ ZV cli_help_db() {
 		 NL();}
 
 ZV cli_usage() {
-
 	cli_banner();
-
 	FTI_INFO fti_info = tok_info();
 	TB();GREEN("indexed fields:");CH(" ",17);
 	DO(FTI_FIELD_COUNT,
@@ -283,7 +281,7 @@ ZI cli_cmd_rec_edit_loop(Rec r, S prompt, S mode, REC_FN rec_fn){
 			NL();TB();O("record %lu: %s %s", r->rec_id, mode, (res==NIL)?"fail":"ok");NL();NL();
 			goto DONE;break;}
 		if(qlen==1&&*q=='\\'){
-			NL();TB();O("record %lu: %s %s", r->rec_id, mode, "cancelled");NL();NL();
+			NL();TB();O("record %lu: %s %s", r->rec_id, mode, "canceled");NL();NL();
 			goto DONE;break;}
 		S colon_pos = schr(q, ':');
 		if(!colon_pos){goto AGAIN;break;}

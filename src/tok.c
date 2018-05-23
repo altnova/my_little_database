@@ -83,6 +83,10 @@ Z UJ tok_load_stop_words(S fname) {
 ZI tok_cmp_qsort(const V*a, const V*b) {R ((UJ)a)-((UJ)b);}
 ZV tok_wordbag_adjust_ptr(BKT bkt, V*diff, UJ i) { bkt->payload -= (J)diff; }
 
+V tok_print_completions_for(S query) {
+	LOG("tok_get_completions_for");
+	T(WARN, "not yet implemented");
+}
 /*
 ZV tok_wordbag_adjust_ptr(NODE bkt, V*diff, I depth) { bkt->payload -= (J)diff; }
 ZV tok_store_completion(NODE n, VEC**vec, I depth) {if(n&&n->payload)vec_add(*vec, n);}
@@ -120,9 +124,9 @@ V tok_search(S query, FTI_SEARCH_CALLBACK fn) {
 		T(TEST, "sending %s (%d)", tok, tok_len);
 
 		(DO(FTI_FIELD_COUNT,
-			SET docset;
-			if(!docset){T(TEST, "no docset for %s", tok);continue;}
-			T(TEST, "docset: %lu", set_size(docset));
+			SET docset = hsh_get_payload(terms[i], tok, tok_len);
+			if(!docset){T(DEBUG, "%d: no docset for %s", i, tok);continue;}
+			T(TEST, "%d: docset: %lu", i, set_size(docset));
 		))
 	)
 }

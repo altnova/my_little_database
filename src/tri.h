@@ -30,16 +30,16 @@ ext TRIE tri_init();
 ext NODE tri_insert(TRIE t, S key, UJ n, V*payload);
 ext NODE tri_upsert(TRIE t, S key, UJ n, V*payload);
 ext NODE tri_get(TRIE t, S key);
-ext C tri_is_leaf(NODE n);
-ext V tri_dump(TRIE t);
-ext V tri_dump_from(TRIE t, NODE n);
+ext C    tri_is_leaf(NODE n);
+ext V    tri_dump(TRIE t);
+ext V    tri_dump_from(TRIE t, NODE n);
 
 typedef V(*TRIE_EACH)(NODE n, V*arg, I depth); //< tri_each function interface
-ext V tri_each(TRIE t, TRIE_EACH fn, V*arg);
-ext V tri_each_from(TRIE t, NODE n, TRIE_EACH fn, V*arg);
-ext V tri_each_reverse(TRIE t, TRIE_EACH fn, V*arg);
+ext V    tri_each(TRIE t, TRIE_EACH fn, V*arg);
+ext V    tri_each_from(TRIE t, NODE n, TRIE_EACH fn, V*arg);
+ext V    tri_each_reverse(TRIE t, TRIE_EACH fn, V*arg);
 
-ext sz tri_destroy(TRIE t);
+ext sz   tri_destroy(TRIE t);
 
 
 //:~
