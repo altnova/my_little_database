@@ -18,6 +18,16 @@ SET set_init(sz el_size, CMP cmpfn) {
 	R s;
 }
 
+SET set_clone(SET from) {
+	LOG("set_clone");
+	SET s = (SET)calloc(SZ_SET,1);chk(s,NULL);
+	s->cmpfn = from->cmpfn;
+	sz vsize = vec_mem(from->items);
+	s->items = (VEC)calloc(vsize,1);chk(s->items,NULL);
+	mcpy(s->items,from->items,vsize);
+	R s;
+}
+
 V* set_get(SET s, V*key) {
 	LOG("set_get");
 	UJ i = binx_(s->items->data, key, s->items->el_size, s->items->used, (CMP)s->cmpfn);
@@ -48,20 +58,23 @@ UJ set_size(SET s) {
 	R s->items->used;
 }
 
-sz set_destroy(SET s) {
-	sz rel = vec_destroy(s->items);
-	free(s);
-	R rel;}
+V set_clear(SET s) {
+	vec_clear(s->items);}
 
 V set_intersection(SET a, SET b, SET dest) {
-	C r = set_size(a)<set_size(b);
-	SET needles = r?a:b; SET haystack = r?b:a;
+	//C r = set_size(a)<=set_size(b);
+	//SET needles = r?a:b; SET haystack = r?b:a;
+	SET needles = a, haystack = b;
 	DO(set_size(needles),
 		V*ndl = vec_at_(needles->items, i);
 		if(set_get(haystack, ndl))
 			set_add(dest, ndl);
-	)
-}
+	)}
+
+sz set_destroy(SET s) {
+	sz rel = vec_destroy(s->items);
+	free(s);
+	R rel;}
 
 #ifdef RUN_TESTS_SET
 
@@ -97,8 +110,7 @@ I main() {
 	//TEND();
 
 	SET s1 = set_init(SZ(J), (CMP)cmp_);
-	//set_add(s1, &keys[0]);
-	set_add(s1, &v3); // fail - out of order
+	set_add(s1, &v3);
 	set_add(s1, &keys[1]);
 	set_add(s1, &keys[2]);
 	set_add(s1, &v1);
@@ -107,7 +119,7 @@ I main() {
 	set_add(s1, &v4);
 
 	SET interx = set_init(SZ(J), (CMP)cmp_);
-	set_intersection(s,s1,interx);
+	set_intersection(s1,s,interx);
 
 	TSTART();T(TEST,"(");
 		DO(set_size(s),T(TEST, "%2ld ", *vec_at(s->items,i,J)));
@@ -124,11 +136,21 @@ I main() {
 		T(TEST, ") = %lu", set_size(interx));
 	TEND();
 
-	T(TEST, "intersection len=%lu", set_size(interx));
+	T(TEST, "intersection len=%lu, at=%p", set_size(interx), interx);
+
+	SET clone = set_clone(interx);
+
+	TSTART();T(TEST,"(");
+		DO(set_size(clone),T(TEST, "%2ld ", *vec_at(clone->items,i,J)));
+		T(TEST, ") = %lu", set_size(clone));
+	TEND();
+
+	T(TEST, "clone len=%lu, at=%p", set_size(clone), clone);
 
 	set_destroy(s);
 	set_destroy(s1);
 	set_destroy(interx);
+	set_destroy(clone);
 	R0;
 }
 
