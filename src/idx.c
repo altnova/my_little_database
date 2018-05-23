@@ -36,14 +36,13 @@ Z UJ idx_save() {
 	LOG("idx_save");
 	FILE*out;
 	xfopen(out, idx_file, "w+", NIL);
-	VEC p = idx->pairs;
-	vec_compact(&p);
+	vec_compact(&idx->pairs);
 	fwrite(idx, SZ_IDX, 1, out);
-	fwrite(idx->pairs, vec_mem(p), 1, out);
+	fwrite(idx->pairs, vec_mem(idx->pairs), 1, out);
 	UJ idx_fsize = fsize(out);
 	fclose(out);
 	mem = idx_fsize;
-	T(TRACE, "saved %lu bytes", idx_fsize);
+	T(INFO, "saved %lu+%lu = %lu bytes", SZ_IDX, vec_mem(idx->pairs), idx_fsize);
 	R idx_fsize;
 }
 
@@ -298,6 +297,7 @@ Z UJ idx_open() {
 	fclose(in);
 
 	idx = (IDX)malloc(SZ_IDX);chk(idx,NIL);
+	idx->last_id = 0;
 	idx->pairs = vec_init(RECBUFLEN, Pair);
 	X(idx->pairs==NULL, T(WARN, "cannot initialize memory for index"), NIL);
 
