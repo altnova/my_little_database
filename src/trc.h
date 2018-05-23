@@ -32,7 +32,6 @@ ext V TSTART(), TEND();
 ext V BYTES_AS_STR(S str,I n);
 
 //! test
-
 #define ASSERT(x,text) if(!(x))T(FATAL, "\e[1;31m✖ %s\e[0m", text); else T(TEST, "\e[1;32m✓\e[0m %s", text);
 
 //! check malloc ptr
