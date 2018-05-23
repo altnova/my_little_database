@@ -262,10 +262,9 @@ ZI cli_cmd_rec_edit_loop(Rec r, S prompt, S mode, REC_FN rec_fn){
 	NL();TB();
 	DO(FTI_FIELD_COUNT,
 		COLOR_START_BOLD(C_YELL);O("%lu: ", i+1);COLOR_END();
-		COLOR_START(C_BLUE);O("%s   ", rec_field_names[i]);COLOR_END();
-	)
-	NL();
-	TB();
+		COLOR_START(C_BLUE);O("%s   ", rec_field_names[i]);COLOR_END();)
+	NL();TB();
+
 	I pad = 6;
 	YELL("field:");BLUE("value");O(" - update field");
 	CH(" ", pad);YELL("=");O(" - save changes");
@@ -275,21 +274,21 @@ ZI cli_cmd_rec_edit_loop(Rec r, S prompt, S mode, REC_FN rec_fn){
 	USR_LOOP(usr_input_str(q, prompt, "inavalid characters"),
 		cli_update_dimensions();
 		I qlen = scnt(q);
-		if(!qlen||*q==10){goto AGAIN;break;}
+		if(!qlen||*q==10){goto AGAIN;}
 		if(qlen==1&&*q=='='){
 			UJ res = rec_fn(r);
 			NL();TB();O("record %lu: %s %s", r->rec_id, mode, (res==NIL)?"fail":"ok");NL();NL();
-			goto DONE;break;}
+			goto DONE;}
 		if(qlen==1&&*q=='\\'){
 			NL();TB();O("record %lu: %s %s", r->rec_id, mode, "canceled");NL();NL();
-			goto DONE;break;}
+			goto DONE;}
 		S colon_pos = schr(q, ':');
-		if(!colon_pos){goto AGAIN;break;}
+		if(!colon_pos){goto AGAIN;}
 		*colon_pos='\0';
 		I fld_id = atoi(q);
-		if(!fld_id){goto AGAIN;break;}
+		if(!fld_id){goto AGAIN;}
 		fld_id--;
-		if(!rec_field_names[fld_id]){goto AGAIN;break;}
+		if(!rec_field_names[fld_id]){goto AGAIN;}
 		TB();O("%s -> (%s)\n", rec_field_names[fld_id], colon_pos+1);
 		H num;
 		if(fld_id<2) {
@@ -297,7 +296,7 @@ ZI cli_cmd_rec_edit_loop(Rec r, S prompt, S mode, REC_FN rec_fn){
 			rec_set(r, fld_id, &num);
 		} else
 			rec_set(r, fld_id, colon_pos+1);
-		goto AGAIN;break;
+		goto AGAIN;
 	)
 	DONE:
 	R res;}
@@ -391,27 +390,26 @@ ZI cli_cmd_rec_list(S arg){
 	I width = cols * .9;
 	I title_max = width * .7;
 	I author_max = width-title_max-6;
-	//T(TEST, "colwidths: %d %d %d", width, title_max, author_max);
-	//R1;
+	//T(TEST, "colwidths: %d %d %d", width, title_max, author_max);R1;
 	UI cols[3] = {6, title_max, author_max};
 
 	// start table
 	BOX_START(width, (I*)&cols, 3);
 	UJ res = idx_page(cli_list_rec, NULL, page_id-1, CLI_PAGE_SIZE); // read records
 	BOX_END(width, (I*)&cols, 3);
-	TB();I len = O("        [%lu/%lu]", page_id, total_pages);
-	I pad = 3;
-	CH(" ", pad);YELL("!");O(" next");
-	CH(" ", pad);YELL("!!");O(" prev");
-	CH(" ", pad+1);YELL("!");BLUE("page");O(" jump");
+
+	// print paging help
+	TB();O("        [%lu/%lu]", page_id, total_pages);
+	CH(" ", 3);YELL("!");O(" next");
+	CH(" ", 3);YELL("!!");O(" prev");
+	CH(" ", 4);YELL("!");BLUE("page");O(" jump");
 	NL();NL();
 	R0;}
 
 ZI cli_cmd_debug(S arg){
 	idx_dump(0);
 	fti_print_memmap();
-	R0;
-}
+	R0;}
 
 I main(I ac, S* av) {
 	LOG("cli_main");
@@ -466,3 +464,5 @@ I main(I ac, S* av) {
 	EXIT:
 	cli_shutdown(0);
 }
+
+//:~
