@@ -118,9 +118,9 @@ I main() {
 
 	J v1 = 9, v2 = 8, v3 = 2, v4 = 11, v5 = 13;
 	ASSERT(set_get(s, &v5)==NULL, "set_get() should work as expected (#2)")
-	ASSERT(set_add(s, &v1), "adding ordered item should work")
+	ASSERT(set_add(s, &v1), "adding an ordered item should work")
 	ASSERT(!set_add(s, &v2), "adding an exising item should have no effect")
-	ASSERT(!set_add(s, &v3), "adding unordered item should have no effect")
+	ASSERT(!set_add(s, &v3), "adding an unordered item should have no effect")
 
 	J more_keys[] = {10,11,12};
 

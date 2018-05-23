@@ -29,7 +29,7 @@ V* bag_add(BAG h, V*obj, sz obj_sz) {
 		h->size *= BAG_GROW_FACTOR;
 		if((obj_sz+h->used) > h->size)goto REALLOC;
 		offset = old_ptr-(h->ptr);
-		T(TRACE, "realloc bag %lu, diff=%lu", h->size, offset);
+		//T(TEST, "realloc bag %lu, diff=%lu", h->size, offset);
 	}
 	V*obj_addr=h->ptr+(h->used);
 	mcpy(obj_addr, obj, obj_sz);
@@ -38,11 +38,18 @@ V* bag_add(BAG h, V*obj, sz obj_sz) {
 	h->cnt++;
 	R obj_addr;}
 
+sz bag_mem(BAG h) {
+	R SZ_BAG+h->size;}
+
+E bag_lfactor(BAG h) {
+	R (E)h->used/h->size;
+}
+
 sz bag_destroy(BAG h) {
 	sz released = h->size;
 	free(h->ptr);
 	free(h);
-	R released;
+	R SZ_BAG+released;
 }
 
 #ifdef RUN_TESTS_BAG
@@ -50,21 +57,30 @@ sz bag_destroy(BAG h) {
 I main() {
 	LOG("bag_test");
 
-	S keys[] = {"abbot", "abbey", "abacus", "abolition", "abolitions", "abortion", "abort", "zero"};
+	S keys[] = {"abbot", "abbey", "abacus", "abolition", "abolitions", "abortion", "abort", "zero", "ninth"};
+	S raw = "abbotabbeyabacusabolitionabolitionsabortionabortzeroninth";
+	sz sz_raw = scnt(raw);
 
 	BAG h=bag_init(1);
-	X(!h,T(FATAL,"cannot init bag"),1);
 
-	S obj;
-	DO(8,
-		obj = (S)bag_add(h, keys[i], scnt(keys[i]));
-		X(!obj, T(FATAL, "can't add to bag"), 1);
-		T(TEST, "added %s, offset=%ld", keys[i], h->offset))
+	ASSERT(h!=NULL, "should be able to create a bag")
 
-	T(TEST,"added %lu objects", h->cnt);
-	T(TEST,"bag contents: (%s)", h->ptr);
+	S obj; sz added = 0;
+	DO(9,
+		sz l = scnt(keys[i]);
+		added += l;
+		obj = (S)bag_add(h, keys[i], l))
 
-	bag_destroy(h);
+	ASSERT(h->cnt==9, "bag_add() should work as expected (#1)")
+	ASSERT(added==h->used, "bag_add() should work as expected (#2)")
+	ASSERT(64==h->size, "bag should grow as expected")
+	ASSERT(h->used==sz_raw, "bag should correctly report content size")
+	ASSERT(!mcmp(h->ptr, raw, sz_raw), "bag content should match prediction")
+
+	sz bytes = bag_mem(h);
+	ASSERT(bytes==(SZ_BAG+64), "bag_mem() should report true size")
+	ASSERT(IN(0.7, bag_lfactor(h), 0.9), "bag_lfactor() should report sane values")
+	ASSERT(bytes==bag_destroy(h), "bag_destroy() should return bytes released")
 
 	R0;
 }
