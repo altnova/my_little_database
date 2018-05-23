@@ -1,4 +1,4 @@
-//! \file tok.h \brief tokenizer definitions
+//! \file fti.h \brief full-text index interface
 
 typedef struct fti_info {
 	UJ   total_records;
@@ -13,14 +13,17 @@ typedef struct fti_info {
 #define SZ_FTI_INFO SZ(pFTI_INFO)
 typedef pFTI_INFO* FTI_INFO;
 
-ext I tok_init();
+ext I fti_init();
 
 typedef V(*FTI_SEARCH_CALLBACK)(Rec);
-ext V tok_search(S query, FTI_SEARCH_CALLBACK fn);
+ext V fti_search(S query, FTI_SEARCH_CALLBACK fn);
 
-ext V tok_print_completions_for(S query);
-ext V tok_print_memmap();
+ext V fti_print_completions_for(S query);
+ext V fti_print_memmap();
 
-ext FTI_INFO tok_info();
-ext V tok_bench();
-ext I tok_shutdown();
+ext FTI_INFO fti_info();
+ext V fti_bench();
+ext I fti_shutdown();
+
+//:~
+
