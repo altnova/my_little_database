@@ -16,7 +16,7 @@
 #include "vec.h"
 #include "bin.h"
 #include "set.h"
-#include "tok.h"
+#include "fti.h"
 #include "usr.h"
 #include "clk.h"
 #include "rec.h"
@@ -144,7 +144,7 @@ ZV cli_help_db() {
 
 ZV cli_usage() {
 	cli_banner();
-	FTI_INFO fti_info = tok_info();
+	FTI_INFO fti_info = fti_stats();
 	TB();GREEN("indexed fields:");CH(" ",17);
 	DO(FTI_FIELD_COUNT,
 		COLOR_START(C_BLUE);O(" %s", rec_field_names[i]);COLOR_END();
@@ -174,7 +174,7 @@ ZV cli_update_dimensions() {
 	rows = ws.ws_row;}
 
 ZV cli_shutdown(I itr) {
-    I res = tok_shutdown();exit(res);}
+    I res = fti_shutdown();exit(res);}
 
 ZI is_db_cmd(C c) {
 	S r=schr(CLI_DB_COMMANDS,c);
@@ -409,7 +409,7 @@ ZI cli_cmd_rec_list(S arg){
 
 ZI cli_cmd_debug(S arg){
 	idx_dump(0);
-	tok_print_memmap();
+	fti_print_memmap();
 	R0;
 }
 
@@ -418,7 +418,7 @@ I main(I ac, S* av) {
 	srand(time(NULL)); //< random seed
 	signal(SIGINT, cli_shutdown); //< catch SIGINT and cleanup nicely
 
-	tok_init();
+	fti_init();
 
 	cli_banner();
 	cli_hint();
@@ -451,13 +451,15 @@ I main(I ac, S* av) {
 		}
 		if(q[qlen-1]=='?'){
 			q[qlen-1]=0;
-			NL();TB();tok_print_completions_for(q);NL();NL();
+			NL();TB();
+			fti_print_completions_for(q);
+			NL();NL();
 			goto NEXT;
 		}
 
-		SET res = set_init(SZ(UH), (CMP)cmp_);
-		tok_search(q, res);
-		set_destroy(res);
+		// not a known command, start search
+		fti_search(q, (FTI_SEARCH_CALLBACK)NULL); // TODO
+
 		NEXT:
 		WIPE(q, qlen);
 	)

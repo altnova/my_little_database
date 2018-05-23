@@ -9,7 +9,7 @@ all: app
 
 db: csv idx
 
-tests: clean str bag tri stm rnd clk fio vec bin hsh set # tok
+tests: clean str bag tri stm rnd clk fio vec bin hsh set # fti
 
 idx: clean
 	$(CC) -DRUN_TESTS_IDX $(CCOPTS) -o bin/idx src/bin.c src/vec.c src/idx.c src/fio.c src/rec.c src/trc.c
@@ -72,12 +72,12 @@ vim:
 	$(CC) -DRUN_TESTS_VIM $(CCOPTS) -o bin/vim src/vec.c src/trc.c src/vim.c
 	$(VLG) ./bin/vim
 
-tok:
-	$(CC) -DRUN_TESTS_TOK $(CCOPTS) -o bin/tok src/set.c src/rnd.c src/bag.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/vec.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/tok.c 
-	$(VLG) ./bin/tok
+fti:
+	$(CC) -DRUN_TESTS_FTI $(CCOPTS) -o bin/fti src/set.c src/rnd.c src/bag.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/vec.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/fti.c 
+	$(VLG) ./bin/fti
 
 app: 
-	$(CC) $(CCOPTS) -o bin/cli src/set.c src/cli.c src/rnd.c src/bag.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/vec.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/tok.c 
+	$(CC) $(CCOPTS) -o bin/cli src/set.c src/cli.c src/rnd.c src/bag.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/vec.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/fti.c 
 	$(VLG) ./bin/cli
 
 clean:

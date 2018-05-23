@@ -182,7 +182,7 @@ UJ fti_index_field(ID rec_id, I field, S s, I flen, UJ DOC_ID) {
 		T(DEBUG, "packed terms in %lums", clk_stop());
 	}
 
-	R fti_cnt;}
+	R tok_cnt;}
 
 Z UJ fti_index_rec(Rec r, V*arg, UJ i) {
 	fti_index_field(r->rec_id, fld_publisher, r->publisher, r->lengths[0], i);
@@ -301,11 +301,11 @@ I fti_init() {
 
 	R0;}
 
-FTI_INFO fti_info() {
+FTI_INFO fti_stats() {
 	R fti_info;
 }
 
-#ifdef RUN_TESTS_TOK
+#ifdef RUN_TESTS_FTI
 
 VEC test_vec;
 

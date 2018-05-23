@@ -21,7 +21,7 @@ ext V fti_search(S query, FTI_SEARCH_CALLBACK fn);
 ext V fti_print_completions_for(S query);
 ext V fti_print_memmap();
 
-ext FTI_INFO fti_info();
+ext FTI_INFO fti_stats();
 ext V fti_bench();
 ext I fti_shutdown();
 
