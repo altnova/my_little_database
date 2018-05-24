@@ -407,8 +407,24 @@ ZI cli_cmd_rec_list(S arg){
 	R0;}
 
 ZI cli_cmd_debug(S arg){
-	idx_dump(0);
-	fti_print_memmap();
+	LOG("cli_cmd_debug");
+	I l = scnt(arg);
+	if(!l) {
+		idx_dump(10);
+		fti_print_memmap();
+		R0;
+	}
+	NL();
+	DO(FTI_FIELD_COUNT,
+		SET docset = fti_get_docset(i, arg, l);
+		if(docset) {
+			TSTART();
+			T(TEST, "docset(%d:%s) -> ", i, arg);
+			DO(set_size(docset), T(TEST, "%d ", *vec_at(docset->items,i,UH)))
+			TEND();
+		}
+	)
+	NL();
 	R0;}
 
 I main(I ac, S* av) {

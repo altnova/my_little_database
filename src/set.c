@@ -34,6 +34,11 @@ V* set_get(SET s, V*key) {
 	R vec_at_(s->items, i);
 }
 
+V* set_get_at(SET s, sz i) {
+	LOG("set_get_at");
+	R vec_at_(s->items, i);
+}
+
 C set_add(SET s, V*key) {
 	LOG("set_add");
 
@@ -87,14 +92,6 @@ C set_contains(SET s, SET subset) {
 		P(set_get(s, vec_at_(subset->items,i))==NULL,0)
 	)
 	R1;}
-
-V set_dump(SET s, S prefix) {
-	LOG("set_dump");
-	TSTART();T(TEST,"%s -> (", prefix);
-		DO(set_size(s),T(TEST, "%2d ", *vec_at(s->items,i,UH)));
-		T(TEST, ") = %lu", set_size(s));
-	TEND();	
-}
 
 sz set_destroy(SET s) {
 	sz dealloc = set_mem(s);

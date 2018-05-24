@@ -22,10 +22,10 @@
 #include "set.h"
 #include "fti.h"
 
-typedef UH FTI_DOCID; 
 #define PACK_EVERY_N_RECS    (8*4096)
 #define WORDBAG_INIT_SIZE    1048576
 #define FTI_STOPWORDS_FILE  "dat/stopwords.txt"
+#define FTI_MIN_TOK_LENGTH   2
 #define USE_WORDBAG          1
 
 Z FTI_INFO fti_info;
@@ -38,7 +38,7 @@ Z SET  out[FTI_FIELD_COUNT];		//< docset intersections, per field
 Z HT   stopwords;	    //< stop words
 Z HT   wordbag;		    //< term -> stem
 Z BAG  wordbag_store;   //< stem heap
-Z SET  docmap;			//< doc_id -> rec_id
+Z VEC  docmap;			//< doc_id -> rec_id
 
 ZC MEM_TRACE=0;
 ZV fti_inc_mem(S label, J bytes) {
@@ -120,18 +120,22 @@ V fti_print_completions_for(S query) {
 V fti_intersect(I field) {
 	VEC res = results[field];
 	sz cnt = vec_size(res);
-	set_clear(out[field]);
-	if(!cnt)R;
+	set_clear(out[field]); // clear previous result
+	if(!cnt)R; // no docsets, bail
+	//! special case: just one docset, clone it
 	if(cnt==1){set_clone(out[field], *vec_at(res,0,SET));R;}
+
+	//! more than one docset: calculate intersection
 	out[field] = set_init(SZ(FTI_DOCID),(CMP)cmp_);
 	I shortest = 0, min_len = set_size(*vec_at(res,0,SET));
+	// find shortest docset
 	DO(cnt-1,
 		SET s = *vec_at(res,i+1,SET);
 		if(set_size(s) < min_len) {
 			shortest = i+1;
 			min_len = set_size(s);
-		}
-	)
+		})
+	// intersect all
 	SET base = *vec_at(res,shortest,SET);
 	DO(cnt,
 		if(i==shortest)continue;
@@ -139,36 +143,56 @@ V fti_intersect(I field) {
 		set_intersection(base,s,out[field]))
 }
 
+SET fti_get_docset(I field, S term, I len) {
+	R(SET)hsh_get_payload(FTI[field], term, len);
+}
+
+Z ID fti_docmap_translate(FTI_DOCID doc_id) {
+	R *(ID*)vec_at_(docmap, doc_id);
+}
+
 V fti_search(S query, FTI_SEARCH_CALLBACK fn) {
 	LOG("fti_search");
 	I qlen = scnt(query);
 	lcse(query,qlen); //< lowercase
-	T(TEST, "raw query: -> (%s)", query);
-	VEC results[FTI_FIELD_COUNT];
+	T(TRACE, "raw query: -> (%s)", query);
 	DO(FTI_FIELD_COUNT, vec_clear(results[i]))
 	stok(query, qlen, FTI_TOKEN_DELIM, 0,
-		if(tok_len<2||hsh_get(stopwords, tok, tok_len))continue;
+		if(tok_len<FTI_MIN_TOK_LENGTH||hsh_get(stopwords, tok, tok_len))continue;
 		//! apply stemmer
 		tok_len = stm(tok, 0, tok_len-1)+1;
 		tok[tok_len] = 0; //< include null
-		T(TEST, "sending %s (%d)", tok, tok_len);
+		//T(TRACE, "sending %s (%d)", tok, tok_len);
 		(DO(FTI_FIELD_COUNT,
-			SET docset = hsh_get_payload(FTI[i], tok, tok_len);
+			SET docset = fti_get_docset(i, tok, tok_len);
 			if(!docset){T(DEBUG, "%d: no docset for %s", i, tok);continue;}
 			T(TEST, "%d: docset: %lu", i, set_size(docset));
 			vec_add(results[i],docset);
 		))
 	)
-	DO(FTI_FIELD_COUNT, fti_intersect(i))
+	DO(FTI_FIELD_COUNT,
+		fti_intersect(i);
+		SET s = out[i];
+		sz l = set_size(s);
+		if(!l) continue;
+		TSTART();
+		T(TEST, "xsection fld:%d -> ", i);
+		DO(l,
+			FTI_DOCID doc_id = *vec_at(s->items,i,FTI_DOCID);
+			ID rec_id = fti_docmap_translate(doc_id);
+			T(TEST, "%lu ", rec_id);
+		)
+		TEND();
+	)
 }
 
-UJ fti_index_field(ID rec_id, I field, S s, I flen, UJ DOC_ID) {
+UJ fti_index_field(ID rec_id, I field, S s, I flen, FTI_DOCID doc_id) {
 	LOG("fti_index_field");
 	lcse(s, flen); //< lowercase
 	I tok_cnt = 0;
 	stok(s, flen, FTI_TOKEN_DELIM, 0,
 
-    	if(tok_len<2||hsh_get(stopwords, tok, tok_len)){
+    	if(tok_len<FTI_MIN_TOK_LENGTH||hsh_get(stopwords, tok, tok_len)){
     		fti_info->stopword_matches++;continue;}
 
        	#ifdef USE_WORDBAG
@@ -203,11 +227,11 @@ UJ fti_index_field(ID rec_id, I field, S s, I flen, UJ DOC_ID) {
 		if(!term->payload)
 			term->payload = set_init(SZ(FTI_DOCID),(CMP)cmp_);
 
-		set_add(term->payload, (FTI_DOCID*)&DOC_ID);
+		set_add(term->payload, (FTI_DOCID*)&doc_id);
 		tok_cnt++;
 	)
 
-	if(((I)DOC_ID%PACK_EVERY_N_RECS)==0) {
+	if(((I)doc_id%PACK_EVERY_N_RECS)==0) {
 		clk_start();
 		hsh_pack(FTI[field]);
 		T(DEBUG, "packed fti in %lums", clk_stop());
@@ -216,18 +240,21 @@ UJ fti_index_field(ID rec_id, I field, S s, I flen, UJ DOC_ID) {
 	R tok_cnt;}
 
 Z UJ fti_index_rec(Rec r, V*arg, UJ i) {
+
 	fti_index_field(r->rec_id, fld_publisher, r->publisher, r->lengths[0], i);
 	fti_index_field(r->rec_id, fld_title, r->title, r->lengths[1], i);
 	fti_index_field(r->rec_id, fld_author, r->author, r->lengths[2], i);
 	fti_index_field(r->rec_id, fld_subject, r->subject, r->lengths[3], i);
+
 	fti_info->total_records++;
-	set_add(docmap, &i); // TODO
+	vec_add(docmap, r->rec_id);
+
 	R0;}
 
-ZV fti_terms_inspect_each(BKT bkt, V*arg, HTYPE i) {
-	LOG("terms_each");
+ZV fti_docsets_pack_each(BKT bkt, V*arg, HTYPE i) {
+	LOG("fti_docsets_pack_each");
 	SET docset = (SET)(bkt->payload);
-	UJ save = vec_compact(&docset->items);
+	UJ savings = vec_compact(&docset->items);
 	UJ* alloc = (UJ*)arg;
 	*alloc += vec_mem(docset->items);
 	/*
@@ -235,9 +262,9 @@ ZV fti_terms_inspect_each(BKT bkt, V*arg, HTYPE i) {
 		docset->items->el_size, docset->items->used, docset->items->size, 
 		vec_mem(docset->items), vec_lfactor(docset->items), save, docset);
 	*/
-	//TSTART();T(TEST,"(");
+	//TSTART();T(TEST,"%s\t-> (", bkt->s);
 	//	DO(set_size(docset),T(TEST, "%lu ", *vec_at(docset->items,i,FTI_DOCID)));
-	//	T(TEST, ") = %lu", set_size(docset));
+	//	T(TEST, ")");
 	//TEND();
 	//if(2>docset->items->used)R;
 	//DO(set_size(docset), O("%lu ", *vec_at(docset->items,i,FTI_DOCID)));O("\n\n");
@@ -267,7 +294,7 @@ I fti_shutdown() {
 		vec_destroy(results[i]); // TODO iterate and destroy sets
 	)
 
-	fti_dec_mem("docmap", set_destroy(docmap));
+	fti_dec_mem("docmap", vec_destroy(docmap));
 
 	if (fti_info->total_mem){
 		T(WARN, "unclean shutdown, \e[91mmem=%ld, cnt=%ld\e[0m", fti_info->total_mem, fti_info->total_alloc_cnt);
@@ -291,14 +318,14 @@ I fti_init() {
 	fti_inc_mem("file_index",
 		db_init(DAT_FILE, IDX_FILE));
 
-	// init fti and docmap
+	// init fti
 	DO(FTI_FIELD_COUNT,
 		FTI[i] = hsh_init(2,1);
 		results[i] = vec_init(1,SET);
 		out[i] = set_init(SZ(FTI_DOCID), (CMP)cmp_);
 	)
 
-	docmap = set_init(SZ(FTI_DOCID),(CMP)cmp_); // TODO
+	docmap = vec_init(1, ID);
 
 	//! init wordbag
 	wordbag = hsh_init(2,1);
@@ -318,21 +345,21 @@ I fti_init() {
 	UJ res = idx_each(fti_index_rec, NULL);
 
 	X(res==NIL,T(FATAL, "unable to index records"), 1);
-	T(INFO, "indexed \e[1;37m%lu records in %lums", res, clk_diff(idx_start, clk_start()));
+	T(INFO, "indexed \e[1;37m%lu records in %lums\e[0m", res, clk_diff(idx_start, clk_start()));
 	T(TEST, "stopword hits %lu", fti_info->stopword_matches);
 
 	fti_inc_mem("wordbag", wordbag->mem);
-	fti_inc_mem("docmap", set_mem(docmap));
+	fti_inc_mem("docmap", vec_mem(docmap));
 	fti_inc_mem("wordbag_store", bag_mem(wordbag_store));
 
 	DO(FTI_FIELD_COUNT,
 		sz docsets_alloc = 0;
-		hsh_each(FTI[i], (HT_EACH)fti_terms_inspect_each, &docsets_alloc);
+		hsh_each(FTI[i], (HT_EACH)fti_docsets_pack_each, &docsets_alloc);
 		fti_inc_mem("docsets", docsets_alloc);
 		fti_inc_mem("fti", FTI[i]->mem);
 		hsh_info(FTI[i]);
 	)
-	T(TEST, "inspected docsets in %lums", clk_stop());
+	T(TEST, "packed docsets in %lums", clk_stop());
 
 	hsh_pack(wordbag);
 	hsh_info(wordbag);
@@ -342,6 +369,16 @@ I fti_init() {
 FTI_INFO fti_stats() {
 	R fti_info;
 }
+
+V fti_dump_docmap() {
+	LOG("fti_dump_docmap");
+	TSTART();
+	DO(vec_size(docmap),
+		T(TEST, "%lu ", *vec_at(docmap,i,ID))
+	)
+	TEND();	
+}
+
 
 #ifdef RUN_TESTS_FTI
 
@@ -405,23 +442,25 @@ I main() {
 
 	P(fti_init(),1);
 
-	test_vec = vec_init(50000, char[11]);
-	X(!test_vec, T(FATAL, "cannot initialize test vector"), 1)
+	//test_vec = vec_init(50000, char[11]);
+	//X(!test_vec, T(FATAL, "cannot initialize test vector"), 1)
 
 	//! test tokenizer
 	S c = "a aaron abaissiez abandon aaron aaron abandoned abase abash abate abated abatement abatements abates abbess abbey abbeys abbominable abbot a";
 	C qq[scnt(c)]; mcpy(qq,c,scnt(c));
 	//fti_search(qq);//exit(0);
-	
+
 	//! test tokenizer
 	//mcpy(qq,c,scnt(c));fti_index_field(0, 5, qq, 0); exit(0);
 
-	hsh_each(wordbag, fti_wordbag_inspect_each, NULL);
-	fti_inc_mem("test_vec", vec_mem(test_vec));
-
+	//hsh_each(wordbag, fti_wordbag_inspect_each, NULL);
+	//fti_inc_mem("test_vec", vec_mem(test_vec));
 	//fti_bench();
+	//fti_dec_mem("test_vec", vec_destroy(test_vec));
 
-	fti_dec_mem("test_vec", vec_destroy(test_vec));
+	C qqq[16];
+	mcpy(qqq,"text read includ",16);
+	fti_search(qqq, NULL);
 
 	R fti_shutdown();}
 
