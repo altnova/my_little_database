@@ -62,7 +62,8 @@ VEC vec_add_(V** aptr, V* el){
 		*aptr = a;
 		T(DEBUG, "realloc to %lu (%p)", a->size, *aptr);
 	}
-	mcpy((V*)(a->data + a->el_size * a->used++), el, a->el_size);
+	//T(TRACE, "copying %d bytes", a->el_size);
+	mcpy((V*)(a->data + a->el_size * a->used++), (V*)el, a->el_size);
 	R a;
 }
 
