@@ -288,7 +288,7 @@ ZI cli_cmd_rec_edit_loop(Rec r, S prompt, S mode, REC_FN rec_fn){
 	USR_LOOP(usr_input_str(q, prompt, "inavalid characters"),
 		cli_update_dimensions();
 		I qlen = scnt(q);
-		if(!qlen||*q==10){goto AGAIN;}
+		if(!qlen||*q==10){goto AGAIN;} //< enter
 		if(qlen==1&&*q=='='){
 			UJ res = rec_fn(r);
 			NL();TB();O("record %lu: %s %s", r->rec_id, mode, (res==NIL)?"fail":"ok");NL();NL();
@@ -335,7 +335,6 @@ ZI cli_cmd_rec_add(S arg){
 	scpy(r->publisher, "publisher", 9);
 	scpy(r->title, "title", 5);
 	scpy(r->subject, "subject", 7);
-
 	I res = cli_cmd_rec_edit_loop(r, "  create$ ", "create", rec_create);
 	free(r);
 	R res;}
@@ -491,6 +490,8 @@ I main(I ac, S* av) {
 
 		// not a known command, start search
 		fts_search(q, (FTI_SEARCH_CALLBACK)NULL); // TODO
+
+		fts_dump_result();
 
 		NEXT:
 		WIPE(q, qlen);

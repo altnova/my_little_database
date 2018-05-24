@@ -29,7 +29,7 @@ ZV fts_dump_docset(S label, SET s) {
 		T(TEST, "%d ", *(FTI_DOCID*)set_at(s,i));
 	)TEND();}
 
-ZV fts_dump_result() {
+V fts_dump_result() {
 	LOG("fts_dump_result");
 	TSTART();T(TEST, "result (%d) -> ", vec_size(HITS));
 	DO(vec_size(HITS),
@@ -131,6 +131,7 @@ I fts_search(S query, FTI_SEARCH_CALLBACK fn) {
 	T(TEST, "raw query: -> (%s)", query);
 	//! flush old docset vectors
 	DO(FTI_FIELD_COUNT, vec_clear(results[i])) 
+	vec_clear(HITS);
 	//! tokenize and accumulate docsets per field/term
 	TSTART();T(TEST, "docsets:");
 	stok(query, qlen, FTI_TOKEN_DELIM, 0,
