@@ -16,6 +16,7 @@
 #include "vec.h"
 #include "bin.h"
 #include "set.h"
+#include "bag.h"
 #include "fti.h"
 #include "usr.h"
 #include "clk.h"
