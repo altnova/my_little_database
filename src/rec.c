@@ -13,7 +13,8 @@
 //! debug print
 V rec_print_dbg(Rec r) {
 	LOG("rec_print_dbg");
-	T(TEST, "id=(%lu) pages=(%d) title=(%s)", r->rec_id, r->pages, r->title);
+	T(TEST, "id=(%lu) year=(%d) pages=(%d) title=(%s) publisher=(%s)",
+		r->rec_id, r->year, r->pages, r->title, r->publisher);
 }
 
 //! binary search for index position of rec_id
@@ -22,10 +23,10 @@ UJ rec_get_idx_pos(ID rec_id) {
 	R binx(idx_data(), &rec_id, Pair, idx_size(), &cmp_binsearch);
 }
 
-//! case insensitive substring search in a given field \return 1 if match found
-C rec_search_txt_field(V* r, I fld, S needle) {
+//! substring search in a given field \return 1 if match found
+C rec_search_txt_field(V*r, I fld, S needle) {
 	S haystack = (S)r + rec_field_offsets[fld];
-	R !!strcasestr(haystack, needle);
+	R !!sstr(haystack, needle);
 }
 
 //! find database position by rec_id
@@ -33,7 +34,7 @@ UJ rec_get_db_pos(ID rec_id) {
 	LOG("rec_get_db_pos");
 
 	UJ idx_pos = rec_get_idx_pos(rec_id);
-	X(idx_pos==NIL, T(TEST, "rec_get_idx_pos returned nil"), NIL);
+	X(idx_pos==NIL, T(DEBUG, "rec_get_idx_pos returned nil"), NIL);
 
 	Pair *e = idx_get_entry(idx_pos);
 	T(TRACE, "{ rec_id=%lu, idx_pos=%lu, db_pos=%lu }", e->rec_id, idx_pos, e->pos);
@@ -60,36 +61,38 @@ UJ rec_delete(ID rec_id) {
 	LOG("rec_delete");
 
 	UJ db_pos = rec_get_db_pos(rec_id);
-	X(db_pos==NIL, T(WARN,"rec_get_db_pos returned nil"), NIL);
+	X(db_pos==NIL, T(DEBUG,"rec_get_db_pos returned nil"), NIL);
 
 	T(DEBUG, "deleting { rec_id=%lu, db_pos=%lu }", rec_id, db_pos);	
 	
 	FILE* db;
 	xfopen(db, db_file, "r+", NIL);
-	Rec b = malloc(SZ_REC); chk(b, NIL);
-	
 	UJ last_pos = idx_size()-1;
-	J offset = SZ_REC * last_pos;
-	zseek(db, offset, SEEK_SET);
-	fread(b, SZ_REC, 1, db);	//< read last record
-	T(DEBUG, "loaded tail record { rec_id=%lu, pos=%lu, offset=%ld }", b->rec_id, last_pos, offset);
-	if(b->rec_id!=rec_id) {
+
+	if(db_pos==last_pos) { // deleting last record in the file
+		T(DEBUG, "deleting tail record in db file");
+	} else {
+		//! load tail record, paste it in place of the deleted and update its index entry
+		Rec b = malloc(SZ_REC); chk(b, NIL);
+		J offset = SZ_REC * last_pos;
+		zseek(db, offset, SEEK_SET);
+		fread(b, SZ_REC, 1, db);	//< read last record
+		T(DEBUG, "loaded tail record { rec_id=%lu, pos=%lu, offset=%ld }", b->rec_id, last_pos, offset);
 		zseek(db, db_pos * SZ_REC, SEEK_SET);
 		fwrite(b, SZ_REC, 1, db); //< overwrite deleted record
-		idx_update_pos(rec_id, NIL);
-		T(TEST, "overwritten record { rec_id=%lu, db_pos=%lu }", rec_id, db_pos);
+		T(DEBUG, "overwritten record { rec_id=%lu, db_pos=%lu }", rec_id, db_pos);
+		idx_update_pos(b->rec_id, db_pos);
+		free(b);
 	}
-	idx_update_pos(b->rec_id, db_pos);
-	free(b);
-
+	//! finally, truncate both index and db file by one pair and one record, respectively
 	UJ new_size = idx_shift(rec_get_idx_pos(rec_id));
 	ftrunc(db, SZ_REC * new_size);
-	T(TRACE, "db file truncated");
+	T(DEBUG, "db file truncated");
 
 	fclose(db);
 	R db_pos;}
 
-//! create and index a record
+//! create a new record and add it to index
 UJ rec_create(Rec r) {
 	LOG("rec_create");
 	r->rec_id = next_id();
@@ -123,7 +126,7 @@ UJ rec_update(Rec r) {
 	R db_pos;
 }
 
-//! update field
+//! update field value
 V rec_set(Rec r, I fld, V* val) {
 	LOG("rec_set");
 	I offset = rec_field_offsets[fld];
@@ -135,3 +138,4 @@ V rec_set(Rec r, I fld, V* val) {
 
 
 //:~
+
