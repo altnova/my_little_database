@@ -27,9 +27,13 @@ SET set_clone(SET s, SET from) {
 	R s;
 }
 
+UJ set_index_of(SET s, V*key) {
+	R binx_(s->items->data, key, s->items->el_size, s->items->used, (CMP)s->cmpfn);	
+}
+
 V* set_get(SET s, V*key) {
 	LOG("set_get");
-	UJ i = binx_(s->items->data, key, s->items->el_size, s->items->used, (CMP)s->cmpfn);
+	UJ i = set_index_of(s,key);
 	P(i==NIL, NULL);
 	R vec_at_(s->items, i);
 }
@@ -74,7 +78,7 @@ sz set_mem(SET s) {
 V set_clear(SET s) {
 	vec_clear(s->items);}
 
-V set_intersection(SET a, SET b, SET dest) {
+V set_intersect(SET a, SET b, SET dest) {
 	//C r = set_size(a)<=set_size(b);
 	//SET needles = r?a:b; SET haystack = r?b:a;
 	SET needles = a, haystack = b;
@@ -148,13 +152,13 @@ I main() {
 	set_add(s1, &v4);
 
 	SET interx = set_init(SZ(J), (CMP)cmp_);
-	set_intersection(s1,s,interx);
+	set_intersect(s1,s,interx);
 
 	J ex[] = {3,4,9,11};
 	SET expected = set_init(SZ(J), (CMP)cmp_);
 	set_add_all(expected,ex,4);
 
-	ASSERT(set_size(interx)==4&&set_contains(interx,expected), "set_intersection() should work as expected")
+	ASSERT(set_size(interx)==4&&set_contains(interx,expected), "set_intersect() should work as expected")
 
 	/*
 	TSTART();T(TEST,"(");
