@@ -15,8 +15,6 @@
 Z IDX idx;		//< in-memory instance of the index
 Z bufRec buf;	//< readbuffer RECBUFLEN records
 
-Z sz mem=0;		//< total allocated memory
-
 C db_file[MAX_FNAME_LEN+1];
 C idx_file[MAX_FNAME_LEN+1];
 
@@ -41,8 +39,7 @@ Z UJ idx_save() {
 	fwrite(idx->pairs, vec_mem(idx->pairs), 1, out);
 	UJ idx_fsize = fsize(out);
 	fclose(out);
-	mem = idx_fsize;
-	T(INFO, "saved %lu+%lu = %lu bytes", SZ_IDX, vec_mem(idx->pairs), idx_fsize);
+	T(DEBUG, "saved %lu+%lu = %lu bytes", SZ_IDX, vec_mem(idx->pairs), idx_fsize);
 	R idx_fsize;
 }
 
@@ -51,7 +48,7 @@ Z UJ idx_save() {
 UJ idx_shift(UJ pos) {
 	LOG("idx_shift");
 	vec_del_at(idx->pairs, pos, 1);
-	T(TEST, "squashed idx_pos=%lu", pos);
+	T(DEBUG, "squashed idx_pos=%lu", pos);
 	UJ b_written = idx_save();
 	X(b_written==NIL, T(WARN, "idx_save failed"), NIL);
 	R idx_size();
@@ -59,8 +56,7 @@ UJ idx_shift(UJ pos) {
 
 //! returns pointer to indexes' data section
 Pair* idx_data() {
-	VEC p = idx->pairs;
-	R(Pair*)p->data;
+	R(Pair*)idx->pairs->data;
 }
 
 //! create db file if not exists \returns number of records
@@ -110,10 +106,10 @@ V idx_dump(UJ head) {
 	LOG("idx_dump");
 	Pair* e;
 	TSTART();
-	T(TEST, "{ last_id=%lu, used=%lu } =>", idx->last_id, idx_size());
+	T(TEST, "{ last_id=%lu, used=%lu, size=%lu } =>", idx->last_id, idx_size(), idx->pairs->size);
 	DO(head?head:idx_size(),
 		e = vec_at(idx->pairs, i, Pair);
-		if (!e->rec_id)
+		//if (!e->rec_id)
 			T(TEST, " %lu:(%lu -> %lu)", i, e->rec_id, e->pos);
 	)
 	if(head&&head<idx_size())T(TEST,"...");
@@ -175,10 +171,9 @@ Z UJ idx_rebuild() {
 	fclose(in);
 
 	idx_sort();
-	idx_dump(0); // show zero pairs
-
-	Pair last = e;
-	idx->last_id = last.rec_id;
+	// after sorting, it is easy to recover last_id
+	e = *vec_last(idx->pairs,Pair);
+	idx->last_id = e.rec_id;
 
 	T(INFO, "rebuilt, entries=%lu, last_id=%lu", idx_size(), idx->last_id);
 	R idx_size();
@@ -188,7 +183,7 @@ Z UJ idx_rebuild() {
 Z sz idx_close() {
 	sz mem = vec_destroy(idx->pairs);
 	free(idx);
-	R mem;
+	R SZ_IDX+mem;
 }
 
 //! map index into memory from file
@@ -207,7 +202,7 @@ Z UJ idx_load() {
 	VEC p = idx->pairs;
 	T(INFO, "%lu bytes, %lu entries, capacity=%lu, last_id=%lu", \
 		size, p->used, p->size, idx->last_id);
-	mem = size;
+
 	R idx_size();
 }
 
@@ -229,6 +224,11 @@ UJ next_id() {
 	R id;
 }
 
+Z UJ last_id() {
+	R idx->last_id;
+}
+
+
 //! patch record's pos pointer and store it on disk
 UJ idx_update_pos(UJ rec_id, UJ new_pos) {
 	LOG("idx_update_pos");
@@ -242,7 +242,7 @@ UJ idx_update_pos(UJ rec_id, UJ new_pos) {
 	zseek(out, SZ_IDX + SZ_VEC + SZ(Pair) * (idx_pos-1), SEEK_SET);
 	fwrite(i, SZ(Pair), 1, out);
 	fclose(out);
-	T(TEST, "rec_id=%lu, idx_pos=%lu, new_pos=%lu", rec_id, idx_pos, new_pos);
+	T(DEBUG, "rec_id=%lu, idx_pos=%lu, new_pos=%ld", rec_id, idx_pos, new_pos==NIL?-1:(J)new_pos);
 	R new_pos;
 }
 
@@ -254,7 +254,21 @@ UJ idx_add(ID rec_id, UJ db_pos) {
 	e.pos = db_pos;
 	vec_add(idx->pairs, e);
 	T(DEBUG, "rec_id=%lu, pos=%lu", rec_id, db_pos);
-	R idx_save(); //< TODO append single item instead of full rewrite
+
+	P(idx_size()==1, idx_save()) //< special case
+
+	// append to index file
+	FILE*out;
+	xfopen(out, idx_file, "r+", NIL);
+	UJ old_fsize = fsize(out);
+	zseek(out, SZ_IDX, SEEK_SET);
+	fwrite(idx->pairs, SZ_VEC, 1, out); //< update vec header
+	zseek(out, old_fsize, SEEK_SET); //< go to the end
+	fwrite(&e, SZ(Pair), 1, out); //< write new pair
+	UJ new_fsize = fsize(out);
+	fclose(out);
+	T(DEBUG, "appended index entry, old fsize=%lu, new fsize=%lu", old_fsize, new_fsize);
+	R new_fsize;
 }
 
 //! perform sample index lookup
@@ -266,6 +280,24 @@ Z UJ idx_peek(ID rec_id){
 	T(TRACE, "rec_id=%lu pos=%ld", rec_id, pos);
 	rec_print_dbg(b);
 	R pos;
+}
+
+Z sz idx_dbsize() {
+	LOG("idx_dbsize");
+	FILE*db;
+	xfopen(db,db_file,"r",NIL);
+	sz db_sz = fsize(db);
+	fclose(db);
+	R db_sz;
+}
+
+Z sz idx_fsize() {
+	LOG("idx_fsize");
+	FILE*idxh;
+	xfopen(idxh,idx_file,"r",1);
+	sz fsz = fsize(idxh);
+	fclose(idxh);
+	R fsz;
 }
 
 //! dump db to stdout
@@ -291,7 +323,6 @@ Z UJ idx_open() {
 
 	FILE*in;
 	xfopen(in, idx_file, "a+", NIL); //< open or create
-
 	UJ idx_fsize = fsize(in);
 	X(idx_fsize==NIL, T(WARN, "fsize(%d) reports error", idx_file), NIL);
 	fclose(in);
@@ -304,14 +335,14 @@ Z UJ idx_open() {
 	if (!idx_fsize) { //! empty index
 		UJ b_written = idx_save();
 		X(b_written==NIL, T(WARN, "idx_save reports error"), NIL);
-		T(WARN, "initialized empty index file");
+		T(INFO, "initialized empty index file");
 	}
 
 	UJ idx_count = idx_load();
 	X(idx_count==NIL, T(WARN, "idx_load reports error"), NIL);
 
 	if (idx_count != db_size) { //< index out of sync
-		T(WARN,"index file out of sync idx_size=%lu, db_size=%lu", idx_count, db_size);
+		T(DEBUG,"index file out of sync idx_size=%lu, db_size=%lu", idx_count, db_size);
 		idx_count = idx_rebuild();
 		X(idx_count==NIL, T(WARN, "idx_rebuild reports error"), NIL);
 		UJ b_written = idx_save();
@@ -329,7 +360,7 @@ UJ db_init(S d, S i) {
 	scpy(idx_file, i, MAX_FNAME_LEN);
 	UJ idx_size = idx_open();
 	T(DEBUG, "database initialized");
-	R vec_mem(idx->pairs);
+	R SZ_IDX + vec_mem(idx->pairs);
 }
 
 sz db_close() {
@@ -339,38 +370,137 @@ sz db_close() {
 #ifdef RUN_TESTS_IDX
 ZI idx_test() {
 	LOG("idx_test");
-	Rec b=malloc(SZ_REC);chk(b,1);
+	Rec r=malloc(SZ_REC);chk(r,1);
+	Rec r1=malloc(SZ_REC);chk(r1,1);
+	//db_init(DAT_FILE, IDX_FILE);
 
-	db_init(DAT_FILE, IDX_FILE);
+	S test_dbfile = "dat/test.dat";
+	S test_idxfile = "dat/test.idx";
 
-	DO(3, next_id())
+	ASSERT(!fexist(test_dbfile), "test db file shouldn't exist")
+	ASSERT(!fexist(test_idxfile), "test idx file shouldn't exist")
 
-	ID delete_test = 10;
-	if(rec_delete(delete_test) == NIL)
-		T(WARN, "no such record=%lu", delete_test);
+	scpy(db_file, test_dbfile, MAX_FNAME_LEN);
+	scpy(idx_file, test_idxfile, MAX_FNAME_LEN);
 
-	rec_get(b, 5); //< load from disk
-	T(TEST, "before update: "); rec_print_dbg(b);
-	H pages = 666;
-	rec_set(b, fld_pages, &pages);
-	rec_set(b, fld_title, "WINNIE THE POOH");
-	rec_update(b);
-	rec_get(b, 5); //< reload from disk
-	T(TEST, "after update: "); rec_print_dbg(b);
+	UJ idx_sz = idx_open();
 
-	//db_dump(); idx_dump(0);
-	DO(3,
-		rec_create(b);
-	)
-	rec_delete(17);
-	//db_dump();
-	//idx_dump(10);
+	ASSERT(fexist(test_dbfile), "test db file should now be created")
+	ASSERT(fexist(test_idxfile), "test idx file should now be created")
 
-	//rec_delete(20); //< delete last
-	//db_dump(); idx_dump(0);
+	ASSERT(idx_dbsize()==0, "empty db file size should be 0")
 
-	db_close();
-	free(b);
+	I predict = SZ_IDX+SZ_VEC+SZ(Pair)*1;
+	ASSERT(idx_fsize()==predict, "empty idx file size should match expected")
+
+	r->year = 2000;
+	r->pages = 1;
+	scpy(r->author, "author1", 7);
+	scpy(r->publisher, "publisher1", 10);
+	scpy(r->title, "title1", 6);
+	scpy(r->subject, "subject1", 8);
+	ASSERT(rec_create(r)==0, "1st record should be at dbpos=0")
+
+	r->year = 2001;
+	r->pages = 2;
+	scpy(r->author, "author2", 7);
+	scpy(r->publisher, "publisher2", 10);
+	scpy(r->title, "title2", 6);
+	scpy(r->subject, "subject2", 8);
+	ASSERT(rec_create(r)==1, "2st record should be at dbpos=1")
+
+	r->year = 2002;
+	r->pages = 3;
+	scpy(r->author, "author3", 7);
+	scpy(r->publisher, "publisher3", 10);
+	scpy(r->title, "title3", 6);
+	scpy(r->subject, "subject3", 8);
+	ASSERT(rec_create(r)==2, "3rd record should be at dbpos=2")
+
+	ASSERT(idx_size()==3, "idx_size() should now be 3")
+	ASSERT(last_id()==3, "last_id should now be 3")
+
+	Pair*p;
+	I total = 0;
+	DO(idx_size(), p = idx_get_entry(i); total += p->rec_id==i+1&&p->pos==i)
+	ASSERT(total==3, "index should be consistent at this point");
+
+	rec_delete(1);
+	ASSERT(idx_size()==2, "idx_size() should now be 2")
+
+	UJ dbpos = rec_get_db_pos(3);
+	ASSERT(dbpos==0, "tail record should have moved to dbpos 0");
+
+	ASSERT(idx_dbsize()==2*SZ_REC, "db should be truncated on deletion (#1)")
+	ASSERT(rec_delete(1)==NIL, "deleting non-existent record should return NIL")
+
+	rec_delete(3);
+	ASSERT(idx_size()==1, "idx_size() should now be 1")
+	ASSERT(idx_dbsize()==SZ_REC, "db should be truncated on deletion (#2)")
+
+	rec_delete(2);
+	ASSERT(idx_size()==0, "idx_size() should now be 0")
+	ASSERT(idx_dbsize()==0, "db should be empty on deletion of last record")
+
+	rec_create(r);
+
+	predict = SZ_IDX+SZ_VEC+SZ(Pair)*1;
+	ASSERT(idx_fsize()==predict, "idx file size should match expected")
+
+	idx_close();
+	idx_open();
+
+	ASSERT(last_id()==4, "last_id() should survive index reopen")
+
+	ASSERT(rec_create(r)==1, "1st record should be at dbpos=0")
+	ASSERT(rec_create(r)==2, "2nd record should be at dbpos=1")
+
+	idx_dump(0);
+
+	predict = SZ_IDX+SZ_VEC+SZ(Pair)*3;
+	ASSERT(idx_fsize()==predict, "idx file size should match expected")
+
+	ASSERT(rec_get(r1, 5)==1, "rec_get(5) should report dbpos=1")
+
+	ASSERT(!scmp(r1->publisher, r->publisher), "record data should match expected (#1)")
+	ASSERT(!scmp(r1->title, r->title), "record data should match expected (#2)")
+	ASSERT(!scmp(r1->subject, r->subject), "record data should match expected (#3)")
+
+	UH year=2018, pages=777;
+	rec_set(r1, 0, &year);
+	rec_set(r1, 1, &pages);
+	rec_set(r1, 2, "Hachette");
+	rec_set(r1, 3, "WINNIE THE POOH");
+	rec_set(r1, 4, "Alan Milne");
+	rec_set(r1, 5, "Winnie-the-Pooh, also called Pooh Bear, is a fictional anthropomorphic teddy bear created by English author A. A. Milne.");
+
+	rec_update(r1);
+	// wipe record
+	free(r1); r1 = (Rec)calloc(SZ_REC,1);chk(r1,1);
+
+	idx_close();
+
+	FILE*idxh;
+	xfopen(idxh,test_idxfile,"r+",1);
+	ftrunc(idxh,0); // truncate to test idx_rebuld on idx_open()
+	fclose(idxh);
+
+	idx_open();
+
+	predict = SZ_IDX+SZ_VEC+SZ(Pair)*3;
+	ASSERT(idx_fsize()==predict, "idx file size should match expected after rebuild")
+	ASSERT(last_id()==6, "last_id() should match expected after rebuild")
+
+	ASSERT(rec_get(r1, 5)==1, "rec_get should report dbpos=1")
+
+	//rec_print_dbg(r1);
+
+	ASSERT(!scmp(r1->author, "Alan Milne"), "record data should match expected (#1)")
+	ASSERT(!scmp(r1->publisher, "Hachette"), "record data should match expected (#2)")
+	ASSERT(scnt(r1->subject)==r1->lengths[3], "r->lengths[] should match reality")
+
+	free(r);
+	free(r1);
 	R0;
 }
 
