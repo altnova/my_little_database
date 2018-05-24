@@ -21,6 +21,8 @@ ext sz  set_mem(SET s);
 ext V   set_clear(SET s);
 ext V   set_intersection(SET a, SET b, SET dest);
 
+ext V   set_dump(SET s, S prefix);
+
 ext sz  set_compact(SET s); // shrink underlying vector
 ext sz  set_destroy(SET s);
 

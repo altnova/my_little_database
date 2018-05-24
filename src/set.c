@@ -88,6 +88,14 @@ C set_contains(SET s, SET subset) {
 	)
 	R1;}
 
+V set_dump(SET s, S prefix) {
+	LOG("set_dump");
+	TSTART();T(TEST,"%s -> (", prefix);
+		DO(set_size(s),T(TEST, "%2d ", *vec_at(s->items,i,UH)));
+		T(TEST, ") = %lu", set_size(s));
+	TEND();	
+}
+
 sz set_destroy(SET s) {
 	sz dealloc = set_mem(s);
 	sz rel = vec_destroy(s->items);
