@@ -455,7 +455,7 @@ ZI idx_test() {
 	ASSERT(rec_create(r)==1, "1st record should be at dbpos=0")
 	ASSERT(rec_create(r)==2, "2nd record should be at dbpos=1")
 
-	idx_dump(0);
+	//idx_dump(0);
 
 	predict = SZ_IDX+SZ_VEC+SZ(Pair)*3;
 	ASSERT(idx_fsize()==predict, "idx file size should match expected")
@@ -497,7 +497,7 @@ ZI idx_test() {
 
 	ASSERT(!scmp(r1->author, "Alan Milne"), "record data should match expected (#1)")
 	ASSERT(!scmp(r1->publisher, "Hachette"), "record data should match expected (#2)")
-	ASSERT(scnt(r1->subject)==r1->lengths[3], "r->lengths[] should match reality")
+	ASSERT(scnt(r1->subject)==r1->lengths[3], "r->lengths[] should agree with reality")
 
 	free(r);
 	free(r1);
