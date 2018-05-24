@@ -26,7 +26,6 @@
 #define WORDBAG_INIT_SIZE    1048576
 #define STATBAG_INIT_SIZE    1048576
 #define FTI_STOPWORDS_FILE  "dat/stopwords.txt"
-#define FTI_MIN_TOK_LENGTH   2
 #define USE_WORDBAG          1
 
 Z HT   FTI[FTI_FIELD_COUNT];		//< inverted index, term -> docset
@@ -82,9 +81,20 @@ V fti_print_completions_for(S query) {
 	vec_destroy(results);
 }*/
 
-ID fti_docmap_translate(FTI_DOCID doc_id) {
-	R *(ID*)vec_at_(docmap, doc_id);
+S fti_get_stopword(S w, I wlen) {
+	R (S)hsh_get(stopwords, w, wlen);
 }
+
+FTI_STAT_FIELD* fti_get_stat(DOCSET ds, UJ pos) {
+	LOG("fts_get_stat");
+	UJ offset = (UJ)ds->stat;
+	V*bag = statbag->ptr + offset;
+	FTI_STAT_FIELD*st = bag + pos * SZ(FTI_STAT_FIELD) * 2;
+	R st;}
+
+ID fti_docmap_translate(FTI_DOCID doc_id) {
+	R *(ID*)vec_at_(docmap, doc_id);}
+
 DOCSET fti_get_docset(I field, S term, I termlen) {
 	R(DOCSET)hsh_get_payload(FTI[field], term, termlen);}
 

@@ -1,24 +1,36 @@
 //! \file fts.c \brief full-text search
 
-
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <time.h>
 #include <math.h>
 #include "___.h"
 #include "cfg.h"
 #include "trc.h"
+#include "clk.h"
+#include "vec.h"
+#include "bin.h"
+#include "set.h"
+#include "hsh.h"
+#include "mem.h"
+#include "stm.h"
+#include "fti.h"
+#include "fts.h"
 
 Z VEC  results[FTI_FIELD_COUNT];	//< raw matching docsets, per field
 Z FTI_MATCH mbuf;					//< buffer
 Z VEC HITS;							//< final assembly of the search result
 
 ZV fts_dump_docset(S label, SET s) {
-	LOG("fti_dbg");
+	LOG("fts_dbg");
 	TSTART();T(TEST, "%s -> (%2d) ", label, set_size(s));
 	DO(set_size(s),
 		T(TEST, "%d ", *(FTI_DOCID*)set_at(s,i));
 	)TEND();}
 
 ZV fts_dump_result() {
-	LOG("fti_dump_result");
+	LOG("fts_dump_result");
 	TSTART();T(TEST, "result (%d) -> ", vec_size(HITS));
 	DO(vec_size(HITS),
 		FTI_MATCH m = vec_at_(HITS,i);
@@ -38,12 +50,10 @@ ZI fts_find_shortest_docset(VEC docsets){
 	R shortest;}
 
 ZE fts_get_score(FTI_DOCID doc_id, DOCSET ds, UJ pos) {
-	LOG("fti_get_stat");
-	UJ offset = (UJ)ds->stat;
-	V*bag = statbag->ptr + offset;
-	FTI_STAT_FIELD*st = bag + pos * SZ(FTI_STAT_FIELD) * 2;
+	LOG("fts_get_score");
+	FTI_STAT_FIELD*st = fti_get_stat(ds,pos);
 	F tf = sqrt((F)st[0]);
-	F idf = 1 + log((F)fti_info->total_records/(1+set_size(ds->docs)));
+	F idf = 1 + log((F)mem_info()->total_records/(1+set_size(ds->docs)));
 	idf *= idf; // square it
 	//T(TEST, "recovered stat: id=%d freq=%d dfreq=%d prox=%d", doc_id, st[0], set_size(ds->docs), st[1]);
 	//T(TEST, "score: id=%d tf=%0.4f idf=%0.4f", tf, idf);
@@ -51,7 +61,7 @@ ZE fts_get_score(FTI_DOCID doc_id, DOCSET ds, UJ pos) {
 
 //! comparator for qsort
 ZI fts_compare_matches(const V*a, const V*b) {
-	LOG("fti_compare");
+	LOG("fts_compare");
 	FTI_MATCH x = (FTI_MATCH)a;
 	FTI_MATCH y = (FTI_MATCH)b;
 	//T(TEST, "qsort %lu %lu", x->rec_id, x->rec_id);
@@ -60,9 +70,9 @@ ZI fts_compare_matches(const V*a, const V*b) {
 	R r?-1:1;}
 
 ZV fts_sort_matches() {
-	LOG("fti_sort");
+	LOG("fts_sort");
 	T(TRACE, "sorting matches...");
-	qsort(HITS->data, vec_size(HITS), SZ_FTI_MATCH, fti_compare_matches);}
+	qsort(HITS->data, vec_size(HITS), SZ_FTI_MATCH, fts_compare_matches);}
 
 Z FTI_MATCH fts_add_match(FTI_DOCID doc_id, I field, F score) {
 		ID rec_id = fti_docmap_translate(doc_id);
@@ -73,7 +83,7 @@ Z FTI_MATCH fts_add_match(FTI_DOCID doc_id, I field, F score) {
 		R(FTI_MATCH)vec_last_(HITS);}
 
 ZV fts_intersect(I field) {
-	LOG("fti_intersect");
+	LOG("fts_intersect");
 	VEC res = results[field];
 	sz cnt = vec_size(res);
 	DOCSET ds,nxt;
@@ -83,8 +93,8 @@ ZV fts_intersect(I field) {
 		ds = *vec_at(res,0,DOCSET);
 		DO(set_size(ds->docs),
 			FTI_DOCID doc_id = *(FTI_DOCID*)set_at(ds->docs,i);
-			F score = fti_get_score(doc_id, ds, i);
-			FTI_MATCH m = fti_add_match(doc_id, field, score))		
+			F score = fts_get_score(doc_id, ds, i);
+			FTI_MATCH m = fts_add_match(doc_id, field, score))		
 		R;}
 
 	//! more than one docset: calculate intersection
@@ -115,7 +125,7 @@ ZV fts_intersect(I field) {
 }
 
 I fts_search(S query, FTI_SEARCH_CALLBACK fn) {
-	LOG("fti_search");
+	LOG("fts_search");
 	I qlen = scnt(query);
 	lcse(query,qlen); //< lowercase
 	T(TEST, "raw query: -> (%s)", query);
@@ -124,7 +134,7 @@ I fts_search(S query, FTI_SEARCH_CALLBACK fn) {
 	//! tokenize and accumulate docsets per field/term
 	TSTART();T(TEST, "docsets:");
 	stok(query, qlen, FTI_TOKEN_DELIM, 0,
-		if(tok_len<FTI_MIN_TOK_LENGTH||hsh_get(stopwords, tok, tok_len))continue;
+		if(tok_len<FTI_MIN_TOK_LENGTH||fti_get_stopword(tok, tok_len))continue;
 		//! apply stemmer
 		tok_len = stm(tok, 0, tok_len-1)+1;
 		tok[tok_len] = 0; //< terminate
@@ -138,14 +148,14 @@ I fts_search(S query, FTI_SEARCH_CALLBACK fn) {
 		)))TEND();
 
 	//! calculate docset intersection, poopulate and sort HITS
-	DO(FTI_FIELD_COUNT, fti_intersect(i))
-	fti_sort_matches();
-	//fti_dump_result();
+	DO(FTI_FIELD_COUNT, fts_intersect(i))
+	fts_sort_matches();
+	//fts_dump_result();
 	R vec_size(HITS);
 }
 
 I fts_shutdown() {
-	LOG("fti_shutdown");
+	LOG("fts_shutdown");
 	I res=0;
 
 	DO(FTI_FIELD_COUNT,
@@ -158,7 +168,7 @@ I fts_shutdown() {
 
 
 I fts_init() {
-	LOG("fti_init");
+	LOG("fts_init");
 
 	DO(FTI_FIELD_COUNT,
 		results[i] = vec_init(1,DOCSET);
@@ -167,6 +177,7 @@ I fts_init() {
 	HITS = vec_init_(1,SZ_FTI_MATCH);
 	mbuf = (FTI_MATCH)calloc(SZ_FTI_MATCH,1);
 
+	R0;
 }
 
 #ifdef RUN_TESTS_FTS
@@ -184,7 +195,7 @@ I main() {
 	mcpy(qqq,Q,scnt(Q)+1);
 
 	clk_start();
-	I hits = fti_search(qqq, NULL);
+	I hits = fts_search(qqq, NULL);
 	T(TEST, "found %d documents in %lums", hits, clk_stop());	
 
 	fts_dump_result();

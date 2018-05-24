@@ -73,6 +73,10 @@ vim:
 	$(CC) -DRUN_TESTS_VIM $(CCOPTS) -o bin/vim src/vec.c src/trc.c src/vim.c
 	$(VLG) ./bin/vim
 
+fts:
+	$(CC) -DRUN_TESTS_FTS $(CCOPTS) -o bin/fts src/trc.c src/set.c src/vec.c src/hsh.c src/bag.c src/clk.c src/bin.c src/idx.c src/fio.c src/stm.c src/mem.c src/fti.c src/fts.c
+	$(VLG) ./bin/fts
+
 fti:
 	$(CC) -DRUN_TESTS_FTI $(CCOPTS) -o bin/fti src/mem.c src/set.c src/rnd.c src/bag.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/vec.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/fti.c 
 	$(VLG) ./bin/fti

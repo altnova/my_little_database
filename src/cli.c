@@ -415,9 +415,10 @@ ZI cli_cmd_debug(S arg){
 		fti_print_memmap();
 		R0;
 	}
+	/*
 	NL();
 	DO(FTI_FIELD_COUNT,
-		SET docset = fti_get_docset(i, arg, l);
+		SET docset = (DOCSET)fti_get_docset(i, arg, l);
 		if(docset) {
 			TSTART();
 			T(TEST, "docset(%d:%s) -> ", i, arg);
@@ -426,6 +427,7 @@ ZI cli_cmd_debug(S arg){
 		}
 	)
 	NL();
+	*/
 	R0;}
 
 I main(I ac, S* av) {
