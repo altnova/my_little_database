@@ -47,6 +47,7 @@ typedef size_t sz;
 //! usual suspects
 #define scnt(x) (UJ)strlen((S)(x))				//!< string length \param str */
 #define scmp(x,y) strcmp((S)(x),(S)(y))     	//!< compare two strings \param x str \param y str */
+#define sstr(h,n) strstr((S)(h),(S)(n))     	//!< find substring \param h haystack \param n needle */
 #define schr(h,n) (S)strchr((S)(h),n)       	//!< first pos \param h haystack \param n needle */
 #define rchr(h,n) (S)strrchr((S)(h),n)      	//!< last pos \param h haystack \param n needle */
 #define mcpy(d,s,n) memcpy((d),(s),n) 			//!< mem copy \param d dest \param s source \param n len */
