@@ -168,6 +168,8 @@ I main(I argc, S*argv){
 	res = csv_test(argv[1], argv[2]);
 	ASSERT(res!=NIL, "csv parser should complete normally")
 	ASSERT(res==expected, "imported record count should match expected value")
+
+	ASSERT(res==expected, "csv import complete")
 	R0;
 }
 #endif
