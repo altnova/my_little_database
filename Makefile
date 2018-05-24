@@ -82,7 +82,7 @@ fti:
 	$(VLG) ./bin/fti
 
 app: 
-	$(CC) $(CCOPTS) -o bin/cli src/set.c src/cli.c src/rnd.c src/bag.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/vec.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/fti.c 
+	$(CC) $(CCOPTS) -o bin/cli src/fts.c src/mem.c src/set.c src/cli.c src/rnd.c src/bag.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/vec.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/fti.c 
 	$(VLG) ./bin/cli
 
 clean:

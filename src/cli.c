@@ -17,6 +17,7 @@
 #include "bin.h"
 #include "set.h"
 #include "bag.h"
+#include "mem.h"
 #include "fti.h"
 #include "usr.h"
 #include "clk.h"
@@ -24,6 +25,7 @@
 #include "str.h"
 #include "cli.h"
 #include "idx.h"
+#include "fts.h"
 
 //! general config
 #define CLI_PROMPT  "  \e[1;32m$\e[0m "
@@ -145,7 +147,7 @@ ZV cli_help_db() {
 
 ZV cli_usage() {
 	cli_banner();
-	FTI_INFO fti_info = fti_stats();
+	FTI_INFO fti_info = mem_info();
 	TB();GREEN("indexed fields:");CH(" ",17);
 	DO(FTI_FIELD_COUNT,
 		COLOR_START(C_BLUE);O(" %s", rec_field_names[i]);COLOR_END();
@@ -175,6 +177,7 @@ ZV cli_update_dimensions() {
 	rows = ws.ws_row;}
 
 ZV cli_shutdown(I itr) {
+	fts_shutdown();
     I res = fti_shutdown();exit(res);}
 
 ZI is_db_cmd(C c) {
@@ -386,7 +389,7 @@ ZI cli_cmd_rec_list(S arg){
 	if(page_id > total_pages)
 		page_id = total_pages; // do not wrap
 
-	current_page_id = page_id; // save
+	current_page_id = page_id; // save current position
 
 	I width = cols * .9;
 	I title_max = width * .7;
@@ -412,7 +415,7 @@ ZI cli_cmd_debug(S arg){
 	I l = scnt(arg);
 	if(!l) {
 		idx_dump(10);
-		fti_print_memmap();
+		mem_map_print();
 		R0;
 	}
 	/*
@@ -435,7 +438,8 @@ I main(I ac, S* av) {
 	srand(time(NULL)); //< random seed
 	signal(SIGINT, cli_shutdown); //< catch SIGINT and cleanup nicely
 
-	fti_init();
+	P(fti_init(),1);
+	P(fts_init(),1);
 
 	cli_banner();
 	cli_hint();
@@ -475,7 +479,7 @@ I main(I ac, S* av) {
 		}
 
 		// not a known command, start search
-		fti_search(q, (FTI_SEARCH_CALLBACK)NULL); // TODO
+		fts_search(q, (FTI_SEARCH_CALLBACK)NULL); // TODO
 
 		NEXT:
 		WIPE(q, qlen);

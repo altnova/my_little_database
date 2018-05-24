@@ -82,8 +82,13 @@ V fti_print_completions_for(S query) {
 }*/
 
 S fti_get_stopword(S w, I wlen) {
-	R (S)hsh_get(stopwords, w, wlen);
-}
+	R (S)hsh_get(stopwords, w, wlen);}
+
+ID fti_docmap_translate(FTI_DOCID doc_id) {
+	R *(ID*)vec_at_(docmap, doc_id);}
+
+DOCSET fti_get_docset(I field, S term, I termlen) {
+	R(DOCSET)hsh_get_payload(FTI[field], term, termlen);}
 
 FTI_STAT_FIELD* fti_get_stat(DOCSET ds, UJ pos) {
 	LOG("fts_get_stat");
@@ -91,12 +96,6 @@ FTI_STAT_FIELD* fti_get_stat(DOCSET ds, UJ pos) {
 	V*bag = statbag->ptr + offset;
 	FTI_STAT_FIELD*st = bag + pos * SZ(FTI_STAT_FIELD) * 2;
 	R st;}
-
-ID fti_docmap_translate(FTI_DOCID doc_id) {
-	R *(ID*)vec_at_(docmap, doc_id);}
-
-DOCSET fti_get_docset(I field, S term, I termlen) {
-	R(DOCSET)hsh_get_payload(FTI[field], term, termlen);}
 
 C fti_compare_docids(V*a, V*b, sz s){
 	FTI_DOCID x = *(FTI_DOCID*)a;
