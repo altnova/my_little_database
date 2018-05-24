@@ -11,6 +11,7 @@ typedef int I;
 typedef short H;
 typedef void V;
 typedef float E;
+typedef double F;
 typedef long J;
 typedef unsigned long UJ;
 typedef unsigned int UI;
@@ -75,6 +76,7 @@ typedef size_t sz;
 #define ZC Z C
 #define ZS Z S
 #define ZE Z E
+#define ZF Z F
 #define ZJ Z J
 #define R0 R 0
 #define R1 R 1
