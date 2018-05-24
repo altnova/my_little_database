@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <time.h>
 #include <stdarg.h>
+#include <locale.h>
 #include "___.h"
 #include "cfg.h"
 #include "trc.h"
@@ -46,7 +47,6 @@ enum colors { C_GREY = 37, C_BLUE = 36, C_YELL = 33, C_GREEN = 32 };
 #define COLOR_START_BOLD(col) O("\e[1;%dm", col)
 #define COLOR_START(col) O("\e[%dm", col)
 #define COLOR_END() O("\e[0m")
-#define MI(i,label) O("\t%d. %s", i, label);
 
 //! boxing utilities
 ZI BOX_BOLD = 0; //< \see https://en.wikipedia.org/wiki/Box-drawing_character
@@ -84,6 +84,16 @@ ZV BOX_END(I w,I*cols, I col_cnt) {
 	CH(BOX_BOLD?"\u251b":"\u2518",1); NL();}	
 ZV BOX_SPAN(I w) {TB(); CH(BOX_BOLD?"\u2523":"\u251c",1); CH(BOX_BOLD?"\u2501":"\u2500",w+2); CH(BOX_BOLD?"\u252b":"\u2524",1); NL();}
 ZV BOX_EMPTY_LINE(I w) {BOX_LEFT();CH(" ", w);BOX_RIGHT(0);NL();}
+ZI NUM(I n) {
+	I r = 0;
+    if(n < 0) {
+        r += O("-");
+        r += NUM(-n);R r;}
+    if(n < 1000) {
+        r += O("%41d", n);R r;}
+    r += NUM(n/1000);
+    r += O(",%03d", n%1000);
+    R r;}
 
 #define WIPE(x,n) DO(n, x[i]=0)
 
@@ -436,6 +446,7 @@ ZI cli_cmd_debug(S arg){
 I main(I ac, S* av) {
 	LOG("cli_main");
 	srand(time(NULL)); //< random seed
+	setlocale(LC_NUMERIC, ""); //< format numbers
 	signal(SIGINT, cli_shutdown); //< catch SIGINT and cleanup nicely
 
 	P(fti_init(),1);
