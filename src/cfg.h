@@ -38,13 +38,13 @@ typedef struct idx_entry {
 //! database record
 typedef struct record {
    ID rec_id;
-	H pages;
-	H year;
+   UH pages;
+   UH year;
 	C publisher[101];
 	C title[201];
 	C author[51];
 	C subject[2001];
-	H lengths[4];
+   UH lengths[4];
 } __attribute__((packed)) pRec;
 
 typedef pRec bufRec[RECBUFLEN];
