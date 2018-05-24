@@ -5,10 +5,9 @@
 typedef struct bag {
 	sz size;
 	sz used;
-	sz cnt;
 	J  offset;
 	V* ptr;
-} pBAG;
+} __attribute__((packed)) pBAG;
 
 #define SZ_BAG SZ(pBAG)
 typedef pBAG* BAG;
@@ -16,6 +15,7 @@ typedef pBAG* BAG;
 ext BAG  bag_init(sz init_sz);
 ext V*   bag_add(BAG h, V*obj, sz obj_sz);
 ext sz   bag_mem(BAG h);
+ext sz   bag_compact(BAG h);
 ext sz   bag_destroy(BAG h);
 
 //:~

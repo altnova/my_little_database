@@ -35,22 +35,29 @@ V* bag_add(BAG h, V*obj, sz obj_sz) {
 	mcpy(obj_addr, obj, obj_sz);
 	h->used += obj_sz;
 	h->offset = offset;
-	h->cnt++;
 	R obj_addr;}
+
+sz bag_compact(BAG h) {
+	LOG("bag_compact");
+	sz offset = 0;
+	V*old_ptr = h->ptr;
+	sz old_sz = h->size;
+	h->ptr = realloc(h->ptr, h->used);chk(h->ptr,0);
+	h->size = h->used;
+	h->offset = old_ptr-(h->ptr);
+	R old_sz - h->size;} // report savings
 
 sz bag_mem(BAG h) {
 	R SZ_BAG+h->size;}
 
 E bag_lfactor(BAG h) {
-	R (E)h->used/h->size;
-}
+	R (E)h->used/h->size;}
 
 sz bag_destroy(BAG h) {
 	sz released = h->size;
 	free(h->ptr);
 	free(h);
-	R SZ_BAG+released;
-}
+	R SZ_BAG+released;}
 
 #ifdef RUN_TESTS_BAG
 
@@ -71,8 +78,7 @@ I main() {
 		added += l;
 		obj = (S)bag_add(h, keys[i], l))
 
-	ASSERT(h->cnt==9, "bag_add() should work as expected (#1)")
-	ASSERT(added==h->used, "bag_add() should work as expected (#2)")
+	ASSERT(added==h->used, "bag_add() should work as expected (#1)")
 	ASSERT(64==h->size, "bag should grow as expected")
 	ASSERT(h->used==sz_raw, "bag should correctly report content size")
 	ASSERT(!mcmp(h->ptr, raw, sz_raw), "bag content should match prediction")
@@ -80,7 +86,11 @@ I main() {
 	sz bytes = bag_mem(h);
 	ASSERT(bytes==(SZ_BAG+64), "bag_mem() should report true size")
 	ASSERT(IN(0.7, bag_lfactor(h), 0.9), "bag_lfactor() should report sane values")
-	ASSERT(bytes==bag_destroy(h), "bag_destroy() should return bytes released")
+
+	sz expected = 64-sz_raw;
+	ASSERT(bag_compact(h)==expected, "bag_compact() should result in predicted savings")
+
+	ASSERT((sz_raw+SZ_BAG)==bag_destroy(h), "bag_destroy() should return bytes released")
 
 	R0;
 }
