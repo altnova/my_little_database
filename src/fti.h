@@ -23,9 +23,17 @@ typedef struct docset {
 	V*  stat; //< frequencies and proximity averages
 	//UH  cnt;
 } pDOCSET;
-
 #define SZ_DOCSET SZ(pDOCSET)
 typedef pDOCSET* DOCSET;
+
+typedef struct fti_match {
+	ID rec_id;
+	 G field;
+	 F score;
+} pFTI_MATCH;
+#define SZ_FTI_MATCH SZ(pFTI_MATCH)
+typedef pFTI_MATCH* FTI_MATCH;
+
 
 ext I fti_init();
 
