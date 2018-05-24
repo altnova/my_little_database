@@ -21,7 +21,7 @@ ext UJ  set_index_of(SET s, V*key);
 ext sz  set_size(SET s);
 ext sz  set_mem(SET s);
 ext V   set_clear(SET s);
-ext V   set_intersect(SET a, SET b, SET dest);
+ext I   set_intersect(SET a, SET b, SET dest, VEC*positions);
 
 ext sz  set_compact(SET s); // shrink underlying vector
 ext sz  set_destroy(SET s);

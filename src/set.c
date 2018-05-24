@@ -78,15 +78,19 @@ sz set_mem(SET s) {
 V set_clear(SET s) {
 	vec_clear(s->items);}
 
-V set_intersect(SET a, SET b, SET dest) {
-	//C r = set_size(a)<=set_size(b);
-	//SET needles = r?a:b; SET haystack = r?b:a;
-	SET needles = a, haystack = b;
+I set_intersect(SET needles, SET haystack, SET dest, VEC*positions) {
+	I xsect_len = 0;
 	DO(set_size(needles),
 		V*ndl = vec_at_(needles->items, i);
-		if(set_get(haystack, ndl))
-			set_add(dest, ndl);
-	)}
+		UJ i = set_index_of(haystack,ndl);
+		if(i!=NIL) {
+			vec_add_(positions, &i);
+			set_add(dest,
+				vec_at_(haystack->items, i));
+			xsect_len++;			
+		}
+	)
+	R xsect_len;}
 
 sz set_compact(SET s) {
 	R vec_compact(&s->items);}
@@ -151,16 +155,26 @@ I main() {
 	set_add(s1, &v3);
 	set_add(s1, &v4);
 
+	VEC positions = vec_init_(1,SZ(UJ));
 	SET interx = set_init(SZ(J), (CMP)cmp_);
-	set_intersect(s1,s,interx);
+	set_intersect(s1,s,interx,&positions);
 
 	J ex[] = {3,4,9,11};
 	SET expected = set_init(SZ(J), (CMP)cmp_);
 	set_add_all(expected,ex,4);
 
+	I matches = 0;
+	DO(vec_size(positions),
+		UJ s_pos = *vec_at(positions,i,UJ);
+		UJ item = *(UJ*)set_get_at(s,s_pos);
+		//O("match s(%lu) = %lu\n", s_pos, item);
+		matches += item==ex[i];
+	)
+	ASSERT(matches==4, "set_intersect() should populate positions as expected")
+
 	ASSERT(set_size(interx)==4&&set_contains(interx,expected), "set_intersect() should work as expected")
 
-	/*
+	/*	
 	TSTART();T(TEST,"(");
 		DO(set_size(s),T(TEST, "%2ld ", *vec_at(s->items,i,J)));
 		T(TEST, ") = %lu", set_size(s));
@@ -200,6 +214,7 @@ I main() {
 	set_destroy(s1);
 	set_destroy(interx);
 	set_destroy(cloned);
+	vec_destroy(positions);
 	R0;
 }
 
