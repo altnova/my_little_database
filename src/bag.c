@@ -32,7 +32,8 @@ V* bag_add(BAG h, V*obj, sz obj_sz) {
 		//T(TEST, "realloc bag %lu, diff=%lu", h->size, offset);
 	}
 	V*obj_addr=h->ptr+(h->used);
-	mcpy(obj_addr, obj, obj_sz);
+	//T(TEST, "mcopy %lu bytes from %p to %p", obj_sz, (V*)obj, obj_addr);
+	mcpy(obj_addr, (V*)obj, obj_sz);
 	h->used += obj_sz;
 	h->offset = offset;
 	R obj_addr;}
