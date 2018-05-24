@@ -13,6 +13,7 @@ tests: clean str bag tri stm rnd clk fio vec bin hsh set # fti
 
 idx: clean
 	$(CC) -DRUN_TESTS_IDX $(CCOPTS) -o bin/idx src/bin.c src/vec.c src/idx.c src/fio.c src/rec.c src/trc.c
+	rm -f dat/test.dat dat/test.idx
 	$(VLG) ./bin/idx
 
 csv: clean nodatafiles
