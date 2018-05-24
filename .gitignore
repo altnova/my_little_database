@@ -1,6 +1,7 @@
 csv/books.csv
 dat/books.dat
 dat/books.idx
+dat/test.*
 .DS_Store
 *.dSYM
 bin/*
