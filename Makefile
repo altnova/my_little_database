@@ -1,7 +1,7 @@
-CC=gcc-8
+#CC=gcc-8
 CC=gcc
-#CCOPTS=-mavx2 -ffast-math -march=native -flto -mfpmath=sse -funroll-loops -Ofast
-CCOPTS=-Og -g
+CCOPTS=-mavx2 -ffast-math -march=native -flto -mfpmath=sse -funroll-loops -Ofast
+#CCOPTS=-Og -g
 #VLG=/opt/valgrind/bin/valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes
 VLG=
 
@@ -18,8 +18,8 @@ idx: clean
 
 csv: clean nodatafiles
 	$(CC) -DRUN_TESTS_CSV $(CCOPTS) -o bin/csv src/trc.c src/fio.c src/csv.c
-	#$(VLG) ./bin/csv csv/books.csv dat/books.dat 39673
-	$(VLG) ./bin/csv csv/sample.csv dat/books.dat 17
+	$(VLG) ./bin/csv csv/books.csv dat/books.dat 39673
+	#$(VLG) ./bin/csv csv/sample.csv dat/books.dat 17
 
 set: clean
 	$(CC) -DRUN_TESTS_SET $(CCOPTS) -o bin/set src/trc.c src/bin.c src/vec.c src/set.c
@@ -74,7 +74,7 @@ vim:
 	$(VLG) ./bin/vim
 
 fti:
-	$(CC) -DRUN_TESTS_FTI $(CCOPTS) -o bin/fti src/set.c src/rnd.c src/bag.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/vec.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/fti.c 
+	$(CC) -DRUN_TESTS_FTI $(CCOPTS) -o bin/fti src/mem.c src/set.c src/rnd.c src/bag.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/vec.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/fti.c 
 	$(VLG) ./bin/fti
 
 app: 

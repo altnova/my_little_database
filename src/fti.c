@@ -16,13 +16,11 @@
 #include "idx.h"
 #include "clk.h"
 #include "stm.h"
-#include "usr.h"
-#include "tri.h"
 #include "bag.h"
-#include "rnd.h"
 #include "bin.h"
 #include "set.h"
 #include "fti.h"
+#include "mem.h"
 
 #define PACK_EVERY_N_RECS    (8*4096)
 #define WORDBAG_INIT_SIZE    1048576
@@ -31,55 +29,12 @@
 #define FTI_MIN_TOK_LENGTH   2
 #define USE_WORDBAG          1
 
-Z FTI_INFO fti_info;
-
 Z HT   FTI[FTI_FIELD_COUNT];		//< inverted index, term -> docset
-
-Z VEC  results[FTI_FIELD_COUNT];	//< raw matching docsets, per field
-Z FTI_MATCH mbuf;					//< buffer
-Z VEC HITS;							//< final assembly of the search result
-
-Z HT   stopwords;	    //< stop words
-Z HT   wordbag;		    //< term -> stem
-Z BAG  wordbag_store;   //< stem heap
-Z VEC  docmap;			//< doc_id -> rec_id
-Z BAG  statbag;         //< central storage of docset stats
-
-ZC MEM_TRACE=0;
-ZV fti_inc_mem(S label, J bytes) {
-	LOG("fti_inc_mem");
-	if(MEM_TRACE)
-		T(TEST, "\e[33m%s alloc %lu\e[0m", label, bytes);
-	fti_info->total_mem += bytes;
-	fti_info->total_alloc_cnt++;
-	BKT b = hsh_ins(fti_info->memmap, label, scnt(label), NULL);
-	b->payload += bytes;
-}
-
-ZV fti_dec_mem(S label, J bytes) {
-	LOG("fti_dec_mem");
-	if(MEM_TRACE)	
-		T(TEST, "\e[37m%s free %lu\e[0m", label, bytes);
-	fti_info->total_mem -= bytes;
-	BKT b = hsh_get_bkt(fti_info->memmap, label, scnt(label));
-	b->payload -= bytes;
-	fti_info->total_alloc_cnt--;}
-
-ZV fti_memmap_print_each(BKT bkt, V*arg, HTYPE i) {
-	LOG("fti_mem");
-	J val = (J)bkt->payload;
-	*(J*)arg += val;
-	T(TEST, "%15s\t%10ld", bkt->s, val);}
-
-V fti_print_memmap() {
-	LOG("fti_mem");
-	J ttl = 0;
-	hsh_each(fti_info->memmap, fti_memmap_print_each, &ttl);
-	T(TEST, "%15s\t%10ld", "total", ttl);
-	O("\n");
-	T(TEST, "%15s\t%10ld", "docset mileage", fti_info->total_docset_length);
-	T(TEST, "%15s\t%10ld", "longest docset", fti_info->longest_docset);
-}
+Z HT   stopwords;	    			//< stop words
+Z HT   wordbag;		    			//< term -> stem
+Z BAG  wordbag_store;   			//< stem heap
+Z VEC  docmap;						//< doc_id -> rec_id
+Z BAG  statbag;         			//< central storage of docset stats
 
 Z UJ fti_load_stop_words(S fname) {
 	LOG("fti_load_stop_words");
@@ -127,137 +82,11 @@ V fti_print_completions_for(S query) {
 	vec_destroy(results);
 }*/
 
-ZI fti_find_shortest_docset(VEC docsets){
-	DOCSET ds = *vec_at(docsets,0,DOCSET);
-	I shortest=0, j, len, min_len=set_size(ds->docs);	
-	DO(vec_size(docsets)-1,
-		j=i+1; ds = *vec_at(docsets,j,DOCSET);
-		len = set_size(ds->docs);
-		if(len < min_len) {
-			shortest = j;
-			min_len = len;
-		})
-	R shortest;}
-
-V fti_dump_docset(S label, SET s) {
-	LOG("fti_dbg");
-	TSTART();T(TEST, "%s -> (%2d) ", label, set_size(s));
-	DO(set_size(s),
-		T(TEST, "%d ", *(FTI_DOCID*)set_at(s,i));
-	)TEND();}
-
-V fti_dump_result() {
-	LOG("fti_dump_result");
-	TSTART();T(TEST, "result (%d) -> ", vec_size(HITS));
-	DO(vec_size(HITS),
-		FTI_MATCH m = vec_at_(HITS,i);
-		T(TEST, "%lu(%.3f) ", m->rec_id, m->score);
-	)TEND();	
-}
-
-Z ID fti_docmap_translate(FTI_DOCID doc_id) {
+ID fti_docmap_translate(FTI_DOCID doc_id) {
 	R *(ID*)vec_at_(docmap, doc_id);
 }
-
-ZE fti_get_score(FTI_DOCID doc_id, DOCSET ds, UJ pos) {
-	LOG("fti_get_stat");
-	UJ offset = (UJ)ds->stat;
-	V*bag = statbag->ptr + offset;
-	FTI_STAT_FIELD*st = bag + pos * SZ(FTI_STAT_FIELD) * 2;
-	F tf = sqrt((F)st[0]);
-	F idf = 1 + log((F)fti_info->total_records/(1+set_size(ds->docs)));
-	idf *= idf; // square it
-	//T(TEST, "recovered stat: id=%d freq=%d dfreq=%d prox=%d", doc_id, st[0], set_size(ds->docs), st[1]);
-	//T(TEST, "score: id=%d tf=%0.4f idf=%0.4f", tf, idf);
-	R tf * idf;
-}
-
-//! comparator for qsort
-ZI fti_compare_matches(const V*a, const V*b) {
-	LOG("fti_compare");
-	FTI_MATCH x = (FTI_MATCH)a;
-	FTI_MATCH y = (FTI_MATCH)b;
-	//T(TEST, "qsort %lu %lu", x->rec_id, x->rec_id);
-	P(x->score==y->score, 0)
-	C r = x->score > y->score; //< ascending
-	R r?-1:1;}
-
-ZV fti_sort_matches() {
-	LOG("fti_sort");
-	T(TRACE, "sorting matches...");
-	qsort(HITS->data, vec_size(HITS), SZ_FTI_MATCH, fti_compare_matches);}
-
-ZV fti_intersect(I field) {
-	LOG("fti_intersect");
-	VEC res = results[field];
-	sz cnt = vec_size(res);
-	DOCSET ds,nxt;
-	if(!cnt)R; //< bail if no docsets
-	//! just one docset, clone it
-	if(cnt==1){
-		T(WARN, "not yet implemented");
-		ds = *vec_at(res,0,DOCSET);
-		//set_clone(out[field], ds->docs);
-		R;}
-	//! more than one docset: calculate intersection
-	I shortest = fti_find_shortest_docset(res);
-	ds = *vec_at(res,shortest,DOCSET);
-	SET base = ds->docs; C match;
-	//fti_dump_docset("base", base);
-	TSTART();T(TEST, "%d-way matches for field %d:", cnt, field);
-	DO(set_size(base),
-		FTI_DOCID needle = *(FTI_DOCID*)set_at(base, i);
-		match = 1;
-		F score = fti_get_score(needle, ds, i);
-		DO(cnt,
-			if(i==shortest)continue;	
-			nxt = *vec_at(res,i,DOCSET);
-			UJ idx = set_index_of(nxt->docs, &needle);
-			if(idx==NIL){match=0;break;}
-			score += fti_get_score(needle, nxt, idx);
-		)
-		if(!match)continue;
-
-		ID rec_id = fti_docmap_translate(needle);
-		mbuf->rec_id = rec_id;
-		mbuf->field = 1<<field;
-		mbuf->score = score;
-		vec_add_((V**)&HITS, mbuf);
-		T(TEST, " %d", mbuf->rec_id);
-	)TEND();
-}
-
 DOCSET fti_get_docset(I field, S term, I termlen) {
 	R(DOCSET)hsh_get_payload(FTI[field], term, termlen);}
-
-V fti_search(S query, FTI_SEARCH_CALLBACK fn) {
-	LOG("fti_search");
-	I qlen = scnt(query);
-	lcse(query,qlen); //< lowercase
-	T(TEST, "raw query: -> (%s)", query);
-	//! flush old docset vectors
-	DO(FTI_FIELD_COUNT, vec_clear(results[i])) 
-	//! tokenize and accumulate docsets per field/term
-	TSTART();T(TEST, "docsets:");
-	stok(query, qlen, FTI_TOKEN_DELIM, 0,
-		if(tok_len<FTI_MIN_TOK_LENGTH||hsh_get(stopwords, tok, tok_len))continue;
-		//! apply stemmer
-		tok_len = stm(tok, 0, tok_len-1)+1;
-		tok[tok_len] = 0; //< terminate
-		//! retrieve docsets per field
-		T(TEST, " %s ->", tok);
-		(DO(FTI_FIELD_COUNT,
-			DOCSET docset = fti_get_docset(i, tok, tok_len);
-			if(!docset){T(DEBUG, "%d: no docset for %s", i, tok);continue;}
-			T(TEST, " (%d:%lu)", i, set_size(docset->docs));
-			vec_add(results[i],docset);
-		)))TEND();
-
-	//! calculate docset intersection, poopulate and sort HITS
-	DO(FTI_FIELD_COUNT, fti_intersect(i))
-	fti_sort_matches();
-	fti_dump_result();
-}
 
 C fti_compare_docids(V*a, V*b, sz s){
 	FTI_DOCID x = *(FTI_DOCID*)a;
@@ -293,7 +122,7 @@ UJ fti_index_field(ID rec_id, I field, S s, I flen, FTI_DOCID doc_id) {
 	stok(s, flen, FTI_TOKEN_DELIM, 0,
 
     	if(tok_len<FTI_MIN_TOK_LENGTH||hsh_get(stopwords, tok, tok_len)){
-    		fti_info->stopword_matches++;continue;}
+    		mem_info()->stopword_matches++;continue;}
 
        	#ifdef USE_WORDBAG
 		BKT b = hsh_ins(wordbag, tok, tok_len, NULL);
@@ -312,7 +141,7 @@ UJ fti_index_field(ID rec_id, I field, S s, I flen, FTI_DOCID doc_id) {
 
 			//! link stem to word
 			b->payload = bagtok;
-			fti_info->total_tokens++;
+			mem_info()->total_tokens++;
 		} else {
 			tok = b->payload;
 			tok_len = scnt(tok);
@@ -343,15 +172,13 @@ UJ fti_index_field(ID rec_id, I field, S s, I flen, FTI_DOCID doc_id) {
 	R tok_cnt;}
 
 Z UJ fti_index_rec(Rec r, V*arg, UJ i) {
-
 	fti_index_field(r->rec_id, fld_publisher, r->publisher, r->lengths[0], i);
 	fti_index_field(r->rec_id, fld_title, r->title, r->lengths[1], i);
 	fti_index_field(r->rec_id, fld_author, r->author, r->lengths[2], i);
 	fti_index_field(r->rec_id, fld_subject, r->subject, r->lengths[3], i);
 
-	fti_info->total_records++;
+	mem_info()->total_records++;
 	vec_add(docmap, r->rec_id);
-
 	R0;}
 
 ZV fti_docsets_pack_each(BKT bkt, V*arg, HTYPE i) {
@@ -371,8 +198,8 @@ ZV fti_docsets_pack_each(BKT bkt, V*arg, HTYPE i) {
 	*alloc += SZ_DOCSET;
 
 	sz n = set_size(docset->docs);
-	fti_info->total_docset_length += n;
-	fti_info->longest_docset = MAX(fti_info->longest_docset, n);
+	mem_info()->total_docset_length += n;
+	mem_info()->longest_docset = MAX(mem_info()->longest_docset, n);
 
 	//docset->cnt = n;
 	
@@ -408,55 +235,36 @@ I fti_shutdown() {
 	LOG("fti_shutdown");
 	I res=0;
 
-	fti_dec_mem("wordbag_store", bag_destroy(wordbag_store));
-	fti_dec_mem("statbag", bag_destroy(statbag));
-	fti_dec_mem("stopwords", hsh_destroy(stopwords));
-	fti_dec_mem("file_index", db_close());
-	fti_dec_mem("wordbag", hsh_destroy(wordbag));
+	mem_dec("wordbag_store", bag_destroy(wordbag_store));
+	mem_dec("statbag", bag_destroy(statbag));
+	mem_dec("stopwords", hsh_destroy(stopwords));
+	mem_dec("file_index", db_close());
+	mem_dec("wordbag", hsh_destroy(wordbag));
 
 	DO(FTI_FIELD_COUNT,
 		sz docsets_dealloc = 0;
 		hsh_each(FTI[i], fti_terms_destroy_each, &docsets_dealloc);
-		fti_dec_mem("docsets", docsets_dealloc);
-		fti_dec_mem("fti", hsh_destroy(FTI[i]));
-		vec_destroy(results[i]);
+		mem_dec("docsets", docsets_dealloc);
+		mem_dec("fti", hsh_destroy(FTI[i]));
 	)
 
-	fti_dec_mem("docmap", vec_destroy(docmap));
+	mem_dec("docmap", vec_destroy(docmap));
 
-	vec_destroy(HITS);
-	free(mbuf);
-
-	if (fti_info->total_mem){
-		T(WARN, "unclean shutdown, \e[91mmem=%ld, cnt=%ld\e[0m", fti_info->total_mem, fti_info->total_alloc_cnt);
-		fti_print_memmap();
-		res=1;
-	}else
-		T(INFO, "shutdown complete.");
-
-	hsh_destroy(fti_info->memmap);
-	free(fti_info);
-
-	R res;}
+	R mem_shutdown();}
 
 I fti_init() {
 	LOG("fti_init");
 
-	fti_info = (FTI_INFO)calloc(SZ_FTI_INFO,1);chk(fti_info,1);
-	fti_info->memmap = hsh_init(2,1);
+	mem_init();
 
 	// load database
-	fti_inc_mem("file_index",
+	mem_inc("file_index",
 		db_init(DAT_FILE, IDX_FILE));
 
 	// init fti
 	DO(FTI_FIELD_COUNT,
 		FTI[i] = hsh_init(2,1);
-		results[i] = vec_init(1,DOCSET);
 	)
-
-	HITS = vec_init_(1,SZ_FTI_MATCH);
-	mbuf = (FTI_MATCH)calloc(SZ_FTI_MATCH,1);
 
 	docmap = vec_init(1, ID);
 
@@ -470,7 +278,7 @@ I fti_init() {
 	UJ swcnt = fti_load_stop_words(FTI_STOPWORDS_FILE);
 	X(swcnt==NIL, T(FATAL, "cannot load stopwords"), 1);
 	T(INFO, "loaded %lu stopwords", stopwords->cnt);
-	fti_inc_mem("stopwords", stopwords->mem);
+	mem_inc("stopwords", stopwords->mem);
 	//hsh_info(stopwords);
 
 	clock_t idx_start = clk_start();
@@ -480,36 +288,32 @@ I fti_init() {
 
 	X(res==NIL,T(FATAL, "unable to index records"), 1);
 	T(INFO, "indexed \e[1;37m%lu records in %lums\e[0m", res, clk_diff(idx_start, clk_start()));
-	T(TEST, "stopword hits %lu", fti_info->stopword_matches);
+	T(TEST, "stopword hits %lu", mem_info()->stopword_matches);
 
 	bag_compact(wordbag_store);
 	if(wordbag_store->offset)
 		hsh_each(wordbag, (HT_EACH)fti_wordbag_adjust_ptr, (V*)wordbag_store->offset);
 
-	fti_inc_mem("wordbag", wordbag->mem);
-	fti_inc_mem("docmap", vec_mem(docmap));
-	fti_inc_mem("wordbag_store", bag_mem(wordbag_store));
+	mem_inc("wordbag", wordbag->mem);
+	mem_inc("docmap", vec_mem(docmap));
+	mem_inc("wordbag_store", bag_mem(wordbag_store));
 
 	DO(FTI_FIELD_COUNT,
 		sz docsets_alloc = 0;
 		hsh_each(FTI[i], fti_docsets_pack_each, &docsets_alloc);
-		fti_inc_mem("docsets", docsets_alloc);
-		fti_inc_mem("fti", FTI[i]->mem);
+		mem_inc("docsets", docsets_alloc);
+		mem_inc("fti", FTI[i]->mem);
 		if(FTI[i]->cnt)
 			hsh_info(FTI[i]);
 	)
 	bag_compact(statbag);
-	fti_inc_mem("statbag", bag_mem(statbag));
+	mem_inc("statbag", bag_mem(statbag));
 	T(TEST, "packed docsets in %lums", clk_stop());
 
 	hsh_pack(wordbag);
 	hsh_info(wordbag);
 
 	R0;}
-
-FTI_INFO fti_stats() {
-	R fti_info;
-}
 
 
 #ifdef RUN_TESTS_FTI
@@ -571,33 +375,7 @@ V fti_bench() {
 I main() {
 	LOG("fti_test");
 	srand(time(NULL));
-
 	P(fti_init(),1);
-
-	//test_vec = vec_init(50000, char[11]);
-	//X(!test_vec, T(FATAL, "cannot initialize test vector"), 1)
-
-	//! test tokenizer
-	S c = "a aaron abaissiez abandon aaron aaron abandoned abase abash abate abated abatement abatements abates abbess abbey abbeys abbominable abbot a";
-	C qq[scnt(c)]; mcpy(qq,c,scnt(c));
-	//fti_search(qq);//exit(0);
-
-	//! test tokenizer
-	//mcpy(qq,c,scnt(c));fti_index_field(0, 5, qq, 0); exit(0);
-
-	//hsh_each(wordbag, fti_wordbag_inspect_each, NULL);
-	//fti_inc_mem("test_vec", vec_mem(test_vec));
-	//fti_bench();
-	//fti_dec_mem("test_vec", vec_destroy(test_vec));
-
-	//fti_print_memmap();
-
-	S Q = "text read includ";
-	C qqq[scnt(Q)+1];
-	mcpy(qqq,Q,scnt(Q)+1);
-
-	fti_search(qqq, NULL);
-
 	R fti_shutdown();}
 
 #endif
