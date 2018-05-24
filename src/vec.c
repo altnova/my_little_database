@@ -69,8 +69,10 @@ VEC vec_add_(V** aptr, V* el){
 sz  vec_compact(VEC*aptr) {
 	LOG("vec_compact");
 	VEC a = *aptr;
+	P(a->size==a->used, 0) // good enough already
 	sz mem = vec_mem(a);
-	a->size = a->used;
+	a->size = MAX(1,a->used); // ensure at least 1 element
+	//T(TRACE, "size: %lu, used: %lu", a->size, a->used);
 	sz new_size = SZ_VEC + a->el_size * a->size;
 	a = realloc(a, new_size);chk(a,0);
 	sz save = mem - new_size;
@@ -92,14 +94,14 @@ sz vec_del_at(VEC a, sz i, sz n){
 	if(truncate){
 		// truncate!
 		a->used = i;
-		T(TEST, "truncated %lu elements", old_size - a->used);
+		T(DEBUG, "truncated %lu elements", old_size - a->used);
 	} else {
 		V* dst = a->data + (i * a->el_size);
 		V* src = dst + (n * a->el_size);
 		sz bytes = (a->used-n) * a->el_size;
 		P(dst!=memmove(dst, src, bytes), 0);
 		a->used -= n;
-		T(TEST, "deleted %lu elements", n);
+		T(DEBUG, "deleted %lu elements", n);
 	}
 	//T(TEST, "load factor %0.3f, alloc=%lu alloc/2=%lu usage=%lu", vec_lfactor(a), a->mem, a->mem>>1, a->used * a->el_size);
 	R a->used;} //< new size
