@@ -5,13 +5,13 @@ typedef HTYPE(*HSH_FN)(S val, UI len); //< hsh_each function interface
 
 typedef struct bucket{
 	HTYPE h;				//< value hash
-	UJ n;					//< value len
+	UH n;					//< value len
 	struct bucket* next;	//< pointer to next 
-	HTYPE idx;				//< table index
+//	HTYPE idx;				//< table index
 	C packed;				//< in heap
 	V* payload;				//< pointer to payload
 	G s[];					//< value bytes
-} pBKT;
+} __attribute__((packed))  pBKT;
 
 const Z sz SZ_BKT = SZ(pBKT); //< bucket header size
 typedef pBKT* BKT;

@@ -67,7 +67,7 @@ Z inline V hsh_idx(HT ht, V*s, UJ n, HTYPE*h, HTYPE*idx) {
 V hsh_print(BKT b) {
 	LOG("hsh_print");
 	T(TEST, "bkt     -> %d",   b);
-	T(TEST, "idx     -> %d",   b->idx);	
+//	T(TEST, "idx     -> %d",   b->idx);	
 	T(TEST, "s       -> %s",   b->s);
 	T(TEST, "h       -> %d",   b->h);
 	T(TEST, "n       -> %d",   b->n);
@@ -128,7 +128,7 @@ BKT hsh_ins(HT ht, V*k, sz n, V*payload){
 	ht->mem += rec_len;	ht->cnt++;			//< increment odometers
 	B->h              = hash;				//< set hash value
 	B->n              = n;					//< set val length
-	B->idx            = idx;				//< set current bucket index
+//	B->idx            = idx;				//< set current bucket index
 	B->payload		  = payload;			//< set payload pointer
 	B->packed		  = 0;					//< not in heap
 	B->next           = ht->buckets[idx];	//< link existing list item, if any
@@ -153,7 +153,7 @@ BKT hsh_ins(HT ht, V*k, sz n, V*payload){
 					moved->next = ht->buckets[new_idx]; //< link existing list item, if any
 					ht->buckets[new_idx] = moved; //< put at the head of the list
 					//T(TEST, "MOV --> %s (%d -> %d)", moved->s, moved->idx, new_idx);
-					moved->idx = new_idx; //< update idx
+//					moved->idx = new_idx; //< update idx
 				} else bp=&(*bp)->next; //< keep walking the list
 			}
 			//! once split reaches the middle:
