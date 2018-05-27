@@ -1,7 +1,7 @@
 #CC=gcc-8
 CC=gcc
-CCOPTS=-mavx2 -ffast-math -march=native -flto -mfpmath=sse -funroll-loops -Ofast
-#CCOPTS=-Og -g
+#CCOPTS=-mavx2 -ffast-math -march=native -flto -mfpmath=sse -funroll-loops -Ofast
+CCOPTS=-Og -g
 #VLG=/opt/valgrind/bin/valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes
 VLG=
 
@@ -80,6 +80,20 @@ fts:
 fti:
 	$(CC) -DRUN_TESTS_FTI $(CCOPTS) -o bin/fti src/mem.c src/set.c src/rnd.c src/bag.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/vec.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/fti.c 
 	$(VLG) ./bin/fti
+
+srv:
+	$(CC) -DRUN_TESTS_SRV $(CCOPTS) -Wno-parentheses -o bin/srv src/msg.c src/trc.c src/tcp.c
+	$(VLG) ./bin/srv
+
+cln:
+	$(CC) -DRUN_TESTS_CLN $(CCOPTS) -Wno-parentheses -o bin/cln src/tcp.c src/msg.c src/trc.c src/cln.c
+	$(VLG) ./bin/cln
+
+msg:
+	rm -f src/rpc.h
+	cpp-8 -C -P rpc/rpc.in.c > src/rpc.h
+	$(CC) -DRUN_TESTS_MSG $(CCOPTS) -Wno-parentheses -o bin/msg src/msg.c src/tcp.c src/trc.c
+	$(VLG) ./bin/msg
 
 app: 
 	$(CC) $(CCOPTS) -o bin/cli src/fts.c src/mem.c src/set.c src/cli.c src/rnd.c src/bag.c src/tri.c src/usr.c src/stm.c src/clk.c src/bin.c src/vec.c src/idx.c src/rec.c src/trc.c src/hsh.c src/fio.c src/fti.c 
