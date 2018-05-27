@@ -21,19 +21,19 @@ csv: clean nodatafiles
 	$(VLG) ./bin/csv csv/books.csv dat/books.dat 39673
 	#$(VLG) ./bin/csv csv/sample.csv dat/books.dat 17
 
-set: clean
+set:
 	$(CC) -DRUN_TESTS_SET $(CCOPTS) -o bin/set src/trc.c src/bin.c src/vec.c src/set.c
 	$(VLG) ./bin/set
 
-hsh: clean
+hsh:
 	$(CC) -DRUN_TESTS_HSH $(CCOPTS) -o bin/hsh src/vec.c src/clk.c src/rnd.c src/trc.c src/hsh.c
 	$(VLG) ./bin/hsh
 
-bin: clean
+bin:
 	$(CC) -DRUN_TESTS_BIN $(CCOPTS) -o bin/bin src/trc.c src/bin.c 
 	$(VLG) ./bin/bin
 
-vec: clean
+vec:
 	$(CC) -DRUN_TESTS_VEC $(CCOPTS) -o bin/vec src/trc.c src/vec.c 
 	$(VLG) ./bin/vec
 
