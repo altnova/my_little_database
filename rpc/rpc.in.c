@@ -1,35 +1,40 @@
 #include "rpc.def.h"
 
 //! message header
-typedef struct msg_hdr { G ver, type; UI len;} MSG_HDR;
+typedef struct msg_hdr { G ver, type; UI len;} __attribute__((packed)) MSG_HDR;
+
+Z  G RPC_VERSION;
 
 Z UI MSG_SIZES[2*100];
-Z G MSG_ARGC[2*100];
+Z  G MSG_ARGC[2*100];
+Z UI MSG_TAIL_OFFSET[2*100];
+
+S MSG_LABELS[]={"HEY","GET","DEL","UPD","ADD","FND","LST","SRT","BYE"};
 
 //! message definitions
-mtype( 0, HEY,     _2(tUI(ver_hi), tUI(ver_lo)),
-                   _2(tUI(ver_hi), tUI(ver_lo)))
+mtype( 0, HEY,     _1(tARR(C,username)),
+                   _1(tARR(UJ,info)))
 
 mtype( 1, GET,     _1(tID(rec_id)),
-                   _3(tID(rec_id), tSZ(el_size), tARR(pRec,record)))
+                   _1(tARR(pRec,record)))
 
 mtype( 2, DEL,     _1(tID(rec_id)),
                    _1(tID(rec_id)))
 
-mtype( 3, UPD,     _4(tID(rec_id), tUI(cnt), tSZ(el_size), tARR(pRec,records)),
+mtype( 3, UPD,     _2(tUI(cnt), tARR(pRec,records)),
                    _1(tUI(cnt)))
 
-mtype( 4, ADD,     _3(tUI(cnt), tSZ(el_size), tARR(pRec,records)),
+mtype( 4, ADD,     _2(tUI(cnt), tARR(pRec,records)),
                    _1(tUI(cnt)))
 
-mtype( 5, FND,     _3(tUI(max_hits), tSZ(query_len), tARR(C,query)),
-                   _3(tUI(cnt), tSZ(el_size), tARR(pRec,hits)))
+mtype( 5, FND,     _2(tUI(max_hits), tARR(C,query)),
+                   _2(tUI(cnt), tARR(pRec,hits)))
 
 mtype( 6, LST,     _2(tUI(page_num), tUI(per_page)),
-                   _5(tUI(page_num), tUI(out_of), tUI(cnt), tSZ(el_size), tARR(pRec,records)))
+                   _4(tUI(page_num), tUI(out_of), tUI(cnt), tARR(pRec,records)))
 
 mtype( 7, SRT,     _2(tUI(field_id), tUI(dir)),
-                   _5(tUI(page_num), tUI(out_of), tUI(cnt), tSZ(el_size), tARR(pRec,records)))
+                   _4(tUI(page_num), tUI(out_of), tUI(cnt), tARR(pRec,records)))
 
 mtype( 8, BYE,     _1(tUI(msgs_sent)), _1(tUI(msgs_rcvd)))
 
@@ -75,45 +80,75 @@ typedef struct {
 } *MSG;
 
 ext V rpc_init() {
-    msg_size_set(0,HEY,2,2) // UI,UI / UI/UI
-    msg_size_set(1,GET,1,3) // ID / ID,SZ,{}
-    msg_size_set(2,DEL,1,1) // ID / ID
-    msg_size_set(3,UPD,4,1) // ID,UI,SZ,{} / UI
-    msg_size_set(4,ADD,3,1) // UI,SZ,{} / UI
-    msg_size_set(5,FND,3,3) // UI,SZ,{} / UI,SZ,{}
-    msg_size_set(6,LST,2,5) // UI,UI / UI,UI,UI,SZ,{}
-    msg_size_set(7,SRT,2,5) // UI,UI / UI,UI,UI,SZ,{}
-    msg_size_set(8,BYE,1,1) // UI / UI
+
+    RPC_VERSION = RPC_VER;
+
+    G TAIL = 2;
+    //                arc_out   argc_in
+    msg_set_size(HEY, 0+TAIL,   0+TAIL) // UI,UI,{} / UI,UI,{}
+    msg_set_size(GET, 1,        0+TAIL) // ID / {}
+    msg_set_size(DEL, 1,        1)      // ID / ID
+    msg_set_size(UPD, 1+TAIL,   1)      // UI,{} / UI
+    msg_set_size(ADD, 1+TAIL,   1)      // UI,{} / UI
+    msg_set_size(FND, 1+TAIL,   1+TAIL) // UI,{} / UI,{}
+    msg_set_size(LST, 2,        3+TAIL) // UI,UI / UI,UI,UI,{}
+    msg_set_size(SRT, 2,        3+TAIL) // UI,UI / UI,UI,UI,{}
+    msg_set_size(BYE, 1,        1)      // UI / UI
+
+    msg_has_tail(OUT_HEY,ptx_HEY)
+    msg_has_tail( IN_HEY,prx_HEY)
+    msg_has_tail( IN_GET,prx_GET)
+    msg_has_tail(OUT_UPD,ptx_UPD)
+    msg_has_tail(OUT_ADD,ptx_ADD)
+    msg_has_tail(OUT_FND,ptx_FND)
+    msg_has_tail( IN_FND,prx_FND)
+    msg_has_tail( IN_LST,prx_LST)
+    msg_has_tail( IN_SRT,prx_SRT)
 }
 
-ext MSG rpc_make(I m_type, ...) {
+ext MSG rpc_create(I m_type, ...) {
+  LOG("rpc_create");
   UI m_len = MSG_SIZES[m_type];
-  G ver = 42;
-  MSG m = calloc(1, m_len);
+  G ver = RPC_VERSION;
+  MSG m = calloc(1, m_len);chk(m,0);
   va_list a;va_start(a, m_type);
-  //I payload_pos = 0, payload_sz = 0;
+  UI tail_offset = MSG_TAIL_OFFSET[m_type];
   m->hdr = (MSG_HDR){ver, m_type, m_len};
   SW(m_type){
-    msg_set_args(tx_HEY, (_a(UI),_a(UI)))
-    msg_set_args(rx_HEY, (_a(UI),_a(UI)))
-    msg_set_args(tx_GET, (_a(ID)))
-    msg_set_args(rx_GET, (_a(ID),_a(SIZETYPE)))
-    msg_set_args(tx_DEL, (_a(ID)))
-    msg_set_args(rx_DEL, (_a(ID)))
-    msg_set_args(tx_UPD, (_a(ID),_a(SIZETYPE),_a(SIZETYPE)))
-    msg_set_args(rx_UPD, (_a(UI)))
-    msg_set_args(tx_ADD, (_a(UI),_a(SIZETYPE)))
-    msg_set_args(rx_ADD, (_a(UI)))
-    msg_set_args(tx_FND, (_a(UI),_a(SIZETYPE)))
-    msg_set_args(rx_FND, (_a(UI),_a(SIZETYPE)))
-    msg_set_args(tx_LST, (_a(UI),_a(UI)))
-    msg_set_args(rx_LST, (_a(UI),_a(UI),_a(UI),_a(SIZETYPE)))
-    msg_set_args(tx_SRT, (_a(UI),_a(UI)))
-    msg_set_args(rx_SRT, (_a(UI),_a(UI),_a(UI),_a(SIZETYPE)))
-    msg_set_args(tx_BYE, (_a(UI)))
-    msg_set_args(rx_BYE, (_a(UI)))
+    msg_set_args_tx(HEY, {})
+    msg_set_args_rx(HEY, {})
+    msg_set_args_tx(GET, (_a(ID)))
+    msg_set_args_rx(GET, {})
+    msg_set_args_tx(DEL, (_a(ID)))
+    msg_set_args_rx(DEL, (_a(ID)))
+    msg_set_args_tx(UPD, (_a(ID)))
+    msg_set_args_rx(UPD, (_a(UI)))
+    msg_set_args_tx(ADD, (_a(UI)))
+    msg_set_args_rx(ADD, (_a(UI)))
+    msg_set_args_tx(FND, (_a(UI)))
+    msg_set_args_rx(FND, (_a(UI)))
+    msg_set_args_tx(LST, (_a(UI),_a(UI)))
+    msg_set_args_rx(LST, (_a(UI),_a(UI),_a(UI)))
+    msg_set_args_tx(SRT, (_a(UI),_a(UI)))
+    msg_set_args_rx(SRT, (_a(UI),_a(UI),_a(UI)))
+    msg_set_args_tx(BYE, (_a(UI)))
+    msg_set_args_rx(BYE, (_a(UI)))
+    CD: T(WARN, "unknown message code: %d", m_type);
   }
-  //if(size>0) mcpy(m, m+SZ_MSG_HDR, size);
+  if(tail_offset) {
+
+    SIZETYPE tail_len = _a(SIZETYPE);
+    V* tail_src = _a(V*);
+    X(!tail_len, T(WARN, "msg type %d requires data, but no length is given"), 0)
+    X(!tail_src, T(WARN, "msg type %d requires data, but no data source is given"), 0)
+    m = realloc(m, m_len+SZ(SIZETYPE)+tail_len);chk(m,0);
+
+    SIZETYPE*tl = (SIZETYPE*)(((V*)&m->msg)+tail_offset);
+    *tl = tail_len;
+    m->hdr.len += tail_len;
+    mcpy(((V*)tl)+SZ(SIZETYPE), tail_src, tail_len);
+    T(TRACE, "tail copied, %d bytes (expect %d)", m->msg.m_tx_HEY.data_len, tail_len);
+  }
   R m;}
 
 

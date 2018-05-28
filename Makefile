@@ -92,7 +92,7 @@ cln:
 msg:
 	rm -f src/rpc.h
 	cpp-8 -C -P rpc/rpc.in.c > src/rpc.h
-	$(CC) -DRUN_TESTS_MSG $(CCOPTS) -Wno-parentheses -o bin/msg src/msg.c src/tcp.c src/trc.c
+	$(CC) -DRUN_TESTS_MSG $(CCOPTS) -Wno-parentheses -o bin/msg src/str.c src/msg.c src/tcp.c src/trc.c
 	$(VLG) ./bin/msg
 
 app: 

@@ -2,12 +2,15 @@
 
 #define SIZETYPE UI
 
+#include <pwd.h>
+
 #include "___.h"
 #include "cfg.h"
 #include "trc.h"
 #include "msg.h"
 #include "tcp.h"
 #include "rpc.h"
+#include "str.h"
 
 #define SZ_MSG_HDR SZ(MSG_HDR)
 
@@ -16,11 +19,14 @@ Z MSG mbuf;
 V msg_dump_header(MSG m) {
 	LOG("msg_dump_header");
 	MSG_HDR h = m->hdr;
-
 	T(TEST, "ver -> %d", h.ver);
-	T(TEST, "type -> %d", h.type);
+	T(TEST, "type -> %d (%s)", h.type, MSG_LABELS[h.type]);
 	T(TEST, "len -> %d", h.len);
-
+	UI tail_offset = MSG_TAIL_OFFSET[h.type];
+	if(!tail_offset)R;
+	T(TEST, "tail_offset -> %d", tail_offset);
+	T(TEST, "tail_len -> %d", *(SIZETYPE*)(((V*)&m->msg)+tail_offset));
+	T(TEST, "tail -> %s", (S)(((V*)&m->msg)+tail_offset+SZ(SIZETYPE)));
 }
 
 /*
@@ -43,11 +49,6 @@ I s_req_hlo(I d, I majver, I minver) {
 	R0;
 }
 
-MSG make_msg(C a[3], C b[3], I a1, I a2, I cnt, I size, V*blob) {
-	MSG m = calloc(1, SZ_MSG_HDR+size);
-	*m = (pMSG){42,a[0],a[1],a[2],b[0],b[1],b[2],a1,a2,0,0,{}};
-	if(size>0) mcpy(m, m+SZ_MSG_HDR, size);
-	R m;}
 */
 
 I recv_msg(I d) {
@@ -87,7 +88,13 @@ I main() {
 	rpc_init();
 	msg_init();
 
-	MSG m = rpc_make(msg_tx_HEY, 12, 13);
+	C b[256];
+	gethostname((S)b,256);
+	S hostname = lcase(b,scnt(b));
+	struct passwd*u=getpwuid(getuid());
+	S username = (S)u->pw_name;
+
+	MSG m = rpc_create(OUT_HEY, scnt(username), username);
 
 	msg_dump_header(m);
 
