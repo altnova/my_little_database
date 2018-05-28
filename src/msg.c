@@ -5,40 +5,56 @@
 #include "___.h"
 #include "cfg.h"
 #include "trc.h"
+#include "rpc.h"
 #include "msg.h"
 #include "tcp.h"
-#include "rpc.h"
 #include "str.h"
 
-/*
-I s_req_hlo(I d, I majver, I minver) {
-	LOG("s_req_hlo");
-	MSG m = make_msg("REQ","HLO",majver,minver,0,0,0);
-	T(TEST, "sending document...");
-	I r = snd(d, m, SZ_MSG_HDR + m->size);
-	T(TEST, "sent, result= %d",r);
+UI msg_size(MSG m) {
+	R SZ_MSG_HDR + m->hdr.len;
+}
+
+V msg_hdr_dump(MSG_HDR *h) {
+	LOG("msg_hdr_dump");
+	T(TEST, "ver -> %d", h->ver);
+	T(TEST, "type -> %d", h->type);
+	T(TEST, "len -> %d", h->len);
+}
+
+I msg_is_err(MSG_HDR *h) {
+	R h->type==50||h->type==150;
+}
+
+I msg_err(I p, I err_id, S msg) {
+	LOG("msg_err");
+	T(WARN, "send err (%d) %s", err_id, msg);
+	MSG m = rpc_create_ERR_res((UI)err_id, scnt(msg), msg);
+	snd(p, m, msg_size(m));
 	R0;
 }
-*/
 
-I recv_msg(I d) {
+I msg_recv(I d) {
 	LOG("recv_msg");
-	G b[SZ_MSG_HDR]; I n=rcv(d,b,SZ_MSG_HDR);
-	O("[~] rcvd_msg %d\n", n);
-	P(n<=0,sd0(d))
-	//print_hdr((MSG)b);
-	//P(42!=b[0]||n<0||n==0,(/*clo(d),*/-1))
-	T(TEST, "rcvd header %d bytes:");
-	//print_hdr((MSG)b);
-	X(42!=b[0], T(WARN, "msg magic value is not 42"), -1);
-	T(TEST, "rcvd header %d bytes, actual msg header size: %d", n, SZ_MSG_HDR);
-	//mbuf = realloc(mbuf, SZ_MSG_HDR + mbuf->size); chk(mbuf,0);
-	//T(TEST, "full msg size is %d+%d = ", SZ_MSG_HDR, mbuf->size, SZ_MSG_HDR + mbuf->size);
-	//n=rcv(d, mbuf+SZ_MSG_HDR, mbuf->size);
-	//T(TEST, "full message should be loaded now, %d more bytes rcvd", n);
-	//print_hdr(mbuf);
-	//clo(d);
-	R -1;}
+	MSG_HDR h; I n=rcv(d,&h,SZ_MSG_HDR);
+	P(n<=0,(sd0(d),-1))
+	T(TEST, "rcvd header %d bytes", n);
+	msg_hdr_dump(&h);
+	X(h.ver!=rpc_ver(), {msg_err(d, 1, "invalid rpc version");sd0(d);},-1);
+	X(h.len > MSG_MAX_LEN, {msg_err(d, 2, "message is too big");sd0(d);},-1);
+
+	pMSG *m = malloc(h.len); chk(m,-1);
+	n=rcv(d,m,h.len);
+	T(TEST, "rcvd payload %d bytes", n);
+
+	if(msg_is_err(&h)) {
+		pERR_res *e = (pERR_res*)&m;
+		T(WARN, "recv err (%d) %.*s", e->err_id, 20, e->msg);
+	} else {
+		T(WARN, "msg ready to process (type=%d)", h.type);
+	}
+
+	R0;}
+
 
 I msg_shutdown() {
 	//free(mbuf);
@@ -46,6 +62,7 @@ I msg_shutdown() {
 }
 
 I msg_init() {
+	rpc_init();
 	//mbuf = malloc(50);
 	R0;
 }
@@ -73,7 +90,6 @@ V hdr_test(S label, MSG_HDR h, I type, UI len) {
 
 I main() {
 	LOG("msg_test");
-	rpc_init();
 	msg_init();
 
 	MSG m;
@@ -203,8 +219,9 @@ I main() {
 	free(r1);
 	free(r2);
 	free(r3);
+	free(records);
 
-	ASSERT(1, "rpc seems to work as expected")
+	ASSERT(1, "RPC looks fine")
 
 	R msg_shutdown();
 }

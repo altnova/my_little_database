@@ -82,11 +82,11 @@ fti:
 	$(VLG) ./bin/fti
 
 srv:
-	$(CC) -DRUN_TESTS_SRV $(CCOPTS) -Wno-parentheses -o bin/srv src/msg.c src/trc.c src/tcp.c
+	$(CC) -DRUN_TESTS_SRV $(CCOPTS) -Wno-parentheses -o bin/srv src/rpc.c src/msg.c src/trc.c src/tcp.c
 	$(VLG) ./bin/srv
 
 cln:
-	$(CC) -DRUN_TESTS_CLN $(CCOPTS) -Wno-parentheses -o bin/cln src/tcp.c src/msg.c src/trc.c src/cln.c
+	$(CC) -DRUN_TESTS_CLN $(CCOPTS) -Wno-parentheses -o bin/cln src/rpc.c src/tcp.c src/msg.c src/trc.c src/cln.c
 	$(VLG) ./bin/cln
 
 msg:

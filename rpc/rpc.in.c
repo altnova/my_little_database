@@ -26,6 +26,7 @@ msg_prea_len(5,FND);
 msg_prea_len(6,LST);
 msg_prea_len(7,SRT);
 msg_prea_len(8,BYE);
+msg_prea_len(50,ERR);
 
 msg_create_fn_w_tail0( HEY_req, S,  username);
 msg_create_fn_w_tail0( HEY_res, UJ*, info);
@@ -45,6 +46,8 @@ msg_create_fn2(        SRT_req, UI, field_id, UI, dir);
 msg_create_fn_w_tail2( SRT_res, UI, page_num, UI, out_of, Rec, records);
 msg_create_fn0(        BYE_req);
 msg_create_fn0(        BYE_res);
+msg_create_fn_w_tail1( ERR_req, UI, err_id, S, msg);
+msg_create_fn_w_tail1( ERR_res, UI, err_id, S, msg);
 
 V rpc_init() {
 
@@ -61,6 +64,7 @@ V rpc_init() {
     msg_set_size(LST)
     msg_set_size(SRT)
     msg_set_size(BYE)
+    msg_set_size(ERR)
 
     msg_has_tail(HEY_req)
     msg_has_tail(HEY_res)
@@ -71,6 +75,12 @@ V rpc_init() {
     msg_has_tail(FND_res)
     msg_has_tail(LST_res)
     msg_has_tail(SRT_res)
+    msg_has_tail(ERR_req)
+    msg_has_tail(ERR_res)
+}
+
+G rpc_ver() {
+  R RPC_VERSION;
 }
 
 V rpc_dump_header(MSG m) {
@@ -148,6 +158,10 @@ mtype( 7, SRT,     _2(tUI(field_id), tUI(dir)),
 mtype( 8, BYE,     _0(),
                    _0())
 
+mtype( 50, ERR,    _2(tUI(err_id), tARR(S,msg)),
+                   _2(tUI(err_id), tARR(S,msg)))
+
+
 /*!
  * message types to int
  */
@@ -160,7 +174,8 @@ enum msg_codes {
     msg_code(5,FND),
     msg_code(6,LST),
     msg_code(7,SRT),
-    msg_code(8,BYE)
+    msg_code(8,BYE),
+    msg_code(50,ERR)
 };
 /*!
  * common type
@@ -175,6 +190,7 @@ typedef union {
     msg_ref(LST)
     msg_ref(SRT)
     msg_ref(BYE)
+    msg_ref(ERR)    
 } pMSG;
 
 /*!
@@ -206,10 +222,13 @@ msg_create_proto2(        SRT_req, _arg(UI,field_id), _arg(UI,dir));
 msg_create_proto_w_tail2( SRT_res, _arg(UI,page_num), _arg(UI,out_of), _tail(Rec,records));
 msg_create_proto0(        BYE_req);
 msg_create_proto0(        BYE_res);
+msg_create_proto_w_tail1( ERR_req, _arg(UI,errno), _tail(S,msg));
+msg_create_proto_w_tail1( ERR_res, _arg(UI,errno), _tail(S,msg));
 /*!
  * public methods
  */
 ext V rpc_init();
+ext G rpc_ver();
 ext V rpc_dump_header(MSG m);
 
 Z MSG rpc_alloc(I m_type, SIZETYPE tail_len, V*tail_src);
