@@ -195,6 +195,7 @@ I main() {
 
 	m = rpc_create_BYE_res();
 	pBYE_res *t18 = &m->as.BYE_res;
+	hdr_test("t18 header", m->hdr, BYE_res, 0);	
 	free(m);
 
 	//rpc_dump_header(m);

@@ -10,10 +10,10 @@ INCL_CONFIG_HEADER
 INCL_TRACE_HEADER
 INCL_OWN_HEADER
 
-Z  G RPC_VERSION;
+G  RPC_VERSION;
 
 UI MSG_SIZES[2*100];
-Z  G MSG_ARGC[2*100];
+G  MSG_ARGC[2*100];
 I  MSG_TAIL_OFFSET[2*100];
 
 S MSG_LABELS[]={"HEY","GET","DEL","UPD","ADD","FND","LST","SRT","BYE"};
@@ -148,7 +148,8 @@ mtype( 6, LST,     _2(tUI(page_num), tUI(per_page)),
 mtype( 7, SRT,     _2(tUI(field_id), tUI(dir)),
                    _4(tUI(page_num), tUI(out_of), tUI(cnt), tARR(pRec,records)))
 
-mtype( 8, BYE,     _1(tUI(msgs_sent)), _1(tUI(msgs_rcvd)))
+mtype( 8, BYE,     _0(),
+                   _0())
 
 /*!
  * message types to int

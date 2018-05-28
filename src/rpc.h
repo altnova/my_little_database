@@ -15,7 +15,7 @@ typedef struct msg_4 { UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute
 typedef struct msg_5 { UI max_hits; SIZETYPE data_len; S query[0]; } __attribute__((packed)) pFND_req; typedef struct msg_15 { UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) pFND_res;
 typedef struct msg_6 { UI page_num; UI per_page; } __attribute__((packed)) pLST_req; typedef struct msg_16 { UI page_num; UI out_of; UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) pLST_res;
 typedef struct msg_7 { UI field_id; UI dir; } __attribute__((packed)) pSRT_req; typedef struct msg_17 { UI page_num; UI out_of; UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) pSRT_res;
-typedef struct msg_8 { UI msgs_sent; } __attribute__((packed)) pBYE_req; typedef struct msg_18 { UI msgs_rcvd; } __attribute__((packed)) pBYE_res;
+typedef struct msg_8 { G empty[0]; } __attribute__((packed)) pBYE_req; typedef struct msg_18 { G empty[0]; } __attribute__((packed)) pBYE_res;
 /*!
  * message types to int
  */

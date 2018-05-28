@@ -21,7 +21,7 @@
 #define DEFN_SIZETYPE ??=define SIZETYPE
 #define DEFN_HDR_SIZE ??=define SZ_MSG_HDR
 
-#define _0()
+#define _0() G empty[0];
 #define _1(a) a;
 #define _2(a,b) a; b;
 #define _3(a,b,c) a; b; c;

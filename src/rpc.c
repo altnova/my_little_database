@@ -4,9 +4,9 @@
  #include "cfg.h"
  #include "trc.h"
  #include "rpc.h"
-Z G RPC_VERSION;
+G RPC_VERSION;
 UI MSG_SIZES[2*100];
-Z G MSG_ARGC[2*100];
+G MSG_ARGC[2*100];
 I MSG_TAIL_OFFSET[2*100];
 S MSG_LABELS[]={"HEY","GET","DEL","UPD","ADD","FND","LST","SRT","BYE"};
 sz SZ_HEY_req = SZ(pHEY_req), SZ_HEY_res = SZ(pHEY_res);;
