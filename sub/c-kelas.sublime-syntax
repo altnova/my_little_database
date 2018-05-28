@@ -19,7 +19,7 @@ variables:
   doxytags_w_args: 'class|def|enum|file|struct|typedef|union|a|b|c|e|em|p|param'
   log_levels: 'FATAL|WARN|INFO|TEST|DEBUG|TRACE'
   return: 'R|R0|R1|P|X'
-  control_keywords: 'ABS|MIN|MAX|IN|MN|rS|rK|SZ|L0|In|V0|V1|V2|XT|XD|XX|XC|XP|X1|X2|X3|XO|XF|k0|k1|k2|k3|k4|k5|xr|xt|xu|xn|xx|xy|xk|xg|xh|xi|xj|xe|xf|xs|xB|xH|xI|xJ|xE|xF|xC|xS|xK|TX|kK|kB|kG|kH|kI|kJ|kE|kF|kC|kS|SW|O|CS|CD|HALT|META|TRACE|STACK|P|Q|R|DO|U|break|case|continue|default|do|else|for|goto|if|_Pragma|return|switch|while|W|EVENTLOOP|R0|R1|X|P'
+  control_keywords: 'ABS|MIN|MAX|IN|MN|rS|rK|SZ|L0|In|V0|V1|V2|XT|XD|XX|XC|XP|X1|X2|X3|XO|XF|k0|k1|k2|k3|k4|k5|xr|xt|xu|xn|xx|xy|xk|xg|xh|xi|xj|xe|xf|xs|xB|xH|xI|xJ|xE|xF|xC|xS|xK|TX|RX|kK|kB|kG|kH|kI|kJ|kE|kF|kC|kS|SW|O|CS|CD|HALT|META|TRACE|STACK|P|Q|R|DO|U|break|case|continue|default|do|else|for|goto|if|_Pragma|return|switch|while|W|EVENTLOOP|R0|R1|X|P'
   basic_types: 'asm|__asm__|auto|bool|_Bool|char|_Complex|double|float|_Imaginary|int|long|short|signed|unsigned|void'
   before_tag: 'struct|union|enum'
   microsoft_types: 'SS|Kg|Kc|Ki|Ks|Kb|Kh|Kf|KG|KE|KJ|KH|KC|KI|KS|KB|KF|CA|ZJ|ZF|ZK|ZS|V|ZV|ZE|ZI|S|ZC|UI|I|C|G|S|K|H|J|E|F|UJ|UH|L|Z'
