@@ -49,20 +49,20 @@ typedef struct msg_1 ## id { rx } __attribute__((packed)) p ## label ## _res; /*
 
 #define msg_has_tail(code)   MSG_TAIL_OFFSET[code] = offsetof(p##code,data_len);
 
-#define msg_create_fn_w_tail0(fn, a_tail_len, t_tail_type, a_tail_ptr) \
-		MSG rpc_create_##fn(SIZETYPE a_tail_len, t_tail_type a_tail_ptr) {\
-		MSG m = rpc_alloc(fn, a_tail_len, (V*)a_tail_ptr);\
+#define msg_create_fn_w_tail0(fn, t_tail_type, a_tail) \
+		MSG rpc_create_##fn(SIZETYPE a_tail##_len, t_tail_type a_tail) {\
+		MSG m = rpc_alloc(fn, a_tail##_len, (V*)a_tail);\
 		R m;}
 
-#define msg_create_fn_w_tail1(fn, t1, a1, a_tail_len, t_tail_type, a_tail_ptr)  \
-		MSG rpc_create_##fn(t1 a1, SIZETYPE a_tail_len, t_tail_type a_tail_ptr) {\
-		MSG m = rpc_alloc(fn, a_tail_len, (V*)a_tail_ptr);\
+#define msg_create_fn_w_tail1(fn, t1, a1, t_tail_type, a_tail)  \
+		MSG rpc_create_##fn(t1 a1, SIZETYPE a_tail##_len, t_tail_type a_tail) {\
+		MSG m = rpc_alloc(fn, a_tail##_len, (V*)a_tail);\
 		m->as.fn = (p##fn){a1};\
 		R m;}
 
-#define msg_create_fn_w_tail2(fn, t1, a1, t2, a2, a_tail_len, t_tail_type, a_tail_ptr)  \
-		MSG rpc_create_##fn(t1 a1, t2 a2, SIZETYPE a_tail_len, t_tail_type a_tail_ptr) {\
-		MSG m = rpc_alloc(fn, a_tail_len, (V*)a_tail_ptr);\
+#define msg_create_fn_w_tail2(fn, t1, a1, t2, a2, t_tail_type, a_tail_ptr)  \
+		MSG rpc_create_##fn(t1 a1, t2 a2, SIZETYPE a_tail##_len, t_tail_type a_tail) {\
+		MSG m = rpc_alloc(fn, a_tail##_len, (V*)a_tail);\
 		m->as.fn = (p##fn){a1, a2};\
 		R m;}
 
@@ -79,7 +79,7 @@ typedef struct msg_1 ## id { rx } __attribute__((packed)) p ## label ## _res; /*
 
 #define msg_create_fn2(fn, t1, a1, t2, a2)  \
 		MSG rpc_create_##fn(t1 a1, t2 a2) {\
-		MSG m = rpc_alloc(fn, 9, NULL);\
+		MSG m = rpc_alloc(fn, 0, NULL);\
 		m->as.fn = (p##fn){a1, a2};\
 		R m;}		
 
