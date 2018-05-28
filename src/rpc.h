@@ -1,20 +1,22 @@
+//#define msg_has_tail(code,type,first_tail_fld)   MSG_TAIL_OFFSET[code] = offsetof(type,first_tail_fld);
+//#define NL \u000A
 //! message header
 typedef struct msg_hdr { G ver, type; UI len;} __attribute__((packed)) MSG_HDR;
 Z G RPC_VERSION;
 Z UI MSG_SIZES[2*100];
 Z G MSG_ARGC[2*100];
-Z UI MSG_TAIL_OFFSET[2*100];
+Z I MSG_TAIL_OFFSET[2*100];
 S MSG_LABELS[]={"HEY","GET","DEL","UPD","ADD","FND","LST","SRT","BYE"};
 //! message definitions
-typedef struct msg_0 { MSG_HDR hdr; SIZETYPE data_len; C username[0]; } __attribute__((packed)) ptx_HEY; typedef ptx_HEY *tx_HEY;typedef struct msg_10 { MSG_HDR hdr; SIZETYPE data_len; UJ info[0]; } __attribute__((packed)) prx_HEY; typedef prx_HEY *rx_HEY;
-typedef struct msg_1 { MSG_HDR hdr; ID rec_id; } __attribute__((packed)) ptx_GET; typedef ptx_GET *tx_GET;typedef struct msg_11 { MSG_HDR hdr; SIZETYPE data_len; pRec record[0]; } __attribute__((packed)) prx_GET; typedef prx_GET *rx_GET;
-typedef struct msg_2 { MSG_HDR hdr; ID rec_id; } __attribute__((packed)) ptx_DEL; typedef ptx_DEL *tx_DEL;typedef struct msg_12 { MSG_HDR hdr; ID rec_id; } __attribute__((packed)) prx_DEL; typedef prx_DEL *rx_DEL;
-typedef struct msg_3 { MSG_HDR hdr; UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) ptx_UPD; typedef ptx_UPD *tx_UPD;typedef struct msg_13 { MSG_HDR hdr; UI cnt; } __attribute__((packed)) prx_UPD; typedef prx_UPD *rx_UPD;
-typedef struct msg_4 { MSG_HDR hdr; UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) ptx_ADD; typedef ptx_ADD *tx_ADD;typedef struct msg_14 { MSG_HDR hdr; UI cnt; } __attribute__((packed)) prx_ADD; typedef prx_ADD *rx_ADD;
-typedef struct msg_5 { MSG_HDR hdr; UI max_hits; SIZETYPE data_len; C query[0]; } __attribute__((packed)) ptx_FND; typedef ptx_FND *tx_FND;typedef struct msg_15 { MSG_HDR hdr; UI cnt; SIZETYPE data_len; pRec hits[0]; } __attribute__((packed)) prx_FND; typedef prx_FND *rx_FND;
-typedef struct msg_6 { MSG_HDR hdr; UI page_num; UI per_page; } __attribute__((packed)) ptx_LST; typedef ptx_LST *tx_LST;typedef struct msg_16 { MSG_HDR hdr; UI page_num; UI out_of; UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) prx_LST; typedef prx_LST *rx_LST;
-typedef struct msg_7 { MSG_HDR hdr; UI field_id; UI dir; } __attribute__((packed)) ptx_SRT; typedef ptx_SRT *tx_SRT;typedef struct msg_17 { MSG_HDR hdr; UI page_num; UI out_of; UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) prx_SRT; typedef prx_SRT *rx_SRT;
-typedef struct msg_8 { MSG_HDR hdr; UI msgs_sent; } __attribute__((packed)) ptx_BYE; typedef ptx_BYE *tx_BYE;typedef struct msg_18 { MSG_HDR hdr; UI msgs_rcvd; } __attribute__((packed)) prx_BYE; typedef prx_BYE *rx_BYE;
+typedef struct msg_0 { SIZETYPE data_len; C username[0]; } __attribute__((packed)) ptx_HEY; typedef ptx_HEY *tx_HEY;typedef struct msg_10 { SIZETYPE data_len; UJ info[0]; } __attribute__((packed)) prx_HEY; typedef prx_HEY *rx_HEY;
+typedef struct msg_1 { ID rec_id; } __attribute__((packed)) ptx_GET; typedef ptx_GET *tx_GET;typedef struct msg_11 { SIZETYPE data_len; pRec record[0]; } __attribute__((packed)) prx_GET; typedef prx_GET *rx_GET;
+typedef struct msg_2 { ID rec_id; } __attribute__((packed)) ptx_DEL; typedef ptx_DEL *tx_DEL;typedef struct msg_12 { ID rec_id; } __attribute__((packed)) prx_DEL; typedef prx_DEL *rx_DEL;
+typedef struct msg_3 { UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) ptx_UPD; typedef ptx_UPD *tx_UPD;typedef struct msg_13 { UI cnt; } __attribute__((packed)) prx_UPD; typedef prx_UPD *rx_UPD;
+typedef struct msg_4 { UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) ptx_ADD; typedef ptx_ADD *tx_ADD;typedef struct msg_14 { UI cnt; } __attribute__((packed)) prx_ADD; typedef prx_ADD *rx_ADD;
+typedef struct msg_5 { UI max_hits; SIZETYPE data_len; C query[0]; } __attribute__((packed)) ptx_FND; typedef ptx_FND *tx_FND;typedef struct msg_15 { UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) prx_FND; typedef prx_FND *rx_FND;
+typedef struct msg_6 { UI page_num; UI per_page; } __attribute__((packed)) ptx_LST; typedef ptx_LST *tx_LST;typedef struct msg_16 { UI page_num; UI out_of; UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) prx_LST; typedef prx_LST *rx_LST;
+typedef struct msg_7 { UI field_id; UI dir; } __attribute__((packed)) ptx_SRT; typedef ptx_SRT *tx_SRT;typedef struct msg_17 { UI page_num; UI out_of; UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) prx_SRT; typedef prx_SRT *rx_SRT;
+typedef struct msg_8 { UI msgs_sent; } __attribute__((packed)) ptx_BYE; typedef ptx_BYE *tx_BYE;typedef struct msg_18 { UI msgs_rcvd; } __attribute__((packed)) prx_BYE; typedef prx_BYE *rx_BYE;
 //! message preamble lenghts
 sz SZ_TX_HEY = SZ(ptx_HEY), SZ_RX_HEY = SZ(prx_HEY);
 sz SZ_TX_GET = SZ(ptx_GET), SZ_RX_GET = SZ(prx_GET);
@@ -54,6 +56,7 @@ typedef struct {
 } *MSG;
 ext V rpc_init() {
     RPC_VERSION = 1;
+    DO(100*2, MSG_TAIL_OFFSET[i]=-1)
     G TAIL = 2;
     //                arc_out   argc_in
     MSG_SIZES[OUT_HEY]=SZ_TX_HEY; MSG_SIZES[IN_HEY]=SZ_RX_HEY; MSG_ARGC[OUT_HEY]=0+TAIL; MSG_ARGC[IN_HEY]=0+TAIL; // UI,UI,{} / UI,UI,{}
@@ -75,45 +78,63 @@ ext V rpc_init() {
     MSG_TAIL_OFFSET[IN_LST] = offsetof(prx_LST,data_len);
     MSG_TAIL_OFFSET[IN_SRT] = offsetof(prx_SRT,data_len);
 }
-ext MSG rpc_create(I m_type, ...) {
-  LOG("rpc_create");
-  UI m_len = MSG_SIZES[m_type];
-  G ver = RPC_VERSION;
-  MSG m = calloc(1, m_len);chk(m,0);
-  va_list a;va_start(a, m_type);
-  UI tail_offset = MSG_TAIL_OFFSET[m_type];
-  m->hdr = (MSG_HDR){ver, m_type, m_len};
+/*
+Z MSG rpc_set_args(MSG m, ...) {
+  LOG("rpc_set_args");
+  va_list a;va_start(a, m);
   SW(m_type){
-    case OUT_HEY: m->msg.m_tx_HEY = (ptx_HEY){{}}; break;
-    case IN_HEY: m->msg.m_rx_HEY = (prx_HEY){{}}; break;
-    case OUT_GET: m->msg.m_tx_GET = (ptx_GET){(va_arg(a,ID))}; break;
-    case IN_GET: m->msg.m_rx_GET = (prx_GET){{}}; break;
-    case OUT_DEL: m->msg.m_tx_DEL = (ptx_DEL){(va_arg(a,ID))}; break;
-    case IN_DEL: m->msg.m_rx_DEL = (prx_DEL){(va_arg(a,ID))}; break;
-    case OUT_UPD: m->msg.m_tx_UPD = (ptx_UPD){(va_arg(a,ID))}; break;
-    case IN_UPD: m->msg.m_rx_UPD = (prx_UPD){(va_arg(a,UI))}; break;
-    case OUT_ADD: m->msg.m_tx_ADD = (ptx_ADD){(va_arg(a,UI))}; break;
-    case IN_ADD: m->msg.m_rx_ADD = (prx_ADD){(va_arg(a,UI))}; break;
-    case OUT_FND: m->msg.m_tx_FND = (ptx_FND){(va_arg(a,UI))}; break;
-    case IN_FND: m->msg.m_rx_FND = (prx_FND){(va_arg(a,UI))}; break;
-    case OUT_LST: m->msg.m_tx_LST = (ptx_LST){(va_arg(a,UI),va_arg(a,UI))}; break;
-    case IN_LST: m->msg.m_rx_LST = (prx_LST){(va_arg(a,UI),va_arg(a,UI),va_arg(a,UI))}; break;
-    case OUT_SRT: m->msg.m_tx_SRT = (ptx_SRT){(va_arg(a,UI),va_arg(a,UI))}; break;
-    case IN_SRT: m->msg.m_rx_SRT = (prx_SRT){(va_arg(a,UI),va_arg(a,UI),va_arg(a,UI))}; break;
-    case OUT_BYE: m->msg.m_tx_BYE = (ptx_BYE){(va_arg(a,UI))}; break;
-    case IN_BYE: m->msg.m_rx_BYE = (prx_BYE){(va_arg(a,UI))}; break;
+    msg_set_args_tx(HEY, {})
+    msg_set_args_rx(HEY, {})
+    msg_set_args_tx(GET, (_a(ID)))
+    msg_set_args_rx(GET, {})
+    msg_set_args_tx(DEL, (_a(ID)))
+    msg_set_args_rx(DEL, (_a(ID)))
+    msg_set_args_tx(UPD, (_a(ID)))
+    msg_set_args_rx(UPD, (_a(UI)))
+    msg_set_args_tx(ADD, (_a(UI)))
+    msg_set_args_rx(ADD, (_a(UI)))
+    msg_set_args_tx(FND, (_a(UI)))
+    msg_set_args_rx(FND, (_a(UI)))
+    msg_set_args_tx(LST, (_a(UI),_a(UI)))
+    msg_set_args_rx(LST, (_a(UI),_a(UI),_a(UI)))
+    msg_set_args_tx(SRT, (_a(UI),_a(UI)))
+    msg_set_args_rx(SRT, (_a(UI),_a(UI),_a(UI)))
+    msg_set_args_tx(BYE, (_a(UI)))
+    msg_set_args_rx(BYE, (_a(UI)))
     CD: T(WARN, "unknown message code: %d", m_type);
   }
-  if(tail_offset) {
-    SIZETYPE tail_len = va_arg(a,SIZETYPE);
-    V* tail_src = va_arg(a,V*);
-    X(!tail_len, T(WARN, "msg type %d requires data, but no length is given"), 0)
-    X(!tail_src, T(WARN, "msg type %d requires data, but no data source is given"), 0)
-    m = realloc(m, m_len+SZ(SIZETYPE)+tail_len);chk(m,0);
-    SIZETYPE*tl = (SIZETYPE*)(((V*)&m->msg)+tail_offset);
-    *tl = tail_len;
-    m->hdr.len += tail_len;
-    mcpy(((V*)tl)+SZ(SIZETYPE), tail_src, tail_len);
-    T(TRACE, "tail copied, %d bytes (expect %d)", m->msg.m_tx_HEY.data_len, tail_len);
-  }
-  R m;}
+}
+*/
+Z MSG rpc_alloc(I m_type, SIZETYPE tail_len, V*tail_src) {
+    LOG("rpc_alloc");
+    UJ m_len = MSG_SIZES[m_type];
+    G ver = RPC_VERSION;
+    I tail_offset = MSG_TAIL_OFFSET[m_type];
+    MSG m = calloc(1, m_len+tail_len);chk(m,0);
+    m->hdr = (MSG_HDR){ver, m_type, m_len+tail_len};
+    if(tail_offset>=0) {
+      SIZETYPE*tl = (SIZETYPE*)(((V*)&m->msg)+tail_offset);
+      *tl = tail_len;
+      mcpy(((V*)tl)+SZ(SIZETYPE), tail_src, tail_len);
+      T(TEST, "tail copied, %d bytes at offset %d", tail_len, tail_offset);
+    }
+    R m;
+}
+MSG rpc_create_OUT_HEY(SIZETYPE username_len, S username) { MSG m = rpc_alloc(OUT_HEY, username_len, (V*)username); R m;};
+MSG rpc_create_IN_HEY(SIZETYPE info_len, UJ info) { MSG m = rpc_alloc(IN_HEY, info_len, (V*)info); R m;};
+MSG rpc_create_OUT_GET(ID rec_id) { MSG m = rpc_alloc(OUT_GET, 0, NULL); m->msg.m_tx_GET = (ptx_GET){rec_id}; R m;};
+MSG rpc_create_IN_GET(SIZETYPE record_len, Rec record) { MSG m = rpc_alloc(IN_GET, record_len, (V*)record); R m;};
+MSG rpc_create_OUT_DEL(ID rec_id) { MSG m = rpc_alloc(OUT_DEL, 0, NULL); m->msg.m_tx_DEL = (ptx_DEL){rec_id}; R m;};
+MSG rpc_create_IN_DEL(ID rec_id) { MSG m = rpc_alloc(IN_DEL, 0, NULL); m->msg.m_rx_DEL = (prx_DEL){rec_id}; R m;};
+MSG rpc_create_OUT_UPD(UI cnt, SIZETYPE records_len, Rec records) { MSG m = rpc_alloc(OUT_UPD, records_len, (V*)records); m->msg.m_tx_UPD = (ptx_UPD){cnt}; R m;};
+MSG rpc_create_IN_UPD(UI cnt) { MSG m = rpc_alloc(IN_UPD, 0, NULL); m->msg.m_rx_UPD = (prx_UPD){cnt}; R m;};
+MSG rpc_create_OUT_ADD(UI cnt, SIZETYPE records_len, Rec records) { MSG m = rpc_alloc(OUT_ADD, records_len, (V*)records); m->msg.m_tx_ADD = (ptx_ADD){cnt}; R m;};
+MSG rpc_create_IN_ADD(UI cnt, SIZETYPE records_len, Rec records) { MSG m = rpc_alloc(IN_ADD, records_len, (V*)records); m->msg.m_rx_ADD = (prx_ADD){cnt}; R m;};
+MSG rpc_create_OUT_FND(UI max_hits, SIZETYPE query_len, S query) { MSG m = rpc_alloc(OUT_FND, query_len, (V*)query); m->msg.m_tx_FND = (ptx_FND){max_hits}; R m;};
+MSG rpc_create_IN_FND(UI cnt, SIZETYPE records_len, Rec records) { MSG m = rpc_alloc(IN_FND, records_len, (V*)records); m->msg.m_rx_FND = (prx_FND){cnt}; R m;};
+MSG rpc_create_OUT_LST(UI page_num, UI per_page) { MSG m = rpc_alloc(OUT_LST, 9, NULL); m->msg.m_tx_LST = (ptx_LST){page_num, per_page}; R m;};
+MSG rpc_create_IN_LST(UI page_num, UI out_of, SIZETYPE records_len, Rec records) { MSG m = rpc_alloc(IN_LST, records_len, (V*)records); m->msg.m_rx_LST = (prx_LST){page_num, out_of}; R m;};
+MSG rpc_create_OUT_SRT(UI field_id, UI dir) { MSG m = rpc_alloc(OUT_SRT, 9, NULL); m->msg.m_tx_SRT = (ptx_SRT){field_id, dir}; R m;};
+MSG rpc_create_IN_SRT(UI page_num, UI out_of, SIZETYPE records_len, Rec records) { MSG m = rpc_alloc(IN_SRT, records_len, (V*)records); m->msg.m_rx_SRT = (prx_SRT){page_num, out_of}; R m;};
+MSG rpc_create_OUT_BYE() { MSG m = rpc_alloc(OUT_BYE, 0, NULL); R m;};
+MSG rpc_create_IN_BYE() { MSG m = rpc_alloc(IN_BYE, 0, NULL); R m;};

@@ -22,8 +22,10 @@ V msg_dump_header(MSG m) {
 	T(TEST, "ver -> %d", h.ver);
 	T(TEST, "type -> %d (%s)", h.type, MSG_LABELS[h.type]);
 	T(TEST, "len -> %d", h.len);
-	UI tail_offset = MSG_TAIL_OFFSET[h.type];
-	if(!tail_offset)R;
+	I tail_offset = MSG_TAIL_OFFSET[h.type];
+	UI preamble_size = MSG_SIZES[h.type];
+	if(tail_offset<0)R;
+	T(TEST, "preamble_len -> %d", preamble_size);
 	T(TEST, "tail_offset -> %d", tail_offset);
 	T(TEST, "tail_len -> %d", *(SIZETYPE*)(((V*)&m->msg)+tail_offset));
 	T(TEST, "tail -> %s", (S)(((V*)&m->msg)+tail_offset+SZ(SIZETYPE)));
@@ -71,13 +73,13 @@ I recv_msg(I d) {
 	R -1;}
 
 I msg_shutdown() {
-	free(mbuf);
+	//free(mbuf);
 	R0;
 }
 
 
 I msg_init() {
-	mbuf = malloc(50);
+	//mbuf = malloc(50);
 	R0;
 }
 
@@ -89,16 +91,20 @@ I main() {
 	msg_init();
 
 	C b[256];
-	gethostname((S)b,256);
-	S hostname = lcase(b,scnt(b));
+	//gethostname((S)b,256);
+	//S hostname = lcase(b,scnt(b));
 	struct passwd*u=getpwuid(getuid());
 	S username = (S)u->pw_name;
 
-	MSG m = rpc_create(OUT_HEY, scnt(username), username);
+	//username="kelaskelas";
+
+	//MSG m = rpc_create(OUT_HEY, scnt(username), username);
+	MSG m = rpc_create_OUT_HEY(scnt(username), username);
 
 	msg_dump_header(m);
 
 	free(m);
+	//free(u);
 	R msg_shutdown();
 }
 
