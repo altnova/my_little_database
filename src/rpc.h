@@ -7,12 +7,12 @@ typedef struct msg_hdr { G ver, type; SIZETYPE len;} __attribute__((packed)) MSG
 /*!
  * message type definitions
  */
-typedef struct msg_0 { SIZETYPE data_len; C username[0]; } __attribute__((packed)) pHEY_req; typedef struct msg_10 { SIZETYPE data_len; UJ info[0]; } __attribute__((packed)) pHEY_res;
+typedef struct msg_0 { SIZETYPE data_len; S username[0]; } __attribute__((packed)) pHEY_req; typedef struct msg_10 { SIZETYPE data_len; UJ* info[0]; } __attribute__((packed)) pHEY_res;
 typedef struct msg_1 { ID rec_id; } __attribute__((packed)) pGET_req; typedef struct msg_11 { SIZETYPE data_len; pRec record[0]; } __attribute__((packed)) pGET_res;
 typedef struct msg_2 { ID rec_id; } __attribute__((packed)) pDEL_req; typedef struct msg_12 { ID rec_id; } __attribute__((packed)) pDEL_res;
 typedef struct msg_3 { UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) pUPD_req; typedef struct msg_13 { UI cnt; } __attribute__((packed)) pUPD_res;
 typedef struct msg_4 { UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) pADD_req; typedef struct msg_14 { UI cnt; } __attribute__((packed)) pADD_res;
-typedef struct msg_5 { UI max_hits; SIZETYPE data_len; C query[0]; } __attribute__((packed)) pFND_req; typedef struct msg_15 { UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) pFND_res;
+typedef struct msg_5 { UI max_hits; SIZETYPE data_len; S query[0]; } __attribute__((packed)) pFND_req; typedef struct msg_15 { UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) pFND_res;
 typedef struct msg_6 { UI page_num; UI per_page; } __attribute__((packed)) pLST_req; typedef struct msg_16 { UI page_num; UI out_of; UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) pLST_res;
 typedef struct msg_7 { UI field_id; UI dir; } __attribute__((packed)) pSRT_req; typedef struct msg_17 { UI page_num; UI out_of; UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) pSRT_res;
 typedef struct msg_8 { UI msgs_sent; } __attribute__((packed)) pBYE_req; typedef struct msg_18 { UI msgs_rcvd; } __attribute__((packed)) pBYE_res;
@@ -55,7 +55,7 @@ typedef struct {
  * message factory
  */
 ext MSG rpc_create_HEY_req(SIZETYPE username_len, S username);
-ext MSG rpc_create_HEY_res(SIZETYPE info_len, UJ info);
+ext MSG rpc_create_HEY_res(SIZETYPE info_len, UJ* info);
 ext MSG rpc_create_GET_req(ID rec_id);
 ext MSG rpc_create_GET_res(SIZETYPE record_len, Rec record);
 ext MSG rpc_create_DEL_req(ID rec_id);
@@ -63,7 +63,7 @@ ext MSG rpc_create_DEL_res(ID rec_id);
 ext MSG rpc_create_UPD_req(UI cnt, SIZETYPE records_len, Rec records);
 ext MSG rpc_create_UPD_res(UI cnt);
 ext MSG rpc_create_ADD_req(UI cnt, SIZETYPE records_len, Rec records);
-ext MSG rpc_create_ADD_res(UI cnt, SIZETYPE records_len, Rec records);
+ext MSG rpc_create_ADD_res(UI cnt);
 ext MSG rpc_create_FND_req(UI max_hits, SIZETYPE query_len, S query);
 ext MSG rpc_create_FND_res(UI cnt, SIZETYPE records_len, Rec records);
 ext MSG rpc_create_LST_req(UI page_num, UI per_page);
