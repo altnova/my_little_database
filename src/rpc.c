@@ -20,20 +20,20 @@ sz SZ_SRT_req = SZ(pSRT_req), SZ_SRT_res = SZ(pSRT_res);;
 sz SZ_BYE_req = SZ(pBYE_req), SZ_BYE_res = SZ(pBYE_res);;
 MSG rpc_create_HEY_req(SIZETYPE username_len, S username) { MSG m = rpc_alloc(HEY_req, username_len, (V*)username); R m;};
 MSG rpc_create_HEY_res(SIZETYPE info_len, UJ info) { MSG m = rpc_alloc(HEY_res, info_len, (V*)info); R m;};
-MSG rpc_create_GET_req(ID rec_id) { MSG m = rpc_alloc(GET_req, 0, NULL); m->msg.GET_req = (pGET_req){rec_id}; R m;};
+MSG rpc_create_GET_req(ID rec_id) { MSG m = rpc_alloc(GET_req, 0, NULL); m->as.GET_req = (pGET_req){rec_id}; R m;};
 MSG rpc_create_GET_res(SIZETYPE record_len, Rec record) { MSG m = rpc_alloc(GET_res, record_len, (V*)record); R m;};
-MSG rpc_create_DEL_req(ID rec_id) { MSG m = rpc_alloc(DEL_req, 0, NULL); m->msg.DEL_req = (pDEL_req){rec_id}; R m;};
-MSG rpc_create_DEL_res(ID rec_id) { MSG m = rpc_alloc(DEL_res, 0, NULL); m->msg.DEL_res = (pDEL_res){rec_id}; R m;};
-MSG rpc_create_UPD_req(UI cnt, SIZETYPE records_len, Rec records) { MSG m = rpc_alloc(UPD_req, records_len, (V*)records); m->msg.UPD_req = (pUPD_req){cnt}; R m;};
-MSG rpc_create_UPD_res(UI cnt) { MSG m = rpc_alloc(UPD_res, 0, NULL); m->msg.UPD_res = (pUPD_res){cnt}; R m;};
-MSG rpc_create_ADD_req(UI cnt, SIZETYPE records_len, Rec records) { MSG m = rpc_alloc(ADD_req, records_len, (V*)records); m->msg.ADD_req = (pADD_req){cnt}; R m;};
-MSG rpc_create_ADD_res(UI cnt, SIZETYPE records_len, Rec records) { MSG m = rpc_alloc(ADD_res, records_len, (V*)records); m->msg.ADD_res = (pADD_res){cnt}; R m;};
-MSG rpc_create_FND_req(UI max_hits, SIZETYPE query_len, S query) { MSG m = rpc_alloc(FND_req, query_len, (V*)query); m->msg.FND_req = (pFND_req){max_hits}; R m;};
-MSG rpc_create_FND_res(UI cnt, SIZETYPE records_len, Rec records) { MSG m = rpc_alloc(FND_res, records_len, (V*)records); m->msg.FND_res = (pFND_res){cnt}; R m;};
-MSG rpc_create_LST_req(UI page_num, UI per_page) { MSG m = rpc_alloc(LST_req, 9, NULL); m->msg.LST_req = (pLST_req){page_num, per_page}; R m;};
-MSG rpc_create_LST_res(UI page_num, UI out_of, SIZETYPE records_len, Rec records) { MSG m = rpc_alloc(LST_res, records_len, (V*)records); m->msg.LST_res = (pLST_res){page_num, out_of}; R m;};
-MSG rpc_create_SRT_req(UI field_id, UI dir) { MSG m = rpc_alloc(SRT_req, 9, NULL); m->msg.SRT_req = (pSRT_req){field_id, dir}; R m;};
-MSG rpc_create_SRT_res(UI page_num, UI out_of, SIZETYPE records_len, Rec records) { MSG m = rpc_alloc(SRT_res, records_len, (V*)records); m->msg.SRT_res = (pSRT_res){page_num, out_of}; R m;};
+MSG rpc_create_DEL_req(ID rec_id) { MSG m = rpc_alloc(DEL_req, 0, NULL); m->as.DEL_req = (pDEL_req){rec_id}; R m;};
+MSG rpc_create_DEL_res(ID rec_id) { MSG m = rpc_alloc(DEL_res, 0, NULL); m->as.DEL_res = (pDEL_res){rec_id}; R m;};
+MSG rpc_create_UPD_req(UI cnt, SIZETYPE records_len, Rec records) { MSG m = rpc_alloc(UPD_req, records_len, (V*)records); m->as.UPD_req = (pUPD_req){cnt}; R m;};
+MSG rpc_create_UPD_res(UI cnt) { MSG m = rpc_alloc(UPD_res, 0, NULL); m->as.UPD_res = (pUPD_res){cnt}; R m;};
+MSG rpc_create_ADD_req(UI cnt, SIZETYPE records_len, Rec records) { MSG m = rpc_alloc(ADD_req, records_len, (V*)records); m->as.ADD_req = (pADD_req){cnt}; R m;};
+MSG rpc_create_ADD_res(UI cnt, SIZETYPE records_len, Rec records) { MSG m = rpc_alloc(ADD_res, records_len, (V*)records); m->as.ADD_res = (pADD_res){cnt}; R m;};
+MSG rpc_create_FND_req(UI max_hits, SIZETYPE query_len, S query) { MSG m = rpc_alloc(FND_req, query_len, (V*)query); m->as.FND_req = (pFND_req){max_hits}; R m;};
+MSG rpc_create_FND_res(UI cnt, SIZETYPE records_len, Rec records) { MSG m = rpc_alloc(FND_res, records_len, (V*)records); m->as.FND_res = (pFND_res){cnt}; R m;};
+MSG rpc_create_LST_req(UI page_num, UI per_page) { MSG m = rpc_alloc(LST_req, 9, NULL); m->as.LST_req = (pLST_req){page_num, per_page}; R m;};
+MSG rpc_create_LST_res(UI page_num, UI out_of, SIZETYPE records_len, Rec records) { MSG m = rpc_alloc(LST_res, records_len, (V*)records); m->as.LST_res = (pLST_res){page_num, out_of}; R m;};
+MSG rpc_create_SRT_req(UI field_id, UI dir) { MSG m = rpc_alloc(SRT_req, 9, NULL); m->as.SRT_req = (pSRT_req){field_id, dir}; R m;};
+MSG rpc_create_SRT_res(UI page_num, UI out_of, SIZETYPE records_len, Rec records) { MSG m = rpc_alloc(SRT_res, records_len, (V*)records); m->as.SRT_res = (pSRT_res){page_num, out_of}; R m;};
 MSG rpc_create_BYE_req() { MSG m = rpc_alloc(BYE_req, 0, NULL); R m;};
 MSG rpc_create_BYE_res() { MSG m = rpc_alloc(BYE_res, 0, NULL); R m;};
 V rpc_init() {
@@ -68,7 +68,7 @@ Z MSG rpc_alloc(I m_type, SIZETYPE tail_len, V*tail_src) {
     MSG m = calloc(1, m_len+tail_len);chk(m,0);
     m->hdr = (MSG_HDR){ver, m_type, m_len+tail_len};
     if(tail_offset>=0) {
-      SIZETYPE*tl = (SIZETYPE*)(((V*)&m->msg)+tail_offset);
+      SIZETYPE*tl = (SIZETYPE*)(((V*)&m->as)+tail_offset);
       *tl = tail_len;
       mcpy(((V*)tl)+SZ(SIZETYPE), tail_src, tail_len);
       T(TEST, "tail copied, %d bytes at offset %d", tail_len, tail_offset);
@@ -86,7 +86,7 @@ V rpc_dump_header(MSG m) {
   if(tail_offset<0)R;
   T(TEST, "preamble_len -> %d", preamble_size);
   T(TEST, "tail_offset -> %d", tail_offset);
-  T(TEST, "tail_len -> %d", *(SIZETYPE*)(((V*)&m->msg)+tail_offset));
-  T(TEST, "tail -> %s", (S)(((V*)&m->msg)+tail_offset+SZ(SIZETYPE)));
+  T(TEST, "tail_len -> %d", *(SIZETYPE*)(((V*)&m->as)+tail_offset));
+  T(TEST, "tail -> %s", (S)(((V*)&m->as)+tail_offset+SZ(SIZETYPE)));
 }
 //:~

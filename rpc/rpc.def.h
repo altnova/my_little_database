@@ -52,19 +52,18 @@ typedef struct msg_1 ## id { rx } __attribute__((packed)) p ## label ## _res; /*
 #define msg_create_fn_w_tail0(fn, a_tail_len, t_tail_type, a_tail_ptr) \
 		MSG rpc_create_##fn(SIZETYPE a_tail_len, t_tail_type a_tail_ptr) {\
 		MSG m = rpc_alloc(fn, a_tail_len, (V*)a_tail_ptr);\
-		/*m->msg.m_##type = (p##type){};*/\
 		R m;}
 
 #define msg_create_fn_w_tail1(fn, t1, a1, a_tail_len, t_tail_type, a_tail_ptr)  \
 		MSG rpc_create_##fn(t1 a1, SIZETYPE a_tail_len, t_tail_type a_tail_ptr) {\
 		MSG m = rpc_alloc(fn, a_tail_len, (V*)a_tail_ptr);\
-		m->msg.fn = (p##fn){a1};\
+		m->as.fn = (p##fn){a1};\
 		R m;}
 
 #define msg_create_fn_w_tail2(fn, t1, a1, t2, a2, a_tail_len, t_tail_type, a_tail_ptr)  \
 		MSG rpc_create_##fn(t1 a1, t2 a2, SIZETYPE a_tail_len, t_tail_type a_tail_ptr) {\
 		MSG m = rpc_alloc(fn, a_tail_len, (V*)a_tail_ptr);\
-		m->msg.fn = (p##fn){a1, a2};\
+		m->as.fn = (p##fn){a1, a2};\
 		R m;}
 
 #define msg_create_fn0(fn)\
@@ -75,13 +74,13 @@ typedef struct msg_1 ## id { rx } __attribute__((packed)) p ## label ## _res; /*
 #define msg_create_fn1(fn, t1, a1)  \
 		MSG rpc_create_##fn(t1 a1) {\
 		MSG m = rpc_alloc(fn, 0, NULL);\
-		m->msg.fn = (p##fn){a1};\
+		m->as.fn = (p##fn){a1};\
 		R m;}
 
 #define msg_create_fn2(fn, t1, a1, t2, a2)  \
 		MSG rpc_create_##fn(t1 a1, t2 a2) {\
 		MSG m = rpc_alloc(fn, 9, NULL);\
-		m->msg.fn = (p##fn){a1, a2};\
+		m->as.fn = (p##fn){a1, a2};\
 		R m;}		
 
 #define _arg(t,n) t n

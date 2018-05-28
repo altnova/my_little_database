@@ -49,7 +49,7 @@ typedef union {
  */
 typedef struct {
     MSG_HDR hdr;
-    pMSG msg;
+    pMSG as;
 } *MSG;
 /*!
  * message factory

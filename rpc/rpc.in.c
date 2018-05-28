@@ -84,7 +84,7 @@ Z MSG rpc_alloc(I m_type, SIZETYPE tail_len, V*tail_src) {
     MSG m = calloc(1, m_len+tail_len);chk(m,0);
     m->hdr = (MSG_HDR){ver, m_type, m_len+tail_len};
     if(tail_offset>=0) {
-      SIZETYPE*tl = (SIZETYPE*)(((V*)&m->msg)+tail_offset);
+      SIZETYPE*tl = (SIZETYPE*)(((V*)&m->as)+tail_offset);
       *tl = tail_len;
       mcpy(((V*)tl)+SZ(SIZETYPE), tail_src, tail_len);
       T(TEST, "tail copied, %d bytes at offset %d", tail_len, tail_offset);
@@ -103,8 +103,8 @@ V rpc_dump_header(MSG m) {
   if(tail_offset<0)R;
   T(TEST, "preamble_len -> %d", preamble_size);
   T(TEST, "tail_offset -> %d", tail_offset);
-  T(TEST, "tail_len -> %d", *(SIZETYPE*)(((V*)&m->msg)+tail_offset));
-  T(TEST, "tail -> %s", (S)(((V*)&m->msg)+tail_offset+SZ(SIZETYPE)));
+  T(TEST, "tail_len -> %d", *(SIZETYPE*)(((V*)&m->as)+tail_offset));
+  T(TEST, "tail -> %s", (S)(((V*)&m->as)+tail_offset+SZ(SIZETYPE)));
 }
 
 
@@ -181,7 +181,7 @@ typedef union {
  */
 typedef struct {
     MSG_HDR hdr;
-    pMSG msg; 
+    pMSG as; 
 } *MSG;
 /*!
  * message factory
