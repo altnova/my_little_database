@@ -13,7 +13,6 @@ INCL_OWN_HEADER
 G  RPC_VERSION;
 
 UI MSG_SIZES[2*100];
-G  MSG_ARGC[2*100];
 I  MSG_TAIL_OFFSET[2*100];
 
 S MSG_LABELS[]={"HEY","GET","DEL","UPD","ADD","FND","LST","SRT","BYE"};
@@ -53,17 +52,15 @@ V rpc_init() {
 
     DO(100*2, MSG_TAIL_OFFSET[i]=-1)
 
-    G TAIL = 2;
-    //                arc_out   argc_in
-    msg_set_size(HEY, 0+TAIL,   0+TAIL) // UI,UI,{} / UI,UI,{}
-    msg_set_size(GET, 1,        0+TAIL) // ID / {}
-    msg_set_size(DEL, 1,        1)      // ID / ID
-    msg_set_size(UPD, 1+TAIL,   1)      // UI,{} / UI
-    msg_set_size(ADD, 1+TAIL,   1)      // UI,{} / UI
-    msg_set_size(FND, 1+TAIL,   1+TAIL) // UI,{} / UI,{}
-    msg_set_size(LST, 2,        3+TAIL) // UI,UI / UI,UI,UI,{}
-    msg_set_size(SRT, 2,        3+TAIL) // UI,UI / UI,UI,UI,{}
-    msg_set_size(BYE, 1,        1)      // UI / UI
+    msg_set_size(HEY)
+    msg_set_size(GET)
+    msg_set_size(DEL)
+    msg_set_size(UPD)
+    msg_set_size(ADD)
+    msg_set_size(FND)
+    msg_set_size(LST)
+    msg_set_size(SRT)
+    msg_set_size(BYE)
 
     msg_has_tail(HEY_req)
     msg_has_tail(HEY_res)

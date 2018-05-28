@@ -43,8 +43,7 @@ typedef struct msg_1 ## id { rx } __attribute__((packed)) p ## label ## _res; /*
 #define msg_ref(label) p##label##_req label##_req; p##label##_res label##_res;
 
 #define str(s) #s
-#define msg_set_size(label,tx_argc,rx_argc) MSG_SIZES[label##_req]=SZ_## label ##_req; MSG_SIZES[label##_res]=SZ_## label ##_res;\
-	MSG_ARGC[label##_req]=tx_argc; MSG_ARGC[label##_res]=rx_argc;\
+#define msg_set_size(label) MSG_SIZES[label##_req]=SZ_## label ##_req; MSG_SIZES[label##_res]=SZ_## label ##_res;\
 	/*O("msize %s -> %d,%d\n", str(label), MSG_SIZES[OUT_##label], MSG_SIZES[IN_##label]);*/
 
 #define msg_has_tail(code)   MSG_TAIL_OFFSET[code] = offsetof(p##code,data_len);

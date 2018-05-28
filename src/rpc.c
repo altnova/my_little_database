@@ -6,7 +6,6 @@
  #include "rpc.h"
 G RPC_VERSION;
 UI MSG_SIZES[2*100];
-G MSG_ARGC[2*100];
 I MSG_TAIL_OFFSET[2*100];
 S MSG_LABELS[]={"HEY","GET","DEL","UPD","ADD","FND","LST","SRT","BYE"};
 sz SZ_HEY_req = SZ(pHEY_req), SZ_HEY_res = SZ(pHEY_res);;
@@ -39,17 +38,15 @@ MSG rpc_create_BYE_res() { MSG m = rpc_alloc(BYE_res, 0, NULL); R m;};
 V rpc_init() {
     RPC_VERSION = 1;
     DO(100*2, MSG_TAIL_OFFSET[i]=-1)
-    G TAIL = 2;
-    //                arc_out   argc_in
-    MSG_SIZES[HEY_req]=SZ_HEY_req; MSG_SIZES[HEY_res]=SZ_HEY_res; MSG_ARGC[HEY_req]=0+TAIL; MSG_ARGC[HEY_res]=0+TAIL; // UI,UI,{} / UI,UI,{}
-    MSG_SIZES[GET_req]=SZ_GET_req; MSG_SIZES[GET_res]=SZ_GET_res; MSG_ARGC[GET_req]=1; MSG_ARGC[GET_res]=0+TAIL; // ID / {}
-    MSG_SIZES[DEL_req]=SZ_DEL_req; MSG_SIZES[DEL_res]=SZ_DEL_res; MSG_ARGC[DEL_req]=1; MSG_ARGC[DEL_res]=1; // ID / ID
-    MSG_SIZES[UPD_req]=SZ_UPD_req; MSG_SIZES[UPD_res]=SZ_UPD_res; MSG_ARGC[UPD_req]=1+TAIL; MSG_ARGC[UPD_res]=1; // UI,{} / UI
-    MSG_SIZES[ADD_req]=SZ_ADD_req; MSG_SIZES[ADD_res]=SZ_ADD_res; MSG_ARGC[ADD_req]=1+TAIL; MSG_ARGC[ADD_res]=1; // UI,{} / UI
-    MSG_SIZES[FND_req]=SZ_FND_req; MSG_SIZES[FND_res]=SZ_FND_res; MSG_ARGC[FND_req]=1+TAIL; MSG_ARGC[FND_res]=1+TAIL; // UI,{} / UI,{}
-    MSG_SIZES[LST_req]=SZ_LST_req; MSG_SIZES[LST_res]=SZ_LST_res; MSG_ARGC[LST_req]=2; MSG_ARGC[LST_res]=3+TAIL; // UI,UI / UI,UI,UI,{}
-    MSG_SIZES[SRT_req]=SZ_SRT_req; MSG_SIZES[SRT_res]=SZ_SRT_res; MSG_ARGC[SRT_req]=2; MSG_ARGC[SRT_res]=3+TAIL; // UI,UI / UI,UI,UI,{}
-    MSG_SIZES[BYE_req]=SZ_BYE_req; MSG_SIZES[BYE_res]=SZ_BYE_res; MSG_ARGC[BYE_req]=1; MSG_ARGC[BYE_res]=1; // UI / UI
+    MSG_SIZES[HEY_req]=SZ_HEY_req; MSG_SIZES[HEY_res]=SZ_HEY_res;
+    MSG_SIZES[GET_req]=SZ_GET_req; MSG_SIZES[GET_res]=SZ_GET_res;
+    MSG_SIZES[DEL_req]=SZ_DEL_req; MSG_SIZES[DEL_res]=SZ_DEL_res;
+    MSG_SIZES[UPD_req]=SZ_UPD_req; MSG_SIZES[UPD_res]=SZ_UPD_res;
+    MSG_SIZES[ADD_req]=SZ_ADD_req; MSG_SIZES[ADD_res]=SZ_ADD_res;
+    MSG_SIZES[FND_req]=SZ_FND_req; MSG_SIZES[FND_res]=SZ_FND_res;
+    MSG_SIZES[LST_req]=SZ_LST_req; MSG_SIZES[LST_res]=SZ_LST_res;
+    MSG_SIZES[SRT_req]=SZ_SRT_req; MSG_SIZES[SRT_res]=SZ_SRT_res;
+    MSG_SIZES[BYE_req]=SZ_BYE_req; MSG_SIZES[BYE_res]=SZ_BYE_res;
     MSG_TAIL_OFFSET[HEY_req] = offsetof(pHEY_req,data_len);
     MSG_TAIL_OFFSET[HEY_res] = offsetof(pHEY_res,data_len);
     MSG_TAIL_OFFSET[GET_res] = offsetof(pGET_res,data_len);
