@@ -90,24 +90,24 @@ V rpc_dump_header(MSG m) {
 }
 
 
-msg_create_fn_w_tail0(HEY_req, OUT_HEY, tx_HEY, username_len, S,  username);
-msg_create_fn_w_tail0( HEY_res, IN_HEY, rx_HEY, info_len,     UJ, info);
-msg_create_fn1(       GET_req, OUT_GET, tx_GET, ID, rec_id);
-msg_create_fn_w_tail0( GET_res, IN_GET, rx_GET, record_len,   Rec, record);
-msg_create_fn1(       DEL_req, OUT_DEL, tx_DEL, ID, rec_id);
-msg_create_fn1(        DEL_res, IN_DEL, rx_DEL, ID, rec_id);
-msg_create_fn_w_tail1(UPD_req, OUT_UPD, tx_UPD, UI, cnt, records_len, Rec, records);
-msg_create_fn1(        UPD_res, IN_UPD, rx_UPD, UI, cnt);
-msg_create_fn_w_tail1(ADD_req, OUT_ADD, tx_ADD, UI, cnt, records_len, Rec, records);
-msg_create_fn_w_tail1( ADD_res, IN_ADD, rx_ADD, UI, cnt, records_len, Rec, records);
-msg_create_fn_w_tail1(FND_req, OUT_FND, tx_FND, UI, max_hits, query_len, S, query);
-msg_create_fn_w_tail1( FND_res, IN_FND, rx_FND, UI, cnt, records_len, Rec, records);
-msg_create_fn2(       LST_req, OUT_LST, tx_LST, UI, page_num, UI, per_page);
-msg_create_fn_w_tail2( LST_res, IN_LST, rx_LST, UI, page_num, UI, out_of, records_len, Rec, records);
-msg_create_fn2(       SRT_req, OUT_SRT, tx_SRT, UI, field_id, UI, dir);
-msg_create_fn_w_tail2( SRT_res, IN_SRT, rx_SRT, UI, page_num, UI, out_of, records_len, Rec, records);
-msg_create_fn0(       BYE_req, OUT_BYE, tx_BYE);
-msg_create_fn0(        BYE_res, IN_BYE, rx_BYE);
+msg_create_fn_w_tail0( HEY_req, OUT_HEY, tx_HEY, username_len, S,  username);
+msg_create_fn_w_tail0( HEY_res, IN_HEY,  rx_HEY, info_len,     UJ, info);
+msg_create_fn1(        GET_req, OUT_GET, tx_GET, ID, rec_id);
+msg_create_fn_w_tail0( GET_res, IN_GET,  rx_GET, record_len,   Rec, record);
+msg_create_fn1(        DEL_req, OUT_DEL, tx_DEL, ID, rec_id);
+msg_create_fn1(        DEL_res, IN_DEL,  rx_DEL, ID, rec_id);
+msg_create_fn_w_tail1( UPD_req, OUT_UPD, tx_UPD, UI, cnt, records_len, Rec, records);
+msg_create_fn1(        UPD_res, IN_UPD,  rx_UPD, UI, cnt);
+msg_create_fn_w_tail1( ADD_req, OUT_ADD, tx_ADD, UI, cnt, records_len, Rec, records);
+msg_create_fn_w_tail1( ADD_res, IN_ADD,  rx_ADD, UI, cnt, records_len, Rec, records);
+msg_create_fn_w_tail1( FND_req, OUT_FND, tx_FND, UI, max_hits, query_len, S, query);
+msg_create_fn_w_tail1( FND_res, IN_FND,  rx_FND, UI, cnt, records_len, Rec, records);
+msg_create_fn2(        LST_req, OUT_LST, tx_LST, UI, page_num, UI, per_page);
+msg_create_fn_w_tail2( LST_res, IN_LST,  rx_LST, UI, page_num, UI, out_of, records_len, Rec, records);
+msg_create_fn2(        SRT_req, OUT_SRT, tx_SRT, UI, field_id, UI, dir);
+msg_create_fn_w_tail2( SRT_res, IN_SRT,  rx_SRT, UI, page_num, UI, out_of, records_len, Rec, records);
+msg_create_fn0(        BYE_req, OUT_BYE, tx_BYE);
+msg_create_fn0(        BYE_res, IN_BYE,  rx_BYE);
 
 #else
 /*!
@@ -187,22 +187,23 @@ typedef struct {
 /*!
  * message factory
  */
-msg_create_proto_w_tail0( HEY_req, username_len, S,  username);
-msg_create_proto_w_tail0( HEY_res, info_len,     UJ, info);
-msg_create_proto1(        GET_req, ID, rec_id);
-msg_create_proto_w_tail0( GET_res, record_len,   Rec, record);
-msg_create_proto1(        DEL_req, ID, rec_id);
-msg_create_proto1(        DEL_res, ID, rec_id);
-msg_create_proto_w_tail1( UPD_req, UI, cnt, records_len, Rec, records);
-msg_create_proto1(        UPD_res, UI, cnt);
-msg_create_proto_w_tail1( ADD_req, UI, cnt, records_len, Rec, records);
-msg_create_proto_w_tail1( ADD_res, UI, cnt, records_len, Rec, records);
-msg_create_proto_w_tail1( FND_req, UI, max_hits, query_len, S, query);
-msg_create_proto_w_tail1( FND_res, UI, cnt, records_len, Rec, records);
-msg_create_proto2(        LST_req, UI, page_num, UI, per_page);
-msg_create_proto_w_tail2( LST_res, UI, page_num, UI, out_of, records_len, Rec, records);
-msg_create_proto2(        SRT_req, UI, field_id, UI, dir);
-msg_create_proto_w_tail2( SRT_res, UI, page_num, UI, out_of, records_len, Rec, records);
+
+msg_create_proto_w_tail0( HEY_req, _tail(S,username));
+msg_create_proto_w_tail0( HEY_res, _tail(UJ,info));
+msg_create_proto1(        GET_req, _arg(ID,rec_id));
+msg_create_proto_w_tail0( GET_res, _tail(Rec,record));
+msg_create_proto1(        DEL_req, _arg(ID,rec_id));
+msg_create_proto1(        DEL_res, _arg(ID,rec_id));
+msg_create_proto_w_tail1( UPD_req, _arg(UI,cnt), _tail(Rec,records));
+msg_create_proto1(        UPD_res, _arg(UI,cnt));
+msg_create_proto_w_tail1( ADD_req, _arg(UI,cnt), _tail(Rec,records));
+msg_create_proto_w_tail1( ADD_res, _arg(UI,cnt), _tail(Rec,records));
+msg_create_proto_w_tail1( FND_req, _arg(UI,max_hits), _tail(S,query));
+msg_create_proto_w_tail1( FND_res, _arg(UI,cnt), _tail(Rec,records));
+msg_create_proto2(        LST_req, _arg(UI,page_num), _arg(UI,per_page));
+msg_create_proto_w_tail2( LST_res, _arg(UI,page_num), _arg(UI,out_of), _tail(Rec,records));
+msg_create_proto2(        SRT_req, _arg(UI,field_id), _arg(UI,dir));
+msg_create_proto_w_tail2( SRT_res, _arg(UI,page_num), _arg(UI,out_of), _tail(Rec,records));
 msg_create_proto0(        BYE_req);
 msg_create_proto0(        BYE_res);
 /*!

@@ -85,22 +85,25 @@ typedef struct msg_1 ## id { rx } __attribute__((packed)) prx_ ## label; typedef
 		m->msg.m_##type = (p##type){a1, a2};\
 		R m;}		
 
-#define msg_create_proto_w_tail0(fn, a_tail_len, t_tail_type, a_tail_ptr) \
-		ext MSG rpc_create_##fn(SIZETYPE a_tail_len, t_tail_type a_tail_ptr)
+#define _arg(t,n) t n
+#define _tail(t,n) n##_##len, t n
 
-#define msg_create_proto_w_tail1(fn, t1, a1, a_tail_len, t_tail_type, a_tail_ptr)  \
-		ext MSG rpc_create_##fn(t1 a1, SIZETYPE a_tail_len, t_tail_type a_tail_ptr)
+#define msg_create_proto_w_tail0(fn, a_tail) \
+		ext MSG rpc_create_##fn(SIZETYPE a_tail)
 
-#define msg_create_proto_w_tail2(fn, t1, a1, t2, a2, a_tail_len, t_tail_type, a_tail_ptr)  \
-		ext MSG rpc_create_##fn(t1 a1, t2 a2, SIZETYPE a_tail_len, t_tail_type a_tail_ptr)
+#define msg_create_proto_w_tail1(fn, a1, a_tail)  \
+		ext MSG rpc_create_##fn(a1, SIZETYPE a_tail)
+
+#define msg_create_proto_w_tail2(fn, a1, a2, a_tail)  \
+		ext MSG rpc_create_##fn(a1, a2, SIZETYPE a_tail)
 
 #define msg_create_proto0(fn)\
 		ext MSG rpc_create_##fn()
 
-#define msg_create_proto1(fn, t1, a1)  \
-		ext MSG rpc_create_##fn(t1 a1)
+#define msg_create_proto1(fn, a1)  \
+		ext MSG rpc_create_##fn(a1)
 
-#define msg_create_proto2(fn, t1, a1, t2, a2)  \
-		ext MSG rpc_create_##fn(t1 a1, t2 a2)
+#define msg_create_proto2(fn, a1, a2)  \
+		ext MSG rpc_create_##fn(a1, a2)
 
 
