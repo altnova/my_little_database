@@ -1,7 +1,5 @@
 //! \file msg.c \brief simple data retrieval protocol
 
-#define SIZETYPE UI
-
 #include <pwd.h>
 
 #include "___.h"
@@ -12,35 +10,9 @@
 #include "rpc.h"
 #include "str.h"
 
-#define SZ_MSG_HDR SZ(MSG_HDR)
-
 Z MSG mbuf;
 
-V msg_dump_header(MSG m) {
-	LOG("msg_dump_header");
-	MSG_HDR h = m->hdr;
-	T(TEST, "ver -> %d", h.ver);
-	T(TEST, "type -> %d (%s)", h.type, MSG_LABELS[h.type]);
-	T(TEST, "len -> %d", h.len);
-	I tail_offset = MSG_TAIL_OFFSET[h.type];
-	UI preamble_size = MSG_SIZES[h.type];
-	if(tail_offset<0)R;
-	T(TEST, "preamble_len -> %d", preamble_size);
-	T(TEST, "tail_offset -> %d", tail_offset);
-	T(TEST, "tail_len -> %d", *(SIZETYPE*)(((V*)&m->msg)+tail_offset));
-	T(TEST, "tail -> %s", (S)(((V*)&m->msg)+tail_offset+SZ(SIZETYPE)));
-}
-
 /*
-V print_hdr(MSG m) {
-	LOG("print_hdr");
-	T(TEST, "mgc %d",m->magic);
-	T(TEST, "dir %.3s",m->dir);
-	T(TEST, "cmd %.3s",m->cmd);
-	T(TEST, "arg %d %d",m->arg[0],m->arg[1]);
-	T(TEST, "cnt %d",m->cnt);
-	T(TEST, "sze %d",m->size);}
-
 I s_req_hlo(I d, I majver, I minver) {
 	LOG("s_req_hlo");
 	MSG m = make_msg("REQ","HLO",majver,minver,0,0,0);
@@ -50,7 +22,6 @@ I s_req_hlo(I d, I majver, I minver) {
 	free(m);
 	R0;
 }
-
 */
 
 I recv_msg(I d) {
@@ -96,12 +67,10 @@ I main() {
 	struct passwd*u=getpwuid(getuid());
 	S username = (S)u->pw_name;
 
-	//username="kelaskelas";
+	MSG m = rpc_create_HEY_req(scnt(username), username);
+	//MSG m = rpc_create_HEY_res(scnt(username), username);
 
-	//MSG m = rpc_create(OUT_HEY, scnt(username), username);
-	MSG m = rpc_create_OUT_HEY(scnt(username), username);
-
-	msg_dump_header(m);
+	rpc_dump_header(m);
 
 	free(m);
 	//free(u);

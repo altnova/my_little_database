@@ -10,6 +10,17 @@
 #define MSGIDTYPE G
 #define HDRTYPE G
 
+#define INCL_OWN_HEADER ??=include "rpc.h"
+#define INCL_GLOBAL_HEADER ??=include "___.h"
+#define INCL_CONFIG_HEADER ??=include "cfg.h"
+#define INCL_TRACE_HEADER ??=include "trc.h"
+
+#define INCL_STDLIB ??=include <stdlib.h>
+#define INCL_STRING ??=include <string.h>
+
+#define DEFN_SIZETYPE ??=define SIZETYPE
+#define DEFN_HDR_SIZE ??=define SZ_MSG_HDR
+
 #define _0()
 #define _1(a) a;
 #define _2(a,b) a; b;
@@ -36,43 +47,60 @@ typedef struct msg_1 ## id { rx } __attribute__((packed)) prx_ ## label; typedef
 	MSG_ARGC[OUT_##label]=tx_argc; MSG_ARGC[IN_##label]=rx_argc;\
 	/*O("msize %s -> %d,%d\n", str(label), MSG_SIZES[OUT_##label], MSG_SIZES[IN_##label]);*/
 
-//#define msg_has_tail(code,type,first_tail_fld)   MSG_TAIL_OFFSET[code] = offsetof(type,first_tail_fld);
 #define msg_has_tail(code,type)   MSG_TAIL_OFFSET[code] = offsetof(type,data_len);
 
-//#define NL \u000A
-#define msg_create_fn_w_tail0(code, type, a_tail_len, t_tail_type, a_tail_ptr) \
-		MSG rpc_create_##code(SIZETYPE a_tail_len, t_tail_type a_tail_ptr) {\
+#define msg_create_fn_w_tail0(fn, code, type, a_tail_len, t_tail_type, a_tail_ptr) \
+		MSG rpc_create_##fn(SIZETYPE a_tail_len, t_tail_type a_tail_ptr) {\
 		MSG m = rpc_alloc(code, a_tail_len, (V*)a_tail_ptr);\
 		/*m->msg.m_##type = (p##type){};*/\
 		R m;}
 
-#define msg_create_fn_w_tail1(code, type, t1, a1, a_tail_len, t_tail_type, a_tail_ptr)  \
-		MSG rpc_create_##code(t1 a1, SIZETYPE a_tail_len, t_tail_type a_tail_ptr) {\
+#define msg_create_fn_w_tail1(fn, code, type, t1, a1, a_tail_len, t_tail_type, a_tail_ptr)  \
+		MSG rpc_create_##fn(t1 a1, SIZETYPE a_tail_len, t_tail_type a_tail_ptr) {\
 		MSG m = rpc_alloc(code, a_tail_len, (V*)a_tail_ptr);\
 		m->msg.m_##type = (p##type){a1};\
 		R m;}
 
-#define msg_create_fn_w_tail2(code, type, t1, a1, t2, a2, a_tail_len, t_tail_type, a_tail_ptr)  \
-		MSG rpc_create_##code(t1 a1, t2 a2, SIZETYPE a_tail_len, t_tail_type a_tail_ptr) {\
+#define msg_create_fn_w_tail2(fn, code, type, t1, a1, t2, a2, a_tail_len, t_tail_type, a_tail_ptr)  \
+		MSG rpc_create_##fn(t1 a1, t2 a2, SIZETYPE a_tail_len, t_tail_type a_tail_ptr) {\
 		MSG m = rpc_alloc(code, a_tail_len, (V*)a_tail_ptr);\
 		m->msg.m_##type = (p##type){a1, a2};\
 		R m;}
 
-#define msg_create_fn0(code, type)\
-		MSG rpc_create_##code() {\
+#define msg_create_fn0(fn, code, type)\
+		MSG rpc_create_##fn() {\
 		MSG m = rpc_alloc(code, 0, NULL);\
 		/*m->msg.m_##type = (p##type){};*/\
 		R m;}
 
-#define msg_create_fn1(code, type, t1, a1)  \
-		MSG rpc_create_##code(t1 a1) {\
+#define msg_create_fn1(fn, code, type, t1, a1)  \
+		MSG rpc_create_##fn(t1 a1) {\
 		MSG m = rpc_alloc(code, 0, NULL);\
 		m->msg.m_##type = (p##type){a1};\
 		R m;}
 
-#define msg_create_fn2(code, type, t1, a1, t2, a2)  \
-		MSG rpc_create_##code(t1 a1, t2 a2) {\
+#define msg_create_fn2(fn, code, type, t1, a1, t2, a2)  \
+		MSG rpc_create_##fn(t1 a1, t2 a2) {\
 		MSG m = rpc_alloc(code, 9, NULL);\
 		m->msg.m_##type = (p##type){a1, a2};\
 		R m;}		
+
+#define msg_create_proto_w_tail0(fn, a_tail_len, t_tail_type, a_tail_ptr) \
+		ext MSG rpc_create_##fn(SIZETYPE a_tail_len, t_tail_type a_tail_ptr)
+
+#define msg_create_proto_w_tail1(fn, t1, a1, a_tail_len, t_tail_type, a_tail_ptr)  \
+		ext MSG rpc_create_##fn(t1 a1, SIZETYPE a_tail_len, t_tail_type a_tail_ptr)
+
+#define msg_create_proto_w_tail2(fn, t1, a1, t2, a2, a_tail_len, t_tail_type, a_tail_ptr)  \
+		ext MSG rpc_create_##fn(t1 a1, t2 a2, SIZETYPE a_tail_len, t_tail_type a_tail_ptr)
+
+#define msg_create_proto0(fn)\
+		ext MSG rpc_create_##fn()
+
+#define msg_create_proto1(fn, t1, a1)  \
+		ext MSG rpc_create_##fn(t1 a1)
+
+#define msg_create_proto2(fn, t1, a1, t2, a2)  \
+		ext MSG rpc_create_##fn(t1 a1, t2 a2)
+
 
