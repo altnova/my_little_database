@@ -5,6 +5,8 @@
 #include "trc.h"
 #include "str.h"
 
+S lcase(S s,I n){DO(n,s[i]+=32*(26u>(UI)(s[i]-'A')))R s;}
+
 #ifdef RUN_TESTS_STR
 
 #define FTI_TOKEN_DELIM " \\%$`^0123456789#@_?~;&/\\,!|+-.:()[]{}<>*=\"\t\n\r'"

@@ -1,5 +1,8 @@
 //! \file str.h \brief string utilities
 
+
+ext S lcase(S s,I n);
+
 //! calculate wrapping of \param s to lines of \param n length
 //! \param x exec should use \c line_start,line_len
 /*! \c pts chunks to split current word into */\
