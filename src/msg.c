@@ -5,7 +5,7 @@
 #include "___.h"
 #include "cfg.h"
 #include "trc.h"
-#include "rpc.h"
+#include "rpc/rpc.h"
 #include "msg.h"
 #include "tcp.h"
 #include "str.h"
@@ -26,13 +26,13 @@ I msg_is_err(MSG_HDR *h) {
 }
 
 I msg_is_req(MSG_HDR *h) {
-	R h->type<100;
+	R h->type<100; //TODO
 }
 
 I msg_err(I p, I err_id, S msg) {
 	LOG("msg_err");
 	T(WARN, "send err (%d) %s", err_id, msg);
-	MSG m = rpc_create_ERR_res((UI)err_id, scnt(msg), msg);
+	MSG m = rpc_ERR_res((UI)err_id, scnt(msg), msg);
 	snd(p, m, msg_size(m));
 	R0;
 }
@@ -63,7 +63,7 @@ I msg_recv(I d) {
 	}
 
 	if(h.type==HEY_req) {
-		MSG m = rpc_create_SAY_res(20,"Pleased to meet you.");
+		MSG m = rpc_SAY_res(20,"Pleased to meet you.");
 		snd(d, m, msg_size(m));
 		T(TEST, "sent SAY %d bytes", msg_size(m));
 		//msg_hdr_dump(&m->hdr);
@@ -75,14 +75,11 @@ I msg_recv(I d) {
 
 
 I msg_shutdown() {
-	//free(mbuf);
 	R0;
 }
 
 I msg_init() {
-	rpc_init();
-	//mbuf = malloc(50);
-	R0;
+	R rpc_init();
 }
 
 #ifdef RUN_TESTS_MSG
@@ -132,43 +129,43 @@ I main() {
 	mcpy(records+SZ_REC,r2,SZ_REC);
 	mcpy(records+2*SZ_REC,r3,SZ_REC);
 	
-	m = rpc_create_HEY_req(scnt(username), username);	
+	m = rpc_HEY_req(scnt(username), username);	
 	pHEY_req *t1 = &m->as.HEY_req;
 	hdr_test("t1 header", m->hdr, HEY_req, SZ(SIZETYPE)+scnt(username));
 	ASSERT(t1->data_len==scnt(username), "t1 tail_len");
 	ASSERT(!scmp(t1->username, username), "t1 tail");
 	free(m);
 
-	m = rpc_create_HEY_res(3 * SZ(UJ), &info[0]);
+	m = rpc_HEY_res(3 * SZ(UJ), &info[0]);
 	hdr_test("t2 header", m->hdr, HEY_res, SZ(SIZETYPE)+3*SZ(UJ));
 	pHEY_res *t2 = &m->as.HEY_res;
 	ASSERT(t2->data_len==3*SZ(UJ), "t2 tail_len");
 	ASSERT(!mcmp(t2->info, info, 3*SZ(UJ)), "t2 tail");
 	free(m);
 
-	m = rpc_create_GET_req(rec_id);
+	m = rpc_GET_req(rec_id);
 	pGET_req *t3 = &m->as.GET_req;
 	hdr_test("t3 header", m->hdr, GET_req, SZ(ID));	
 	free(m);
 
-	m = rpc_create_GET_res(SZ_REC, r1);
+	m = rpc_GET_res(SZ_REC, r1);
 	pGET_res *t4 = &m->as.GET_res;
 	hdr_test("t4 header", m->hdr, GET_res, SZ(SIZETYPE)+SZ_REC);	
 	ASSERT(t4->data_len==SZ_REC, "t4 tail_len");
 	ASSERT(!mcmp(t4->record, r1, SZ_REC), "t4 tail");
 	free(m);
 
-	m = rpc_create_DEL_req(rec_id);
+	m = rpc_DEL_req(rec_id);
 	pDEL_req *t5 = &m->as.DEL_req;
 	hdr_test("t5 header", m->hdr, DEL_req, SZ(ID));	
 	free(m);
 
-	m = rpc_create_DEL_res(rec_id);
+	m = rpc_DEL_res(rec_id);
 	pDEL_res *t6 = &m->as.DEL_res;
 	hdr_test("t6 header", m->hdr, DEL_res, SZ(ID));	
 	free(m);
 
-	m = rpc_create_UPD_req(cnt, records_len, records);
+	m = rpc_UPD_req(cnt, records_len, records);
 	pUPD_req *t7 = &m->as.UPD_req;
 	hdr_test("t7 header", m->hdr, UPD_req, SZ(UI)+SZ(SIZETYPE)+3*SZ_REC);
 	//rpc_dump_header(m);
@@ -177,29 +174,27 @@ I main() {
 	ASSERT(!mcmp(t7->records, records, cnt*SZ_REC), "t7 tail");
 	free(m);
 
-
-	m = rpc_create_UPD_res(cnt);
+	m = rpc_UPD_res(cnt);
 	pUPD_res *t8 = &m->as.UPD_res;
 	ASSERT(t8->cnt==cnt, "t8 arg1");
 	free(m);
 
-	m = rpc_create_ADD_req(cnt, records_len, records);
+	m = rpc_ADD_req(cnt, records_len, records);
 	pADD_req *t9 = &m->as.ADD_req;
 	ASSERT(t9->cnt==cnt, "t9 arg1");
 	ASSERT(t9->data_len==cnt*SZ_REC, "t9 tail_len");
 	ASSERT(!mcmp(t9->records, records, cnt*SZ_REC), "t9 tail");
-
 	free(m);
 
-	m = rpc_create_ADD_res(cnt);
+	m = rpc_ADD_res(cnt);
 	pADD_res *t10 = &m->as.ADD_res;
 	free(m);
 
-	m = rpc_create_FND_req(max_hits, scnt(query), query);
+	m = rpc_FND_req(max_hits, scnt(query), query);
 	pFND_req *t11 = &m->as.FND_req;
 	free(m);
 
-	m = rpc_create_FND_res(cnt, records_len, records);
+	m = rpc_FND_res(cnt, records_len, records);
 	pFND_res *t12 = &m->as.FND_res;
 	hdr_test("t12 header", m->hdr, FND_res, SZ(UI)+SZ(SIZETYPE)+3*SZ_REC);	
 	ASSERT(t12->cnt==cnt, "t12 arg1");
@@ -207,32 +202,30 @@ I main() {
 	ASSERT(!mcmp(t12->records, records, cnt*SZ_REC), "t12 tail");
 	free(m);
 
-	m = rpc_create_LST_req(page_num, per_page);
+	m = rpc_LST_req(page_num, per_page);
 	pLST_req *t13 = &m->as.LST_req;
 	free(m);
 
-	m = rpc_create_LST_res(page_num, out_of, records_len, records);
+	m = rpc_LST_res(page_num, out_of, records_len, records);
 	pLST_res *t14 = &m->as.LST_res;
 	free(m);
 
-	m = rpc_create_SRT_req(field_id, dir);
+	m = rpc_SRT_req(field_id, dir);
 	pSRT_req *t15 = &m->as.SRT_req;
 	free(m);
 
-	m = rpc_create_SRT_res(page_num, out_of, 2 * SZ_REC, records);
+	m = rpc_SRT_res(page_num, out_of, 2 * SZ_REC, records);
 	pSRT_res *t16 = &m->as.SRT_res;
 	free(m);
 
-	m = rpc_create_BYE_req();
+	m = rpc_BYE_req();
 	pBYE_req *t17 = &m->as.BYE_req;
 	free(m);
 
-	m = rpc_create_BYE_res();
+	m = rpc_BYE_res();
 	pBYE_res *t18 = &m->as.BYE_res;
 	hdr_test("t18 header", m->hdr, BYE_res, 0);	
 	free(m);
-
-	//rpc_dump_header(m);
 
 	free(r1);
 	free(r2);

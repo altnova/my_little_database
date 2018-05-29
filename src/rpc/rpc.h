@@ -1,3 +1,4 @@
+//:~
 /*!
  * message header
  */
@@ -60,28 +61,28 @@ typedef struct {
 /*!
  * message factory
  */
-ext MSG rpc_create_HEY_req(SIZETYPE username_len, S username);
-ext MSG rpc_create_HEY_res(SIZETYPE info_len, UJ* info);
-ext MSG rpc_create_GET_req(ID rec_id);
-ext MSG rpc_create_GET_res(SIZETYPE record_len, Rec record);
-ext MSG rpc_create_DEL_req(ID rec_id);
-ext MSG rpc_create_DEL_res(ID rec_id);
-ext MSG rpc_create_UPD_req(UI cnt, SIZETYPE records_len, Rec records);
-ext MSG rpc_create_UPD_res(UI cnt);
-ext MSG rpc_create_ADD_req(UI cnt, SIZETYPE records_len, Rec records);
-ext MSG rpc_create_ADD_res(UI cnt);
-ext MSG rpc_create_FND_req(UI max_hits, SIZETYPE query_len, S query);
-ext MSG rpc_create_FND_res(UI cnt, SIZETYPE records_len, Rec records);
-ext MSG rpc_create_LST_req(UI page_num, UI per_page);
-ext MSG rpc_create_LST_res(UI page_num, UI out_of, SIZETYPE records_len, Rec records);
-ext MSG rpc_create_SRT_req(UI field_id, UI dir);
-ext MSG rpc_create_SRT_res(UI page_num, UI out_of, SIZETYPE records_len, Rec records);
-ext MSG rpc_create_BYE_req();
-ext MSG rpc_create_BYE_res();
-ext MSG rpc_create_SAY_req(SIZETYPE msg_len, S msg);
-ext MSG rpc_create_SAY_res(SIZETYPE msg_len, S msg);
-ext MSG rpc_create_ERR_req(UI errno, SIZETYPE msg_len, S msg);
-ext MSG rpc_create_ERR_res(UI errno, SIZETYPE msg_len, S msg);
+ext MSG rpc_HEY_req(SIZETYPE username_len, S username);
+ext MSG rpc_HEY_res(SIZETYPE info_len, UJ* info);
+ext MSG rpc_GET_req(ID rec_id);
+ext MSG rpc_GET_res(SIZETYPE record_len, Rec record);
+ext MSG rpc_DEL_req(ID rec_id);
+ext MSG rpc_DEL_res(ID rec_id);
+ext MSG rpc_UPD_req(UI cnt, SIZETYPE records_len, Rec records);
+ext MSG rpc_UPD_res(UI cnt);
+ext MSG rpc_ADD_req(UI cnt, SIZETYPE records_len, Rec records);
+ext MSG rpc_ADD_res(UI cnt);
+ext MSG rpc_FND_req(UI max_hits, SIZETYPE query_len, S query);
+ext MSG rpc_FND_res(UI cnt, SIZETYPE records_len, Rec records);
+ext MSG rpc_LST_req(UI page_num, UI per_page);
+ext MSG rpc_LST_res(UI page_num, UI out_of, SIZETYPE records_len, Rec records);
+ext MSG rpc_SRT_req(UI field_id, UI dir);
+ext MSG rpc_SRT_res(UI page_num, UI out_of, SIZETYPE records_len, Rec records);
+ext MSG rpc_BYE_req();
+ext MSG rpc_BYE_res();
+ext MSG rpc_SAY_req(SIZETYPE msg_len, S msg);
+ext MSG rpc_SAY_res(SIZETYPE msg_len, S msg);
+ext MSG rpc_ERR_req(UI errno, SIZETYPE msg_len, S msg);
+ext MSG rpc_ERR_res(UI errno, SIZETYPE msg_len, S msg);
 /*!
  * public methods
  */
