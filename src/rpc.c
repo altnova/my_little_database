@@ -17,6 +17,7 @@ sz SZ_FND_req = SZ(pFND_req), SZ_FND_res = SZ(pFND_res);;
 sz SZ_LST_req = SZ(pLST_req), SZ_LST_res = SZ(pLST_res);;
 sz SZ_SRT_req = SZ(pSRT_req), SZ_SRT_res = SZ(pSRT_res);;
 sz SZ_BYE_req = SZ(pBYE_req), SZ_BYE_res = SZ(pBYE_res);;
+sz SZ_SAY_req = SZ(pSAY_req), SZ_SAY_res = SZ(pSAY_res);;
 sz SZ_ERR_req = SZ(pERR_req), SZ_ERR_res = SZ(pERR_res);;
 MSG rpc_create_HEY_req(SIZETYPE username_len, S username) { MSG m = rpc_alloc(HEY_req, username_len, (V*)username); m->as.HEY_req = (pHEY_req){username_len}; R m;};
 MSG rpc_create_HEY_res(SIZETYPE info_len, UJ* info) { MSG m = rpc_alloc(HEY_res, info_len, (V*)info); m->as.HEY_res = (pHEY_res){info_len}; R m;};
@@ -38,6 +39,8 @@ MSG rpc_create_BYE_req() { MSG m = rpc_alloc(BYE_req, 0, NULL); R m;};
 MSG rpc_create_BYE_res() { MSG m = rpc_alloc(BYE_res, 0, NULL); R m;};
 MSG rpc_create_ERR_req(UI err_id, SIZETYPE msg_len, S msg) { MSG m = rpc_alloc(ERR_req, msg_len, (V*)msg); m->as.ERR_req = (pERR_req){err_id, msg_len}; R m;};
 MSG rpc_create_ERR_res(UI err_id, SIZETYPE msg_len, S msg) { MSG m = rpc_alloc(ERR_res, msg_len, (V*)msg); m->as.ERR_res = (pERR_res){err_id, msg_len}; R m;};
+MSG rpc_create_SAY_req(SIZETYPE msg_len, S msg) { MSG m = rpc_alloc(SAY_req, msg_len, (V*)msg); m->as.SAY_req = (pSAY_req){msg_len}; R m;};
+MSG rpc_create_SAY_res(SIZETYPE msg_len, S msg) { MSG m = rpc_alloc(SAY_res, msg_len, (V*)msg); m->as.SAY_res = (pSAY_res){msg_len}; R m;};
 V rpc_init() {
     RPC_VERSION = 1;
     DO(100*2, MSG_TAIL_OFFSET[i]=-1)
@@ -50,6 +53,7 @@ V rpc_init() {
     MSG_SIZES[LST_req]=SZ_LST_req; MSG_SIZES[LST_res]=SZ_LST_res;
     MSG_SIZES[SRT_req]=SZ_SRT_req; MSG_SIZES[SRT_res]=SZ_SRT_res;
     MSG_SIZES[BYE_req]=SZ_BYE_req; MSG_SIZES[BYE_res]=SZ_BYE_res;
+    MSG_SIZES[SAY_req]=SZ_SAY_req; MSG_SIZES[SAY_res]=SZ_SAY_res;
     MSG_SIZES[ERR_req]=SZ_ERR_req; MSG_SIZES[ERR_res]=SZ_ERR_res;
     MSG_TAIL_OFFSET[HEY_req] = offsetof(pHEY_req,data_len);
     MSG_TAIL_OFFSET[HEY_res] = offsetof(pHEY_res,data_len);
@@ -62,6 +66,8 @@ V rpc_init() {
     MSG_TAIL_OFFSET[SRT_res] = offsetof(pSRT_res,data_len);
     MSG_TAIL_OFFSET[ERR_req] = offsetof(pERR_req,data_len);
     MSG_TAIL_OFFSET[ERR_res] = offsetof(pERR_res,data_len);
+    MSG_TAIL_OFFSET[SAY_req] = offsetof(pSAY_req,data_len);
+    MSG_TAIL_OFFSET[SAY_res] = offsetof(pSAY_res,data_len);
 }
 G rpc_ver() {
   R RPC_VERSION;

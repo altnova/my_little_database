@@ -25,6 +25,10 @@ I msg_is_err(MSG_HDR *h) {
 	R h->type==50||h->type==150;
 }
 
+I msg_is_req(MSG_HDR *h) {
+	R h->type<100;
+}
+
 I msg_err(I p, I err_id, S msg) {
 	LOG("msg_err");
 	T(WARN, "send err (%d) %s", err_id, msg);
@@ -37,21 +41,35 @@ I msg_recv(I d) {
 	LOG("recv_msg");
 	MSG_HDR h; I n=rcv(d,&h,SZ_MSG_HDR);
 	P(n<=0,(sd0(d),-1))
-	T(TEST, "rcvd header %d bytes", n);
-	msg_hdr_dump(&h);
+	T(TRACE, "rcvd header %d bytes", n);
+	//msg_hdr_dump(&h);
 	X(h.ver!=rpc_ver(), {msg_err(d, 1, "invalid rpc version");sd0(d);},-1);
 	X(h.len > MSG_MAX_LEN, {msg_err(d, 2, "message is too big");sd0(d);},-1);
 
 	pMSG *m = malloc(h.len); chk(m,-1);
 	n=rcv(d,m,h.len);
-	T(TEST, "rcvd payload %d bytes", n);
+	T(TRACE, "rcvd payload %d bytes", n);
 
 	if(msg_is_err(&h)) {
-		pERR_res *e = (pERR_res*)&m;
+		pERR_res *e = (pERR_res*)m;
 		T(WARN, "recv err (%d) %.*s", e->err_id, 20, e->msg);
 	} else {
-		T(WARN, "msg ready to process (type=%d)", h.type);
+		T(TRACE, "msg ready to process (type=%d)", h.type);
 	}
+
+	if(h.type==SAY_res) {
+		pSAY_res *t = (pSAY_res*)m;
+		T(TEST, "rcvd SAY(%d): %.*s", t->data_len, t->data_len, t->msg);
+	}
+
+	if(h.type==HEY_req) {
+		MSG m = rpc_create_SAY_res(20,"Pleased to meet you.");
+		snd(d, m, msg_size(m));
+		T(TEST, "sent SAY %d bytes", msg_size(m));
+		//msg_hdr_dump(&m->hdr);
+	}
+
+	free(m);
 
 	R0;}
 

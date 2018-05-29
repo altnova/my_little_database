@@ -16,6 +16,7 @@ typedef struct msg_5 { UI max_hits; SIZETYPE data_len; S query[0]; } __attribute
 typedef struct msg_6 { UI page_num; UI per_page; } __attribute__((packed)) pLST_req; typedef struct msg_16 { UI page_num; UI out_of; UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) pLST_res;
 typedef struct msg_7 { UI field_id; UI dir; } __attribute__((packed)) pSRT_req; typedef struct msg_17 { UI page_num; UI out_of; UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) pSRT_res;
 typedef struct msg_8 { G empty[0]; } __attribute__((packed)) pBYE_req; typedef struct msg_18 { G empty[0]; } __attribute__((packed)) pBYE_res;
+typedef struct msg_9 { SIZETYPE data_len; S msg[0]; } __attribute__((packed)) pSAY_req; typedef struct msg_19 { SIZETYPE data_len; S msg[0]; } __attribute__((packed)) pSAY_res;
 typedef struct msg_50 { UI err_id; SIZETYPE data_len; S msg[0]; } __attribute__((packed)) pERR_req; typedef struct msg_150 { UI err_id; SIZETYPE data_len; S msg[0]; } __attribute__((packed)) pERR_res;
 /*!
  * message types to int
@@ -30,6 +31,7 @@ enum msg_codes {
     LST_req = 6, LST_res = 16,
     SRT_req = 7, SRT_res = 17,
     BYE_req = 8, BYE_res = 18,
+    SAY_req = 9, SAY_res = 19,
     ERR_req = 50, ERR_res = 150
 };
 /*!
@@ -45,6 +47,7 @@ typedef union {
     pLST_req LST_req; pLST_res LST_res;
     pSRT_req SRT_req; pSRT_res SRT_res;
     pBYE_req BYE_req; pBYE_res BYE_res;
+    pSAY_req SAY_req; pSAY_res SAY_res;
     pERR_req ERR_req; pERR_res ERR_res;
 } pMSG;
 /*!
@@ -75,6 +78,8 @@ ext MSG rpc_create_SRT_req(UI field_id, UI dir);
 ext MSG rpc_create_SRT_res(UI page_num, UI out_of, SIZETYPE records_len, Rec records);
 ext MSG rpc_create_BYE_req();
 ext MSG rpc_create_BYE_res();
+ext MSG rpc_create_SAY_req(SIZETYPE msg_len, S msg);
+ext MSG rpc_create_SAY_res(SIZETYPE msg_len, S msg);
 ext MSG rpc_create_ERR_req(UI errno, SIZETYPE msg_len, S msg);
 ext MSG rpc_create_ERR_res(UI errno, SIZETYPE msg_len, S msg);
 /*!
