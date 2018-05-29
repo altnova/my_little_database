@@ -110,7 +110,7 @@ ZI cli_cmd_csv_export(S arg);
 ZI cli_cmd_rec_list(S arg);
 ZI cli_cmd_rec_sort(S arg);
 ZI cli_cmd_debug(S arg);
-//!                      :             *             +            -            <               >               !             ^             ~
+//!                      :                 *                 +                -                <                   >                   !                 ^                 ~
 CLI_CMD cmds[] =        {cli_cmd_rec_show, cli_cmd_rec_edit, cli_cmd_rec_add, cli_cmd_rec_del, cli_cmd_csv_import, cli_cmd_csv_export, cli_cmd_rec_list, cli_cmd_rec_sort, cli_cmd_debug};
 #define CLI_DB_COMMANDS ":*+-<>!^~"
 
@@ -457,7 +457,7 @@ I main(I ac, S* av) {
 	C q[LINE_BUF];
 
 	//! start main loop
-	USR_LOOP(usr_input_str(q, CLI_PROMPT, "inavalid characters"),
+	USR_LOOP(usr_input_str(q, CLI_PROMPT, "invalid characters"),
 		cli_update_dimensions(); //< adjust cols/rows
 
 		I qlen = scnt(q);
