@@ -23,6 +23,7 @@ enum colors { C_GREY = 37, C_BLUE = 36, C_YELL = 33, C_GREEN = 32 };
 #define HR(n) TB();CH("\u2501",n);NL(); /* horisontal ruler */
 #define BLUE(s) O("\e[36m%s\e[0m", s)
 #define GREY(s) O("\e[37m%s\e[0m", s)
+#define RED(s) O("\e[1;31m%s\e[0m", s)
 #define YELL(s) O("\e[1;33m%s\e[0m", s)
 #define GREEN(s) O("\e[1;32m%s\e[0m", s)
 #define COLOR_START_BOLD(col) O("\e[1;%dm", col)
@@ -94,7 +95,7 @@ Z CLI_CMD cmds[] =        {cli_cmd_rec_show, cli_cmd_rec_edit, cli_cmd_rec_add, 
 Z CLI_CMD cli_cmd_search;
 
 ZI initialized=0;
-ZS current_prompt;
+ZS current_prompt;C ptbuf[100];
 ZI rows, cols; //< terminal dimensions
 ZC fldbuf[FLDMAX];
 
@@ -117,21 +118,30 @@ ZI current_column_widths[3];
 
 Z pDB_INFO db_info;
 
+S username="user";
+S hostname="failbowl";
+I prt=0;
+S hpu;
+
 ZV cli_set_prompt(S p){
-	current_prompt = p;}
+	snprintf(ptbuf, 100, p, username, hostname);
+	current_prompt = ptbuf;}
 
 S cli_get_prompt(){
 	R current_prompt;}
 
 V cli_prompt() {
 	LOG("cli_prompt");
-	write(0,current_prompt, scnt(current_prompt));
-}
+	write(0,current_prompt, scnt(current_prompt));}
+
+V cli_set_hpu(S host,I pt,S user) {
+	username = user;
+	prt = pt;
+	hostname = host;}
 
 V cli_lf() {
 	LOG("cli_lf");
-	write(0,"\n", 1);
-}
+	write(0,"\n", 1);}
 
 ZI cli_is_db_cmd(C c) {
 	S r=schr(CLI_DB_COMMANDS,c);
@@ -185,6 +195,11 @@ ZV cli_help_db() {
 
 ZV cli_usage() {
 	cli_banner();
+	C buf[100];
+	I len = snprintf(buf,100, "%s:%d", hostname, prt);
+	TB();GREEN("index server:");CH(" ",53-13-len);
+		COLOR_START(C_BLUE);O("%s", buf);COLOR_END();
+	NL();NL();
 	TB();GREEN("indexed fields:");CH(" ",17);
 	DO(FTI_FIELD_COUNT,
 		COLOR_START(C_BLUE);O(" %s", rec_field_names[i]);COLOR_END();
@@ -213,15 +228,16 @@ ZV cli_update_term_size() {
 	cols = ws.ws_col;
 	rows = ws.ws_row;}
 
-ZI cli_warn(S msg){
-	TB();O("%s",msg);NL();
+I cli_warn(I err_id, S msg){
+	NL();TB();TB();RED("[!] ");YELL(msg);/*O(" (%d)",err_id)*/;NL();NL();
+	cli_prompt();
 	R1;}
 
 ID cli_parse_id(S str) {
-	X(!scnt(str), cli_warn("empty record id"), NIL);
+	X(!scnt(str), cli_warn(ERR_BAD_RECORD_ID, "empty record id"), NIL);
 	errno = 0;
 	J res = strtol(str, NULL, 10);
-	X(errno||res<0, cli_warn("bad record id"), NIL);
+	X(errno||res<0, cli_warn(ERR_BAD_RECORD_ID, "bad record id"), NIL);
 	R(ID)res;}
 
 ZI cli_fld_format(S fmt, ...) {
@@ -305,7 +321,7 @@ ZI cli_parse_cmd_edit(S q) {
 	LOG("cli_parse_cmd_edit");
 	cli_update_term_size();
 	I qlen = scnt(q);
-	T(TEST, "qlen=%d, q=%s last=%d", qlen, q, q[qlen-1]);
+	//T(TEST, "qlen=%d, q=%s last=%d", qlen, q, q[qlen-1]);
 	if(!qlen||*q==10)R0; //< LF
 	//if(qlen>1&&q[qlen-1]==10)q[qlen-1]=0;qlen--; // strip LF
 	if(qlen==1&&*q=='='){
@@ -437,19 +453,18 @@ ZI cli_parse_cmd_main(S q) {
 	if(pos>=0){
 		//T(TEST, "pos=%d", pos);
 		I res = cmds[pos](q+1);
-		if(res){TB();O("command error\n");}
 		goto NEXT;
 	}
 	SW(qlen){
 		CS(1,
 			SW(*q){
-				CS('\\',R-1;)
+				CS('\\',R-1;) //< exit
 				CS(10, cli_hint()) //< LF
 				CS('?', cli_usage())
 			}
 			goto NEXT;
 		)
-		CS(2, if(!mcmp("\\\\", q, 2))R-1;)
+		CS(2, if(!mcmp("\\\\", q, 2))R-1;) //< exit
 	}
 	if(q[qlen-1]=='?'){
 		q[qlen-1]=0;
@@ -465,16 +480,13 @@ ZI cli_parse_cmd_main(S q) {
 
 	NEXT:
 	WIPE(q, qlen);
-	R0;
-}
+	R0;}
 
 V cli_set_edit_buf(Rec r) {
-	mcpy(edit_buf,r,SZ_REC);
-}
+	mcpy(edit_buf,r,SZ_REC);}
 
 V cli_set_db_info(DB_INFO di) {
-	mcpy(&db_info,di,SZ_DB_INFO);
-}
+	mcpy(&db_info,di,SZ_DB_INFO);}
 
 I cli_dispatch_cmd(S cmd) {
 	I r;
@@ -536,7 +548,7 @@ I cli_cmd_rec_show(S arg){
 	ID rec_id = cli_parse_id(arg);
 	P(rec_id==NIL,1)
 	Rec r = (Rec)malloc(SZ_REC);chk(r,1);
-	P(rec_get(r, rec_id)==NIL, cli_warn("no such record"))
+	P(rec_get(r, rec_id)==NIL, cli_warn(ERR_NO_SUCH_RECORD, "no such record"))
 	cli_rec_print(r);
 	free(r);
 	R0;}
@@ -561,7 +573,7 @@ ZI cli_cmd_rec_edit(S arg){
 	LOG("cli_cmd_rec_edit");
 	ID rec_id = cli_parse_id(arg);
 	P(rec_id==NIL,1)
-	P(rec_get(edit_buf, rec_id)==NIL, cli_warn("no such record"));
+	P(rec_get(edit_buf, rec_id)==NIL, cli_warn(ERR_NO_SUCH_RECORD,"no such record"));
 	cli_enter_edit_mode("  update$ ", "update", rec_update_fn);
 	cli_print_editor_head();
 	R0;}

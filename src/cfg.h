@@ -30,6 +30,10 @@
 
 #define MAX_FNAME_LEN 200	//< db and idx files
 
+//! network config
+#define NET_STREAM_BUF 8	//< stream buffer size for LST and FND
+#define NET_PORT 5000		//< default tcp port
+
 typedef UJ ID;				//< rec_id type alias
 
 //! index entry
@@ -77,5 +81,16 @@ ZI rec_field_offsets[] = {
 #define FTI_FIELD_COUNT 6 //< count of full-text search fields
 //! delimiters for text tokenizer
 #define FTI_TOKEN_DELIM "' %$`^0123456789#@_?~;&/\\,!|+-.:()[]{}<>*=\"\t\n\r\0" 
+
+enum msg_err_codes{
+	ERR_INVALID_RPC_VERSION = 1,
+	ERR_MSG_IS_TOO_BIG = 2,
+	ERR_NOT_YET_IMPLEMENTED = 3,
+	ERR_UNKNOWN_MSG_TYPE = 4,
+	ERR_NO_SUCH_RECORD = 5,
+	ERR_NOT_SUPPORTED = 6,
+	ERR_CMD_FAILED = 7,
+	ERR_BAD_RECORD_ID = 8
+};
 
 //:~

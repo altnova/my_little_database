@@ -6,10 +6,11 @@
 #include "rec.h"
 #include "cli.h"
 
-#define PORT 5000
-
 I c=-1; // current connection
 I streaming = 0;
+S adr = "localhost";
+I a = 0;  //< addr
+I p = NET_PORT; //<port
 
 I ncl_shutdown();
 
@@ -20,7 +21,7 @@ ZS ncl_username() {
 
 ZI ncl_on_connect(I d) {
 	LOG("ncl_on_connect");
-	T(INFO, "connected to server on port %d", PORT);
+	T(INFO, "connected to %s:%d",adr,p);
 	S u = ncl_username();
 	c = d;
 	R msg_send(d, rpc_HEY_req(scnt(u)+1, u));
@@ -37,13 +38,14 @@ ZI ncl_on_stdin(I c, UI l, S str) {
 I ncl_cmd_show(S arg) { // show
 	LOG("ncl_cmd_show");
 	ID rec_id = cli_parse_id(arg);
-	streaming=1;
 	P(rec_id==NIL,1);
+	streaming=1;
 	msg_send(c, rpc_GET_req(rec_id));
 	R0;}
 
 UJ ncl_cmd_edit_send(Rec r) {
 	LOG("ncl_cmd_edit_send");
+	streaming=1;
 	msg_send(c, rpc_UPD_req(1, r));
 	R NIL-1;}//< defer ok
 
@@ -61,7 +63,7 @@ UJ ncl_cmd_add_send(Rec r) {
 I ncl_cmd_add(S arg) { // add
 	LOG("ncl_cmd_add");
 	cli_cmd_rec_add(arg); // native fn is good enough
-R0;}
+	R0;}
 
 I ncl_cmd_del(S arg) { // del
 	LOG("ncl_cmd_del");
@@ -107,6 +109,12 @@ R0;}
 
 ZI ncl_on_msg(I d, MSG_HDR *h, pMSG *m) {
 	LOG("cln_on_msg");
+	if(msg_is_err(h)) {
+		pERR_res *e = (pERR_res*)m;
+		cli_warn(e->err_id, (S)e->msg);
+		streaming=0;
+		R1;}	
+
 	SW(h->type){
 		CS(SAY_res,;
 			pSAY_res *m_say = (pSAY_res*)m;
@@ -127,6 +135,8 @@ ZI ncl_on_msg(I d, MSG_HDR *h, pMSG *m) {
 		CS(UPD_res,;
 			pUPD_res *m_upd = (pUPD_res*)m;
 			cli_print_edit_res(m_upd->rec_id,0);
+			streaming=0;
+			cli_prompt();
 		)
 		CS(DEL_res,;
 			pDEL_res *m_del = (pDEL_res*)m;
@@ -149,22 +159,25 @@ ZI ncl_on_msg(I d, MSG_HDR *h, pMSG *m) {
 				cli_prompt();
 			}
 		)
-
 		CD: msg_send_err(d, ERR_UNKNOWN_MSG_TYPE, "unknown message type");
 	}
-	R0;	}
+	R0;}
 
 I ncl_shutdown() {
 	cli_shutdown(0);
 	cln_shutdown();
 	//TBUF(0);
-	R0;
-}
+	R0;}
 
-I main() {
+I main(I ac, S*av) {
 	LOG("ncl");
 	//TBUF(1);
 
+	adr=av[1];
+	a=addr(adr);
+	p=atoi(av[2]);
+
+	cli_set_hpu(adr,p,ncl_username());
 	cli_set_cmd_handler(':', ncl_cmd_show); // show
 	cli_set_cmd_handler('*', ncl_cmd_edit); // edit
 	cli_set_cmd_handler('+', ncl_cmd_add); // add
@@ -182,7 +195,7 @@ I main() {
 	cln_set_stdin_callback(ncl_on_stdin);
 	cln_set_on_connect_callback(ncl_on_connect);
 
-	cln_connect(0, PORT);
+	cln_connect(a,p);
 
 	R ncl_shutdown();
 }

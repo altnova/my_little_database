@@ -56,8 +56,7 @@ I msg_recv(I d) {
 
 	if(msg_is_err(&h)) {
 		pERR_res *e = (pERR_res*)m;
-		T(WARN, "recv err (%d) %.*s", e->err_id, e->cnt, e->msg);
-		R1;
+		T(TRACE, "recv err (%d) %.*s", e->err_id, e->cnt, e->msg);
 	} else
 		T(TRACE, "msg ready to process (type=%d)", h.type);
 

@@ -24,7 +24,7 @@ nsr:
 
 ncl:
 	$(CC) -DNET_CLIENT $(CCOPTS) -Wno-parentheses -o bin/ncl $(COMMON) src/rec.c src/cli.c src/rpc/rpc.c src/net/tcp.c src/net/msg.c src/net/cln.c src/ncl.c
-	$(VLG) ./bin/ncl
+	$(VLG) ./bin/ncl mdb.kel.as 5000
 
 cln:
 	make -C src/net cln

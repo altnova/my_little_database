@@ -9,22 +9,20 @@
 ZV nyi(I d) {
 	msg_send_err(d, ERR_NOT_YET_IMPLEMENTED, "not yet implemented");}
 
-Z pRec recbuf[4];
+Z pRec recbuf[NET_STREAM_BUF];
 Z UI recbufpos = 0;
 
 Z UJ nsr_rec_each(Rec r, V*conn, UJ i) {
 	LOG("nsr_rec_each");
 	I d = *(I*)conn;
 	mcpy(&recbuf[recbufpos++], r, SZ_REC);
-	if(recbufpos==4) {
+	if(recbufpos==NET_STREAM_BUF) {
 		msg_send(d, rpc_LST_res(4, (Rec)&recbuf));
 		T(TRACE, "flush at %lu", i);
 		recbufpos=0;
-	} else {
+	} else
 		T(TRACE, "record %lu", i);
-	}
-	R0;
-}
+	R0;}
 
 ZI nsr_on_msg(I d, MSG_HDR *h, pMSG *m) {
 	LOG("nsr_on_msg");
@@ -61,7 +59,7 @@ ZI nsr_on_msg(I d, MSG_HDR *h, pMSG *m) {
     		X(m_upd->cnt!=1,msg_send_err(d,ERR_NOT_SUPPORTED,"updating multiple records is not implemented"),-1);
     		res = rec_update(m_upd->records);
     		X(res==NIL,msg_send_err(d,ERR_CMD_FAILED,"update failed"),-1);
-    		msg_send(d, rpc_UPD_res(m_upd->cnt));
+    		msg_send(d, rpc_UPD_res(m_upd->records->rec_id));
     	)
     	CS(ADD_req,
     		;pADD_req* m_add = (pADD_req*)m;
@@ -90,8 +88,7 @@ ZI nsr_on_msg(I d, MSG_HDR *h, pMSG *m) {
     	CD: msg_send_err(d, ERR_UNKNOWN_MSG_TYPE, "unknown command");
 	}
 
-	R0;	
-}
+	R0;}
 
 I nsr_stdin(I d, UI l, S str) {
 	LOG("nsr_stdin");
@@ -104,12 +101,11 @@ V nsr_init() {
 	fts_init();
 	msg_set_callback(nsr_on_msg);
 	srv_set_stdin_callback(nsr_stdin);
-	srv_listen(0, 5000, msg_recv);}
+	srv_listen(0, NET_PORT, msg_recv);}
 
 V nsr_shutdown() {
 	srv_shutdown();
-	fts_shutdown();
-}
+	fts_shutdown();}
 
 I main() {
 	LOG("nsr");
