@@ -15,7 +15,7 @@ dep: clean
 	make -C src/adt
 	make -C src/alg
 	make -C src/utl
-	make -C src/rpc
+	#make -C src/rpc
 	make -C src/net
 
 nsr:
