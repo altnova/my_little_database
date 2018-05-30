@@ -1,7 +1,7 @@
 #CC=gcc-8
 CC=gcc
 #CCOPTS=-mavx2 -ffast-math -march=native -flto -mfpmath=sse -funroll-loops -Ofast
-CCOPTS=-Og -g
+CCOPTS=-Og -g -lm
 #VLG=/opt/valgrind/bin/valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes
 VLG=
 SUBDIRS=

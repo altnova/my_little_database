@@ -155,13 +155,13 @@ ZI ncl_on_msg(I d, MSG_HDR *h, pMSG *m) {
 I ncl_shutdown() {
 	cli_shutdown(0);
 	cln_shutdown();
-	TBUF(0);
+	//TBUF(0);
 	R0;
 }
 
 I main() {
 	LOG("ncl");
-	TBUF(1);
+	//TBUF(1);
 
 	cli_set_cmd_handler(':', ncl_cmd_show); // show
 	cli_set_cmd_handler('*', ncl_cmd_edit); // edit
