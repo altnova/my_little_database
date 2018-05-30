@@ -49,11 +49,17 @@ typedef struct record {
 	C subject[2001];
    UH lengths[4];
 } __attribute__((packed)) pRec;
-
 typedef pRec bufRec[RECBUFLEN];
 typedef pRec* Rec; //< use this one
-
 #define SZ_REC SZ(pRec)
+
+typedef struct db_info {
+	UJ total_records;
+	UJ total_words;
+	UJ total_mem;
+} __attribute__((packed)) pDB_INFO;
+typedef pDB_INFO* DB_INFO; //< use this one
+#define SZ_DB_INFO SZ(pDB_INFO)
 
 enum rec_fields { fld_pages, fld_year,   fld_publisher,
                   fld_title, fld_author, fld_subject };
