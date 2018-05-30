@@ -1,5 +1,7 @@
 //! \file clk.h \brief precision timer
 
+#include <time.h>
+
 //! start timer
 ext clock_t clk_start();
 
