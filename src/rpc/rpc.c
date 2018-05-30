@@ -93,7 +93,7 @@ Z MSG rpc_alloc(I m_type, SIZETYPE tail_len, V*tail_src) {
     UJ m_len = MSG_SIZES[m_type];
     G ver = RPC_VERSION;
     I tail_offset = MSG_TAIL_OFFSET[m_type];
-    MSG m = calloc(1, m_len+tail_len);chk(m,0);
+    MSG m = calloc(1, SZ_MSG_HDR+m_len+tail_len);chk(m,0);
     m->hdr = (MSG_HDR){ver, m_type, m_len+tail_len};
     if(tail_offset>=0) {
       V* tail_dest = ((V*)&m->as)+tail_offset+SZ(SIZETYPE);
