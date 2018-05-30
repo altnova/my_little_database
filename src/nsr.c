@@ -18,10 +18,10 @@ Z UJ nsr_rec_each(Rec r, V*conn, UJ i) {
 	mcpy(&recbuf[recbufpos++], r, SZ_REC);
 	if(recbufpos==4) {
 		msg_send(d, rpc_LST_res(4, (Rec)&recbuf));
-		T(TEST, "flush at %lu", i);
+		T(TRACE, "flush at %lu", i);
 		recbufpos=0;
 	} else {
-		T(TEST, "record %lu", i);
+		T(TRACE, "record %lu", i);
 	}
 	R0;
 }
@@ -76,8 +76,9 @@ ZI nsr_on_msg(I d, MSG_HDR *h, pMSG *m) {
     		PAGING_INFO p = m_lst->pagination; // page_num, per_page, sort_by, sort_dir
 			UJ res = idx_page(nsr_rec_each, &d, p->page_num, p->per_page);
 			msg_send(d, rpc_LST_res(recbufpos, (Rec)&recbuf)); // flush buffer remainder
-			T(TEST, "flush remainining %d", recbufpos);
-			msg_send(d, rpc_LST_res(0, NULL)); // send stream terminator
+			T(TRACE, "flush remainining %d", recbufpos);
+			if(recbufpos)
+				msg_send(d, rpc_LST_res(0, NULL)); // send stream terminator
 			recbufpos=0;
     	)
 

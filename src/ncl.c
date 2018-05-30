@@ -67,6 +67,7 @@ I ncl_cmd_del(S arg) { // del
 	LOG("ncl_cmd_del");
 	ID rec_id = cli_parse_id(arg);
 	P(rec_id==NIL,1);
+	streaming=1;
 	msg_send(c, rpc_DEL_req(rec_id));
 	R0;}
 
@@ -130,6 +131,7 @@ ZI ncl_on_msg(I d, MSG_HDR *h, pMSG *m) {
 		CS(DEL_res,;
 			pDEL_res *m_del = (pDEL_res*)m;
 			cli_print_del_res(m_del->rec_id,0);
+			streaming=0;
 		)
 		CS(ADD_res,;
 			pADD_res *m_add = (pADD_res*)m;
@@ -137,7 +139,7 @@ ZI ncl_on_msg(I d, MSG_HDR *h, pMSG *m) {
 		)
 		CS(LST_res,;
 			pLST_res *m_lst = (pLST_res*)m;
-			//T(TEST, "LST rcvd %d records", m_lst->cnt);
+			T(TRACE, "LST rcvd %d records", m_lst->cnt);
 			if(m_lst->cnt) {
 				DO(m_lst->cnt,
 					cli_list_rec_each(&m_lst->records[i], NULL, i))
