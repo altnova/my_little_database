@@ -81,7 +81,7 @@ ZI NUM(I n) {
 //! database commands
 I cli_cmd_rec_show(S arg);
 ZI cli_cmd_rec_edit(S arg);
-ZI cli_cmd_rec_add(S arg);
+I cli_cmd_rec_add(S arg);
 ZI cli_cmd_rec_del(S arg); 
 ZI cli_cmd_csv_import(S arg);
 ZI cli_cmd_csv_export(S arg);
@@ -93,6 +93,7 @@ Z CLI_CMD cmds[] =        {cli_cmd_rec_show, cli_cmd_rec_edit, cli_cmd_rec_add, 
 #define CLI_DB_COMMANDS ":*+-<>!^~"
 Z CLI_CMD cli_cmd_search;
 
+ZI initialized=0;
 ZS current_prompt;
 ZI rows, cols; //< terminal dimensions
 ZC fldbuf[FLDMAX];
@@ -288,7 +289,7 @@ ZV cli_leave_edit_mode() {
 
 V cli_print_edit_res(ID rec_id, UJ res) {
 	if(res==NIL-1)R; // pending server response
-	NL();TB();O("record %lu: %s %s", edit_buf->rec_id, edit_mode, (res==NIL)?"fail":"ok");NL();NL();}
+	NL();TB();O("record %lu: %s %s", rec_id, edit_mode, (res==NIL)?"fail":"ok");NL();NL();}
 
 ZI cli_parse_cmd_edit(S q) {
 	LOG("cli_parse_cmd_edit");
@@ -296,8 +297,7 @@ ZI cli_parse_cmd_edit(S q) {
 	I qlen = scnt(q);
 	T(TEST, "qlen=%d, q=%s last=%d", qlen, q, q[qlen-1]);
 	if(!qlen||*q==10)R0; //< LF
-	if(qlen>1&&q[qlen-1]==10)
-		q[qlen-1]=0;qlen--; // strip LF
+	//if(qlen>1&&q[qlen-1]==10)q[qlen-1]=0;qlen--; // strip LF
 	if(qlen==1&&*q=='='){
 		UJ res = edit_fn(edit_buf);
 		cli_print_edit_res(edit_buf->rec_id, res);
@@ -344,7 +344,7 @@ Z UJ cli_list_rec_each(Rec r, V*arg, UJ i) {
 	BOX_RIGHT(gap);NL();
 	R0;}
 
-ZV cli_recalc_pager(S page) {
+V cli_recalc_pager(S page) {
 	UJ page_id;
 	UJ total_recs = db_info.total_records;
 	current_total_pages = 1+total_recs/CLI_PAGE_SIZE;
@@ -375,11 +375,11 @@ ZV cli_recalc_pager(S page) {
 	current_column_widths[2] = author_max;
 }
 
-ZV cli_print_page_head(){
+V cli_print_page_head(){
 	BOX_START(current_width, (I*)&current_column_widths, 3);
 }
 
-ZV cli_print_page_tail() {
+V cli_print_page_tail() {
 	BOX_END(current_width, (I*)&current_column_widths, 3);
 	// print paging help
 	TB();O("        [%d/%d]", current_page_id, current_total_pages);
@@ -399,7 +399,7 @@ ZI cli_cmd_debug(S arg){
 	T(INFO, "not yet implemented");
 	R0;}
 
-ZI cli_cmd_rec_add(S arg){
+I cli_cmd_rec_add(S arg){
 	LOG("cli_cmd_rec_add");
 	edit_buf->year = 2018;
 	edit_buf->pages = 0;
@@ -407,7 +407,7 @@ ZI cli_cmd_rec_add(S arg){
 	scpy(edit_buf->publisher, "publisher", 9);
 	scpy(edit_buf->title, "title", 5);
 	scpy(edit_buf->subject, "subject", 7);
-	cli_enter_edit_mode("  create$ ", "create", rec_create_fn);
+	cli_enter_edit_mode(CLI_PROMPT_CREATE, "create", rec_create_fn);
 	cli_print_editor_head();
 	R0;}
 
@@ -486,6 +486,14 @@ V cli_print_del_res(ID rec_id, UJ res) {
 	NL();TB();O("record %lu: delete %s", rec_id, (res==NIL)?"failed":"ok");NL();NL();
 }
 
+I cli_get_current_page_id() {
+	R current_page_id;
+}
+
+I cli_get_current_page_size() {
+	R CLI_PAGE_SIZE;
+}
+
 #ifndef CLI_STANDALONE
 I cli_cmd_rec_show(S arg){
 	if(!editing)
@@ -499,11 +507,13 @@ ZI cli_cmd_rec_del(S arg){R0;}
 ZI cli_cmd_rec_edit(S arg){R0;}
 
 I cli_init() {
+	P(initialized,0);
 	LOG("cli_init");
 	edit_buf = (Rec)calloc(1,SZ_REC);chk(edit_buf,1);
 	cli_set_prompt(CLI_PROMPT);
 	cli_banner();
 	cli_hint();
+	initialized=1;
 	R0;
 }
 
