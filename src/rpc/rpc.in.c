@@ -11,6 +11,7 @@ INCL_OWN_HEADER
 G  RPC_VERSION;
 
 UI MSG_SIZES[2*100];
+SIZETYPE ITEM_SIZE[2*100];
 I  MSG_TAIL_OFFSET[2*100];
 
 S MSG_LABELS[]={"HEY","GET","DEL","UPD","ADD","FND","LST","SRT","BYE"};
@@ -28,17 +29,17 @@ msg_prea_len(9,SAY);
 msg_prea_len(50,ERR);
 
 msg_create_fn_w_tail0( HEY_req,  S, username);
-msg_create_fn_w_tail0( HEY_res, UJ*,info);
+msg_create_fn_w_tail0( HEY_res, DB_INFO,db_info);
 msg_create_fn1(        GET_req, ID, rec_id);
 msg_create_fn_w_tail0( GET_res, Rec,record);
 msg_create_fn1(        DEL_req, ID, rec_id);
 msg_create_fn1(        DEL_res, ID, rec_id);
-msg_create_fn_w_tail1( UPD_req, UI, cnt, Rec, records);
+msg_create_fn_w_tail0( UPD_req, Rec, records);
 msg_create_fn1(        UPD_res, UI, cnt);
-msg_create_fn_w_tail1( ADD_req, UI, cnt, Rec, records);
+msg_create_fn_w_tail0( ADD_req, Rec, records);
 msg_create_fn1       ( ADD_res, UI, cnt);
 msg_create_fn_w_tail1( FND_req, UI, max_hits, S, query);
-msg_create_fn_w_tail1( FND_res, UI, cnt, Rec, records);
+msg_create_fn_w_tail0( FND_res, Rec, records);
 msg_create_fn2(        LST_req, UI, page_num, UI, per_page);
 msg_create_fn_w_tail2( LST_res, UI, page_num, UI, out_of, Rec, records);
 msg_create_fn2(        SRT_req, UI, field_id, UI, dir);
@@ -69,19 +70,19 @@ I rpc_init() {
     msg_set_size(SAY)
     msg_set_size(ERR)
 
-    msg_has_tail(HEY_req)
-    msg_has_tail(HEY_res)
-    msg_has_tail(GET_res)
-    msg_has_tail(UPD_req)
-    msg_has_tail(ADD_req)
-    msg_has_tail(FND_req)
-    msg_has_tail(FND_res)
-    msg_has_tail(LST_res)
-    msg_has_tail(SRT_res)
-    msg_has_tail(ERR_req)
-    msg_has_tail(ERR_res)
-    msg_has_tail(SAY_req)
-    msg_has_tail(SAY_res)
+    msg_has_tail(HEY_req, C)
+    msg_has_tail(HEY_res, pDB_INFO)
+    msg_has_tail(GET_res, pRec)
+    msg_has_tail(UPD_req, pRec)
+    msg_has_tail(ADD_req, pRec)
+    msg_has_tail(FND_req, C)
+    msg_has_tail(FND_res, pRec)
+    msg_has_tail(LST_res, pRec)
+    msg_has_tail(SRT_res, pRec)
+    msg_has_tail(ERR_req, C)
+    msg_has_tail(ERR_res, C)
+    msg_has_tail(SAY_req, C)
+    msg_has_tail(SAY_res, C)
 
     R0;
 }
@@ -103,22 +104,24 @@ V rpc_dump_header(MSG m) {
   if(tail_offset<0)R;
   T(TEST, "preamble_len -> %d", preamble_size);
   T(TEST, "tail_offset -> %d", tail_offset);
-  T(TEST, "tail_len -> %d", *(SIZETYPE*)(((V*)&m->as)+tail_offset));
+  T(TEST, "tail_cnt -> %d", *(SIZETYPE*)(((V*)&m->as)+tail_offset));
   T(TEST, "tail -> %s", (S)(((V*)&m->as)+tail_offset+SZ(SIZETYPE)));
 
 }
 
-Z MSG rpc_alloc(I m_type, SIZETYPE tail_len, V*tail_src) {
+Z MSG rpc_alloc(I m_type, SIZETYPE tail_cnt, V*tail_src) {
     LOG("rpc_alloc");
     UJ m_len = MSG_SIZES[m_type];
+    SIZETYPE el_size = ITEM_SIZE[m_type];
     G ver = RPC_VERSION;
     I tail_offset = MSG_TAIL_OFFSET[m_type];
+    SIZETYPE tail_len = tail_cnt * el_size;
     MSG m = calloc(1, SZ_MSG_HDR+m_len+tail_len);chk(m,0);
     m->hdr = (MSG_HDR){ver, m_type, m_len+tail_len};
     if(tail_offset>=0) {
       V* tail_dest = ((V*)&m->as)+tail_offset+SZ(SIZETYPE);
       mcpy(tail_dest, tail_src, tail_len);
-      //T(TEST, "tail copied, %d bytes at offset %d", tail_len, tail_offset+SZ(SIZETYPE));
+      T(TEST, "tail copied, %d bytes at offset %d", tail_len, tail_offset+SZ(SIZETYPE));
     }
     //rpc_dump_header(m);
     R m;
@@ -144,7 +147,7 @@ DEFN_HDR_SIZE SZ(MSG_HDR)
  * message type definitions
  */
 mtype( 0, HEY,     _1(tARR(S,username)),
-                   _1(tARR(UJ*,info)))
+                   _1(tARR(DB_INFO,db_info)))
 
 mtype( 1, GET,     _1(tID(rec_id)),
                    _1(tARR(pRec,record)))
@@ -152,20 +155,20 @@ mtype( 1, GET,     _1(tID(rec_id)),
 mtype( 2, DEL,     _1(tID(rec_id)),
                    _1(tID(rec_id)))
 
-mtype( 3, UPD,     _2(tUI(cnt), tARR(pRec,records)),
+mtype( 3, UPD,     _1(tARR(pRec,records)),
                    _1(tUI(cnt)))
 
-mtype( 4, ADD,     _2(tUI(cnt), tARR(pRec,records)),
+mtype( 4, ADD,     _1(tARR(pRec,records)),
                    _1(tUI(cnt)))
 
 mtype( 5, FND,     _2(tUI(max_hits), tARR(S,query)),
-                   _2(tUI(cnt), tARR(pRec,records)))
+                   _1(tARR(pRec,records)))
 
 mtype( 6, LST,     _2(tUI(page_num), tUI(per_page)),
-                   _4(tUI(page_num), tUI(out_of), tUI(cnt), tARR(pRec,records)))
+                   _3(tUI(page_num), tUI(out_of), tARR(pRec,records)))
 
 mtype( 7, SRT,     _2(tUI(field_id), tUI(dir)),
-                   _4(tUI(page_num), tUI(out_of), tUI(cnt), tARR(pRec,records)))
+                   _3(tUI(page_num), tUI(out_of), tARR(pRec,records)))
 
 mtype( 8, BYE,     _0(),
                    _0())
@@ -222,17 +225,17 @@ typedef struct {
  */
 
 msg_create_proto_w_tail0( HEY_req, _tail(S,username));
-msg_create_proto_w_tail0( HEY_res, _tail(UJ*,info));
+msg_create_proto_w_tail0( HEY_res, _tail(DB_INFO,info));
 msg_create_proto1(        GET_req, _arg(ID,rec_id));
 msg_create_proto_w_tail0( GET_res, _tail(Rec,record));
 msg_create_proto1(        DEL_req, _arg(ID,rec_id));
 msg_create_proto1(        DEL_res, _arg(ID,rec_id));
-msg_create_proto_w_tail1( UPD_req, _arg(UI,cnt), _tail(Rec,records));
+msg_create_proto_w_tail0( UPD_req, _tail(Rec,records));
 msg_create_proto1(        UPD_res, _arg(UI,cnt));
-msg_create_proto_w_tail1( ADD_req, _arg(UI,cnt), _tail(Rec,records));
+msg_create_proto_w_tail0( ADD_req, _tail(Rec,records));
 msg_create_proto1       ( ADD_res, _arg(UI,cnt));
 msg_create_proto_w_tail1( FND_req, _arg(UI,max_hits), _tail(S,query));
-msg_create_proto_w_tail1( FND_res, _arg(UI,cnt), _tail(Rec,records));
+msg_create_proto_w_tail0( FND_res, _tail(Rec,records));
 msg_create_proto2(        LST_req, _arg(UI,page_num), _arg(UI,per_page));
 msg_create_proto_w_tail2( LST_res, _arg(UI,page_num), _arg(UI,out_of), _tail(Rec,records));
 msg_create_proto2(        SRT_req, _arg(UI,field_id), _arg(UI,dir));

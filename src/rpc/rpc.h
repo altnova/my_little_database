@@ -10,17 +10,17 @@ typedef struct msg_hdr { G ver, type; SIZETYPE len;} __attribute__((packed)) MSG
 /*!
  * message type definitions
  */
-typedef struct msg_0 { SIZETYPE data_len; S username[0]; } __attribute__((packed)) pHEY_req; typedef struct msg_10 { SIZETYPE data_len; UJ* info[0]; } __attribute__((packed)) pHEY_res;
-typedef struct msg_1 { ID rec_id; } __attribute__((packed)) pGET_req; typedef struct msg_11 { SIZETYPE data_len; pRec record[0]; } __attribute__((packed)) pGET_res;
+typedef struct msg_0 { SIZETYPE cnt; S username[0]; } __attribute__((packed)) pHEY_req; typedef struct msg_10 { SIZETYPE cnt; DB_INFO db_info[0]; } __attribute__((packed)) pHEY_res;
+typedef struct msg_1 { ID rec_id; } __attribute__((packed)) pGET_req; typedef struct msg_11 { SIZETYPE cnt; pRec record[0]; } __attribute__((packed)) pGET_res;
 typedef struct msg_2 { ID rec_id; } __attribute__((packed)) pDEL_req; typedef struct msg_12 { ID rec_id; } __attribute__((packed)) pDEL_res;
-typedef struct msg_3 { UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) pUPD_req; typedef struct msg_13 { UI cnt; } __attribute__((packed)) pUPD_res;
-typedef struct msg_4 { UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) pADD_req; typedef struct msg_14 { UI cnt; } __attribute__((packed)) pADD_res;
-typedef struct msg_5 { UI max_hits; SIZETYPE data_len; S query[0]; } __attribute__((packed)) pFND_req; typedef struct msg_15 { UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) pFND_res;
-typedef struct msg_6 { UI page_num; UI per_page; } __attribute__((packed)) pLST_req; typedef struct msg_16 { UI page_num; UI out_of; UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) pLST_res;
-typedef struct msg_7 { UI field_id; UI dir; } __attribute__((packed)) pSRT_req; typedef struct msg_17 { UI page_num; UI out_of; UI cnt; SIZETYPE data_len; pRec records[0]; } __attribute__((packed)) pSRT_res;
+typedef struct msg_3 { SIZETYPE cnt; pRec records[0]; } __attribute__((packed)) pUPD_req; typedef struct msg_13 { UI cnt; } __attribute__((packed)) pUPD_res;
+typedef struct msg_4 { SIZETYPE cnt; pRec records[0]; } __attribute__((packed)) pADD_req; typedef struct msg_14 { UI cnt; } __attribute__((packed)) pADD_res;
+typedef struct msg_5 { UI max_hits; SIZETYPE cnt; S query[0]; } __attribute__((packed)) pFND_req; typedef struct msg_15 { SIZETYPE cnt; pRec records[0]; } __attribute__((packed)) pFND_res;
+typedef struct msg_6 { UI page_num; UI per_page; } __attribute__((packed)) pLST_req; typedef struct msg_16 { UI page_num; UI out_of; SIZETYPE cnt; pRec records[0]; } __attribute__((packed)) pLST_res;
+typedef struct msg_7 { UI field_id; UI dir; } __attribute__((packed)) pSRT_req; typedef struct msg_17 { UI page_num; UI out_of; SIZETYPE cnt; pRec records[0]; } __attribute__((packed)) pSRT_res;
 typedef struct msg_8 { G empty[0]; } __attribute__((packed)) pBYE_req; typedef struct msg_18 { G empty[0]; } __attribute__((packed)) pBYE_res;
-typedef struct msg_9 { SIZETYPE data_len; S msg[0]; } __attribute__((packed)) pSAY_req; typedef struct msg_19 { SIZETYPE data_len; S msg[0]; } __attribute__((packed)) pSAY_res;
-typedef struct msg_50 { UI err_id; SIZETYPE data_len; S msg[0]; } __attribute__((packed)) pERR_req; typedef struct msg_150 { UI err_id; SIZETYPE data_len; S msg[0]; } __attribute__((packed)) pERR_res;
+typedef struct msg_9 { SIZETYPE cnt; S msg[0]; } __attribute__((packed)) pSAY_req; typedef struct msg_19 { SIZETYPE cnt; S msg[0]; } __attribute__((packed)) pSAY_res;
+typedef struct msg_50 { UI err_id; SIZETYPE cnt; S msg[0]; } __attribute__((packed)) pERR_req; typedef struct msg_150 { UI err_id; SIZETYPE cnt; S msg[0]; } __attribute__((packed)) pERR_res;
 /*!
  * message types to int
  */
@@ -63,28 +63,28 @@ typedef struct {
 /*!
  * message factory
  */
-ext MSG rpc_HEY_req(SIZETYPE username_len, S username);
-ext MSG rpc_HEY_res(SIZETYPE info_len, UJ* info);
+ext MSG rpc_HEY_req(SIZETYPE username_cnt, S username);
+ext MSG rpc_HEY_res(SIZETYPE info_cnt, DB_INFO info);
 ext MSG rpc_GET_req(ID rec_id);
-ext MSG rpc_GET_res(SIZETYPE record_len, Rec record);
+ext MSG rpc_GET_res(SIZETYPE record_cnt, Rec record);
 ext MSG rpc_DEL_req(ID rec_id);
 ext MSG rpc_DEL_res(ID rec_id);
-ext MSG rpc_UPD_req(UI cnt, SIZETYPE records_len, Rec records);
+ext MSG rpc_UPD_req(SIZETYPE records_cnt, Rec records);
 ext MSG rpc_UPD_res(UI cnt);
-ext MSG rpc_ADD_req(UI cnt, SIZETYPE records_len, Rec records);
+ext MSG rpc_ADD_req(SIZETYPE records_cnt, Rec records);
 ext MSG rpc_ADD_res(UI cnt);
-ext MSG rpc_FND_req(UI max_hits, SIZETYPE query_len, S query);
-ext MSG rpc_FND_res(UI cnt, SIZETYPE records_len, Rec records);
+ext MSG rpc_FND_req(UI max_hits, SIZETYPE query_cnt, S query);
+ext MSG rpc_FND_res(SIZETYPE records_cnt, Rec records);
 ext MSG rpc_LST_req(UI page_num, UI per_page);
-ext MSG rpc_LST_res(UI page_num, UI out_of, SIZETYPE records_len, Rec records);
+ext MSG rpc_LST_res(UI page_num, UI out_of, SIZETYPE records_cnt, Rec records);
 ext MSG rpc_SRT_req(UI field_id, UI dir);
-ext MSG rpc_SRT_res(UI page_num, UI out_of, SIZETYPE records_len, Rec records);
+ext MSG rpc_SRT_res(UI page_num, UI out_of, SIZETYPE records_cnt, Rec records);
 ext MSG rpc_BYE_req();
 ext MSG rpc_BYE_res();
-ext MSG rpc_SAY_req(SIZETYPE msg_len, S msg);
-ext MSG rpc_SAY_res(SIZETYPE msg_len, S msg);
-ext MSG rpc_ERR_req(UI errno, SIZETYPE msg_len, S msg);
-ext MSG rpc_ERR_res(UI errno, SIZETYPE msg_len, S msg);
+ext MSG rpc_SAY_req(SIZETYPE msg_cnt, S msg);
+ext MSG rpc_SAY_res(SIZETYPE msg_cnt, S msg);
+ext MSG rpc_ERR_req(UI errno, SIZETYPE msg_cnt, S msg);
+ext MSG rpc_ERR_res(UI errno, SIZETYPE msg_cnt, S msg);
 /*!
  * public methods
  */
