@@ -6,6 +6,7 @@
 #include "mem.h"
 
 Z FTI_INFO fti_info;
+Z DB_INFO db_info;
 
 ZC MEM_TRACE=0;
 V mem_inc(S label, J bytes) {
@@ -16,6 +17,12 @@ V mem_inc(S label, J bytes) {
 	fti_info->total_alloc_cnt++;
 	BKT b = hsh_ins(fti_info->memmap, label, scnt(label), NULL);
 	b->payload += bytes;}
+ 
+DB_INFO mem_db_info() {
+	db_info->total_records=fti_info->total_records;
+	db_info->total_words=fti_info->total_tokens;
+	db_info->total_mem=fti_info->total_mem;
+	R db_info;}
 
 V mem_dec(S label, J bytes) {
 	LOG("mem_dec");
@@ -47,9 +54,9 @@ I mem_init() {
 	fti_info = (FTI_INFO)calloc(SZ_FTI_INFO,1);chk(fti_info,1);
 	fti_info->memmap = hsh_init(2,1);
 
+	db_info = (DB_INFO)calloc(SZ_DB_INFO,1);chk(db_info,1);
 	R0;
 }
-
 
 FTI_INFO mem_info() {
 	R fti_info;}
@@ -66,6 +73,7 @@ I mem_shutdown() {
 
 	hsh_destroy(fti_info->memmap);
 	free(fti_info);
+	free(db_info);
 
 	R0;
 }
