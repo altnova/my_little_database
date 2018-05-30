@@ -1,11 +1,13 @@
 //! \file fti.h \brief full-text index interface
 
+#pragma once
+
 #include "adt/set.h"
 #include "adt/hsh.h"
 #include "adt/bag.h"
-#include "fio.h"
-#include "stm.h"
-#include "clk.h"
+#include "utl/fio.h"
+#include "alg/stm.h"
+#include "utl/clk.h"
 #include "mem.h"
 #include "idx.h"
 

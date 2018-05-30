@@ -1,5 +1,7 @@
 //! \file mem.h \brief memory controller api
 
+#pragma once
+
 #include "adt/hsh.h"
 
 typedef struct fti_info {

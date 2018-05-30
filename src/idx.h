@@ -1,9 +1,11 @@
 //!\file idx.h \brief index file api
 
+#pragma once
+
 #include "adt/vec.h"
 #include "rec.h"
-#include "fio.h"
-#include "clk.h"
+#include "utl/fio.h"
+#include "utl/clk.h"
 
 typedef struct idx {
 	ID   last_id;

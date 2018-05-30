@@ -1,7 +1,7 @@
 //! \file clk.c \brief precision timer
 
 #include <time.h>
-#include "___.h"
+#include "../___.h"
 #include "clk.h"
 
 clock_t start,end;

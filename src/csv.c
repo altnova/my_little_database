@@ -4,8 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "___.h"
-#include "fio.h"
-#include "clk.h"
+#include "csv.h"
 
 Z FILE* outfile;
 Z ID last_id = 0;

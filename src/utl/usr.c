@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "___.h"
+#include "../___.h"
 #include "usr.h"
 
 #define STR_SET "%[a-zA-Z0-9\"'-,.$%*/+-=^~#?|!():;<> \\]\n\r"
@@ -29,19 +29,9 @@ I usr_input_str(S str, S prompt, S errmsg){
 
 #ifdef RUN_TESTS_USR
 I main(V){
-
-    usr_input_chr("hello: ", "moto");
-
-    exit(0);
-
-	I n;C str[LINE_BUF];
-	
-	USR_LOOP(usr_input_str(str, "Search query", "Invalid input"),
-		O("You have entered: %s\n", str);
-	)
-
-    //input_number(&n, "say 42", "try again");
-	O("%d\n", n);
+	//USR_LOOP(usr_input_str(str, "Search query", "Invalid input"),
+    //    O("You have entered: %s\n", str);
+	//)
 } 
 #endif
 

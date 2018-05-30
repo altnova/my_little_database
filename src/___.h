@@ -87,6 +87,6 @@ typedef size_t sz;
 //! app-specific global includes 
 
 #include "cfg.h"
-#include "trc.h"
+#include "utl/trc.h"
 
 //:~

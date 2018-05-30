@@ -548,7 +548,7 @@ I stm(S p, I i, I pos){
 #include <stdlib.h>
 #include <string.h>
 
-#include "../fio.h"
+#include "../utl/fio.h"
 
 ZI assertionCount = 0, errorCount = 0;
 

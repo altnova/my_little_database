@@ -1,7 +1,7 @@
 //!\file rec.h \brief database record api
 
-#include "bin.h"
-#include "fio.h"
+#include "alg/bin.h"
+#include "utl/fio.h"
 
 //! basic operations on records
 //! \return NIL in case of failure

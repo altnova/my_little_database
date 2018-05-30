@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "vec.h"
+
 typedef UI HTYPE; //< hash width
 typedef HTYPE(*HSH_FN)(S val, UI len); //< hsh_each function interface
 

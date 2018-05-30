@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "___.h"
+#include "../___.h"
 #include "rnd.h"
 
 S rnd_str(S dest, sz size, I charset) {

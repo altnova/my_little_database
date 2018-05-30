@@ -1,5 +1,9 @@
 //! \file csv.h \brief csv parser api
 
+#pragma once
+
+#include "utl/fio.h"
+
 //! load csv file
 //! \return #records loaded, NIL on error
 extern UJ csv_load(S fname);

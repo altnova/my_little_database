@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "___.h"
+#include "../___.h"
 
 ZC cont = 0;
 ZC newline = 1;

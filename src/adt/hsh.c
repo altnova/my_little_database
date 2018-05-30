@@ -5,10 +5,9 @@
 #include <string.h>
 #include <time.h>
 #include "../___.h"
-#include "vec.h"
-#include "../rnd.h"
+#include "../utl/rnd.h"
+#include "../utl/clk.h"
 #include "hsh.h"
-#include "../clk.h"
 
 //#define HSH_DEFAULT_FN hsh_fnv32
 #define HSH_DEFAULT_FN hsh_djb
