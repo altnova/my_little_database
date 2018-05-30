@@ -155,11 +155,14 @@ I fts_shutdown() {
 
 	vec_destroy(HITS);
 	free(mbuf);
-	R0;}
+
+	R fti_shutdown();}
 
 
 I fts_init() {
 	LOG("fts_init");
+
+	P(fti_init(),1);
 
 	DO(FTI_FIELD_COUNT,
 		results[i] = vec_init(1,DOCSET);
@@ -177,7 +180,6 @@ I main() {
 	LOG("fts_test");
 
 	srand(time(NULL));
-	P(fti_init(),1);
 	P(fts_init(),1);
 
 	//S Q = "text read includ";
@@ -191,9 +193,7 @@ I main() {
 
 	fts_dump_result();
 
-	fts_shutdown();
-
-	R fti_shutdown();}
+	R fts_shutdown();}
 
 #endif
 

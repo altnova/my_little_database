@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include <time.h>
 #include <math.h>
 #include "___.h"
 #include "fti.h"
@@ -164,7 +163,8 @@ UJ fti_index_field(ID rec_id, I field, S s, I flen, FTI_DOCID doc_id) {
 	if(((I)doc_id%PACK_EVERY_N_RECS)==0) {
 		clk_start();
 		hsh_pack(FTI[field]);
-		T(DEBUG, "packed fti in %lums", clk_stop());}
+		T(DEBUG, "packed fti in %lums", clk_stop());
+	}
 
 	R tok_cnt;}
 
