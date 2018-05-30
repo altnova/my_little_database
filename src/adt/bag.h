@@ -1,5 +1,7 @@
 //! \file bag.h \brief bag api
 
+#pragma once
+
 #define BAG_GROW_FACTOR 2
 
 typedef struct bag {

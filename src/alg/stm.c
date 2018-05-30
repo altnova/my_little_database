@@ -1,7 +1,7 @@
 //! \file stm.c \brief porter stemmer
 
 #include <string.h>
-#include "___.h"
+#include "../___.h"
 #include "stm.h"
 
 /* This is the Porter stemming algorithm, coded up in ANSI C by the
@@ -548,8 +548,7 @@ I stm(S p, I i, I pos){
 #include <stdlib.h>
 #include <string.h>
 
-#include "fio.h"
-#include "trc.h"
+#include "../fio.h"
 
 ZI assertionCount = 0, errorCount = 0;
 
@@ -577,7 +576,7 @@ ZV assertStem(const S input, const S output){
   free(result);
 }
 
-I main(){
+I main(I ac, S*av){
   LOG("stm_test");
   FILE*input,*output;
 
@@ -589,8 +588,8 @@ I main(){
   lengthIn = 0;
   lengthOut = 0;
 
-  xfopen(input,  "fxt/input.txt", "r", 1);
-  xfopen(output, "fxt/output.txt", "r", 1);
+  xfopen(input,  av[1], "r", 1);
+  xfopen(output, av[2], "r", 1);
 
   W(
     getline(&lineIn, &lengthIn, input)!=-1 &&

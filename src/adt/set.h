@@ -1,5 +1,9 @@
 //! \file set.c \brief ordered set api
 
+#pragma once
+
+#include "../alg/bin.h"
+#include "vec.h"
 
 typedef struct set {
 	VEC items;

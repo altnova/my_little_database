@@ -8,19 +8,7 @@
 #include <time.h>
 #include <math.h>
 #include "___.h"
-#include "cfg.h"
-#include "trc.h"
-#include "fio.h"
-#include "hsh.h"
-#include "vec.h"
-#include "idx.h"
-#include "clk.h"
-#include "stm.h"
-#include "bag.h"
-#include "bin.h"
-#include "set.h"
 #include "fti.h"
-#include "mem.h"
 
 #define PACK_EVERY_N_RECS    (8*4096)
 #define WORDBAG_INIT_SIZE    1048576

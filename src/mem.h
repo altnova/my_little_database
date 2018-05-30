@@ -1,5 +1,7 @@
 //! \file mem.h \brief memory controller api
 
+#include "adt/hsh.h"
+
 typedef struct fti_info {
 	UJ   total_records;
 	UJ   total_tokens;

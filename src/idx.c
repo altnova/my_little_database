@@ -3,14 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "___.h"
-#include "cfg.h"
-#include "trc.h"
-#include "vec.h"
-#include "bin.h"
 #include "idx.h"
-#include "rec.h"
-#include "fio.h"
-#include "clk.h"
 
 Z IDX idx;		//< in-memory instance of the index
 Z bufRec buf;	//< readbuffer RECBUFLEN records

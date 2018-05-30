@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../___.h"
-#include "../trc.h"
 #include "vec.h"
 
 VEC vec_init_(sz n, UI t) {

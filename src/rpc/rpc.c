@@ -2,8 +2,6 @@
  #include <stdlib.h>
  #include <string.h>
  #include "../___.h"
- #include "../cfg.h"
- #include "../trc.h"
  #include "rpc.h"
 G RPC_VERSION;
 UI MSG_SIZES[2*100];
@@ -42,7 +40,7 @@ MSG rpc_ERR_req(UI err_id, SIZETYPE msg_len, S msg) { MSG m = rpc_alloc(ERR_req,
 MSG rpc_ERR_res(UI err_id, SIZETYPE msg_len, S msg) { MSG m = rpc_alloc(ERR_res, msg_len, (V*)msg); m->as.ERR_res = (pERR_res){err_id, msg_len}; R m;};
 MSG rpc_SAY_req(SIZETYPE msg_len, S msg) { MSG m = rpc_alloc(SAY_req, msg_len, (V*)msg); m->as.SAY_req = (pSAY_req){msg_len}; R m;};
 MSG rpc_SAY_res(SIZETYPE msg_len, S msg) { MSG m = rpc_alloc(SAY_res, msg_len, (V*)msg); m->as.SAY_res = (pSAY_res){msg_len}; R m;};
-V rpc_init() {
+I rpc_init() {
     RPC_VERSION = 1;
     DO(100*2, MSG_TAIL_OFFSET[i]=-1)
     MSG_SIZES[HEY_req]=SZ_HEY_req; MSG_SIZES[HEY_res]=SZ_HEY_res;
@@ -69,6 +67,7 @@ V rpc_init() {
     MSG_TAIL_OFFSET[ERR_res] = offsetof(pERR_res,data_len);
     MSG_TAIL_OFFSET[SAY_req] = offsetof(pSAY_req,data_len);
     MSG_TAIL_OFFSET[SAY_res] = offsetof(pSAY_res,data_len);
+    R0;
 }
 G rpc_ver() {
   R RPC_VERSION;

@@ -1,4 +1,7 @@
 //!\file cfg.c \brief database settings
+
+#pragma once
+
 #include <stddef.h>
 #include "___.h"
 #define TEST_MODE

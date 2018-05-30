@@ -1,5 +1,7 @@
 //!\file vec.h \brief vector api
 
+#pragma once
+
 typedef struct vector {
 	sz size;		//< current capacity
 	sz used;		//< occupied

@@ -1,5 +1,7 @@
 //!\file hsh.h \brief hash table api
 
+#pragma once
+
 typedef UI HTYPE; //< hash width
 typedef HTYPE(*HSH_FN)(S val, UI len); //< hsh_each function interface
 

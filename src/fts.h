@@ -1,5 +1,8 @@
 //! \file fts.c \brief full-text search api
 
+//#include "adt/set.h"
+#include "fti.h"
+
 typedef struct fti_match {
 	ID rec_id;
 	 G field;

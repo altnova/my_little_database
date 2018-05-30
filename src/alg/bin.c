@@ -2,8 +2,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "___.h"
-#include "trc.h"
+#include "../___.h"
 #include "bin.h"
 
 #define val(x,t) *((t*)x) 

@@ -4,10 +4,6 @@
 #include <string.h>
 
 #include "../___.h"
-#include "../cfg.h"
-#include "../trc.h"
-#include "../bin.h"
-#include "vec.h"
 #include "set.h"
 
 SET set_init(sz el_size, CMP cmpfn) {

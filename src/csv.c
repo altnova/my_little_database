@@ -4,8 +4,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include "___.h"
-#include "cfg.h"
-#include "trc.h"
 #include "fio.h"
 #include "clk.h"
 

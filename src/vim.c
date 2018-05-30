@@ -11,9 +11,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include "___.h"
-#include "trc.h"
 #include "vim.h"
-#include "vec.h"
 
 vim_conf CFG;
 

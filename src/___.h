@@ -84,4 +84,9 @@ typedef size_t sz;
 //! error
 #define NIL 0xffffffffffffffff
 
+//! app-specific global includes 
+
+#include "cfg.h"
+#include "trc.h"
+
 //:~

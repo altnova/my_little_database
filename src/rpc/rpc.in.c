@@ -6,8 +6,6 @@ INCL_STDLIB
 INCL_STRING
 
 INCL_GLOBAL_HEADER
-INCL_CONFIG_HEADER
-INCL_TRACE_HEADER
 INCL_OWN_HEADER
 
 G  RPC_VERSION;
@@ -53,7 +51,7 @@ msg_create_fn_w_tail0( SAY_req,  S, msg);
 msg_create_fn_w_tail0( SAY_res,  S, msg);
 
 
-V rpc_init() {
+I rpc_init() {
 
     RPC_VERSION = RPC_VER;
 
@@ -85,6 +83,7 @@ V rpc_init() {
     msg_has_tail(SAY_req)
     msg_has_tail(SAY_res)
 
+    R0;
 }
 
 G rpc_ver() {
@@ -127,6 +126,11 @@ Z MSG rpc_alloc(I m_type, SIZETYPE tail_len, V*tail_src) {
 
 
 #else
+//! \file rpc.h \brief rpc api
+
+
+PRAGMA_ONCE
+
 /*!
  * message header
  */
@@ -242,7 +246,7 @@ msg_create_proto_w_tail1( ERR_res, _arg(UI,errno), _tail(S,msg));
 /*!
  * public methods
  */
-ext V rpc_init();
+ext I rpc_init();
 ext G rpc_ver();
 ext V rpc_dump_header(MSG m);
 

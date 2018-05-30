@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "___.h"
-#include "trc.h"
 #include "str.h"
 
 S lcase(S s,I n){DO(n,s[i]+=32*(26u>(UI)(s[i]-'A')))R s;}

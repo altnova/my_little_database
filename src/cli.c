@@ -11,13 +11,11 @@
 #include <stdarg.h>
 #include <locale.h>
 #include "___.h"
-#include "cfg.h"
-#include "trc.h"
-#include "hsh.h"
-#include "vec.h"
 #include "bin.h"
-#include "set.h"
-#include "bag.h"
+//#include "adt/hsh.h"
+//#include "adt/vec.h"
+//#include "adt/set.h"
+//#include "adt/bag.h"
 #include "mem.h"
 #include "fti.h"
 #include "usr.h"

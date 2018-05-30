@@ -1,4 +1,4 @@
-//! \file clk.h \brief clock
+//! \file clk.h \brief precision timer
 
 //! start timer
 ext clock_t clk_start();

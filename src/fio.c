@@ -1,7 +1,6 @@
 //! \file fio.c \brief file utilities
 #include "___.h"
 #include "fio.h"
-#include "trc.h"
 
 #if WIN32||_WIN64
 J zseek(I d,J j,I f){UI h=(UI)(j>>32),l=SetFilePointer((HANDLE)d,(UI)j,&h,f);R((J)h<<32)+l;}

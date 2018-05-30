@@ -6,16 +6,6 @@
 #include <time.h>
 #include <math.h>
 #include "___.h"
-#include "cfg.h"
-#include "trc.h"
-#include "clk.h"
-#include "vec.h"
-#include "bin.h"
-#include "set.h"
-#include "hsh.h"
-#include "mem.h"
-#include "stm.h"
-#include "fti.h"
 #include "fts.h"
 
 Z VEC  results[FTI_FIELD_COUNT];	//< raw matching docsets, per field

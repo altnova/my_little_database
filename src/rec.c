@@ -3,12 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "___.h"
-#include "cfg.h"
-#include "trc.h"
-#include "bin.h"
-#include "vec.h"
 #include "idx.h"
-#include "fio.h"
+#include "rec.h"
 
 //! debug print
 V rec_print_dbg(Rec r) {

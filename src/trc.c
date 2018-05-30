@@ -10,8 +10,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "___.h"
-#include "cfg.h"
-#include "trc.h"
 
 ZC cont = 0;
 ZC newline = 1;

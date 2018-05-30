@@ -5,7 +5,6 @@
 #include <string.h>
 #include <time.h>
 #include "../___.h"
-#include "../trc.h"
 #include "vec.h"
 #include "../rnd.h"
 #include "hsh.h"

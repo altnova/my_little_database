@@ -1,5 +1,14 @@
 //! \file fti.h \brief full-text index interface
 
+#include "adt/set.h"
+#include "adt/hsh.h"
+#include "adt/bag.h"
+#include "fio.h"
+#include "stm.h"
+#include "clk.h"
+#include "mem.h"
+#include "idx.h"
+
 #define FTI_MIN_TOK_LENGTH   2
 
 typedef UH FTI_DOCID;

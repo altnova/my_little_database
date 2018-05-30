@@ -3,8 +3,6 @@
 #include <math.h>
 #include <string.h>
 #include "___.h"
-#include "cfg.h"
-#include "trc.h"
 
 #define VER "1.0.0"
 #define MI(i,label) O("\t%d. %s", i, label);

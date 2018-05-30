@@ -1,5 +1,7 @@
 //! \file tri.h \brief trie api
 
+#pragma once
+
 #define TRI_RANGE 26
 
 //! 97 ascii lowercase, 65 ascii uppercase

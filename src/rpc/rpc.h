@@ -1,4 +1,6 @@
 //:~
+//! \file rpc.h \brief rpc api
+ #pragma once
 /*!
  * message header
  */
@@ -86,7 +88,7 @@ ext MSG rpc_ERR_res(UI errno, SIZETYPE msg_len, S msg);
 /*!
  * public methods
  */
-ext V rpc_init();
+ext I rpc_init();
 ext G rpc_ver();
 ext V rpc_dump_header(MSG m);
 Z MSG rpc_alloc(I m_type, SIZETYPE tail_len, V*tail_src);

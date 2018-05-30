@@ -10,13 +10,13 @@
 #define MSGIDTYPE G
 #define HDRTYPE G
 
-#define INCL_OWN_HEADER ??=include "rpc.h"
 #define INCL_GLOBAL_HEADER ??=include "../___.h"
-#define INCL_CONFIG_HEADER ??=include "../cfg.h"
-#define INCL_TRACE_HEADER ??=include "../trc.h"
+#define INCL_OWN_HEADER ??=include "rpc.h"
 
 #define INCL_STDLIB ??=include <stdlib.h>
 #define INCL_STRING ??=include <string.h>
+
+#define PRAGMA_ONCE ??=pragma once
 
 #define DEFN_SIZETYPE ??=define SIZETYPE
 #define DEFN_HDR_SIZE ??=define SZ_MSG_HDR

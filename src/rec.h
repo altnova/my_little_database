@@ -1,5 +1,8 @@
 //!\file rec.h \brief database record api
 
+#include "bin.h"
+#include "fio.h"
+
 //! basic operations on records
 //! \return NIL in case of failure
 ext UJ rec_get(Rec dest, ID rec_id);

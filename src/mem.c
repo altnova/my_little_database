@@ -3,9 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "___.h"
-#include "cfg.h"
-#include "trc.h"
-#include "hsh.h"
 #include "mem.h"
 
 Z FTI_INFO fti_info;

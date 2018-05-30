@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../___.h"
-#include "../cfg.h"
-#include "../trc.h"
 #include "tri.h"
 
 Z NODE tri_init_node(TRIE t, C key){

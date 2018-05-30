@@ -1,5 +1,7 @@
 //!\file bin.h \brief binary search api
 
+#pragma once
+
 typedef C(*CMP)(V*,V*,sz); //< comparator interface \return (-1;0;1)
 
 //! compare SS,G,H,I,J

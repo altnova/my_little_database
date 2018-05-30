@@ -1,5 +1,7 @@
 //! \file vim.h \brief text editor defns
 
+#include "adt/vec.h"
+
 #define VERSION "0.0.1"
 #define CTRL_KEY(k) ((k)&0x1f)
 

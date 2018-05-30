@@ -1,5 +1,7 @@
 //!\file trc.h \brief logging system api
 
+#pragma once
+
 #define TRC_MAX_STACK_DEPTH 41
 
 enum loglevels { L_FATAL, L_WARN, L_INFO, L_TEST, L_DEBUG, L_TRACE };
