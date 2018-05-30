@@ -10,26 +10,9 @@
 #include <time.h>
 #include <stdarg.h>
 #include <locale.h>
-#include "___.h"
-#include "alg/bin.h"
-//#include "adt/hsh.h"
-//#include "adt/vec.h"
-//#include "adt/set.h"
-//#include "adt/bag.h"
-#include "mem.h"
-#include "fti.h"
-#include "utl/usr.h"
-#include "utl/clk.h"
-#include "rec.h"
-#include "utl/str.h"
-#include "cli.h"
-#include "idx.h"
-#include "fts.h"
 
-//! general config
-#define CLI_PROMPT  "  \e[1;32m$\e[0m "
-#define VER "0.9.5"
-#define CLI_PAGE_SIZE 30
+#include "___.h"
+#include "cli.h"
 
 //! printing utilities
 enum colors { C_GREY = 37, C_BLUE = 36, C_YELL = 33, C_GREEN = 32 };
@@ -95,11 +78,8 @@ ZI NUM(I n) {
 
 #define WIPE(x,n) DO(n, x[i]=0)
 
-//! command function interface
-typedef I(*CLI_CMD)(S arg);
-
 //! database commands
-ZI cli_cmd_rec_show(S arg);
+I cli_cmd_rec_show(S arg);
 ZI cli_cmd_rec_edit(S arg);
 ZI cli_cmd_rec_add(S arg);
 ZI cli_cmd_rec_del(S arg); 
@@ -108,28 +88,68 @@ ZI cli_cmd_csv_export(S arg);
 ZI cli_cmd_rec_list(S arg);
 ZI cli_cmd_rec_sort(S arg);
 ZI cli_cmd_debug(S arg);
-//!                      :                 *                 +                -                <                   >                   !                 ^                 ~
-CLI_CMD cmds[] =        {cli_cmd_rec_show, cli_cmd_rec_edit, cli_cmd_rec_add, cli_cmd_rec_del, cli_cmd_csv_import, cli_cmd_csv_export, cli_cmd_rec_list, cli_cmd_rec_sort, cli_cmd_debug};
+//!                        :                 *                 +                -                <                   >                   !                 ^                 ~
+Z CLI_CMD cmds[] =        {cli_cmd_rec_show, cli_cmd_rec_edit, cli_cmd_rec_add, cli_cmd_rec_del, cli_cmd_csv_import, cli_cmd_csv_export, cli_cmd_rec_list, cli_cmd_rec_sort, cli_cmd_debug};
 #define CLI_DB_COMMANDS ":*+-<>!^~"
+Z CLI_CMD cli_cmd_search;
 
+ZS current_prompt;
 ZI rows, cols; //< terminal dimensions
 ZC fldbuf[FLDMAX];
-Z UJ current_page_id = 0;
+
+//! editing state
+ZI       editing = 0;
+Z Rec    edit_buf;
+Z REC_FN edit_fn;
+Z S      edit_mode;
+
+//! rec handlers
+Z REC_FN  rec_create_fn;
+Z REC_FN  rec_update_fn;
+Z REC_SET_FN rec_set_fn;
+
+//! pager state
+ZI current_page_id = 0;
+ZI current_total_pages = 0;
+ZI current_width = 0;
+ZI current_column_widths[3];
+
+Z pDB_INFO db_info;
+
+ZV cli_set_prompt(S p){
+	current_prompt = p;}
+
+S cli_get_prompt(){
+	R current_prompt;}
+
+ZI cli_is_db_cmd(C c) {
+	S r=schr(CLI_DB_COMMANDS,c);
+	P(!r,-1)
+	R r-CLI_DB_COMMANDS;}
+
+I cli_set_cmd_handler(C cmd, CLI_CMD fn) {
+	I i = cli_is_db_cmd(cmd);
+	if(i<0){cli_cmd_search=fn;R0;}
+	cmds[i] = fn;
+	R0;}
+
+V cli_set_rec_handlers(REC_FN create_fn, REC_FN update_fn, REC_SET_FN set_fn) {
+	rec_create_fn = create_fn;
+	rec_update_fn = update_fn;
+	rec_set_fn = set_fn;}
 
 ZV cli_hint() {
 	NL();
 	TB();GREY("Enter search terms or commands, ");
 	YELL("?");  GREY(" for help, ");
-	YELL("\\"); GREY(" to exit");NL();NL();
-}
+	YELL("\\"); GREY(" to exit");NL();NL();}
 
 ZV cli_banner() {
 	NL();NL();
 	HR(53);
 	TB();GREEN("Amazon Kindle Database");CH(" ",25);O("v%s\n", VER);
 	HR(53);
-	NL();
-}
+	NL();}
 
 ZV cli_help_db() {
 	NL();
@@ -148,24 +168,22 @@ ZV cli_help_db() {
     	 //YELL("^");BLUE("    "); O("resort");CH(" ",9);
     	 //YELL(">");BLUE("o.csv");O("   export");
     	 NL();
-
     TB();YELL("^");BLUE("    "); O("sort");CH(" ",9);
     	 YELL(">");BLUE("o.csv");O("   export");
 		 NL();}
 
 ZV cli_usage() {
 	cli_banner();
-	FTI_INFO fti_info = mem_info();
 	TB();GREEN("indexed fields:");CH(" ",17);
 	DO(FTI_FIELD_COUNT,
 		COLOR_START(C_BLUE);O(" %s", rec_field_names[i]);COLOR_END();
 		if(!((I)(i+1)%3)){O("\n");TB();CH(" ",17+15);}
 	)
 	NL();
-	TB();O("total books:%41lu\n", fti_info->total_records);
-	TB();O("total words:%41lu\n", fti_info->total_tokens);
-	TB();O("total terms:%41lu\n", fti_info->total_terms);
-	TB();O("total alloc:%41lu\n", fti_info->total_mem);
+	TB();O("total books:%41lu\n", db_info.total_records);
+	TB();O("total words:%41lu\n", db_info.total_words);
+	TB();O("total alloc:%41lu\n", db_info.total_mem);
+
 	NL();
 	TB();GREEN("search modes:\n");
     HR(53);
@@ -178,29 +196,21 @@ ZV cli_usage() {
 	cli_hint();
 }
 
-ZV cli_update_dimensions() {
+ZV cli_update_term_size() {
 	struct winsize ws;
 	ioctl(STDOUT_FILENO,TIOCGWINSZ,&ws);
 	cols = ws.ws_col;
 	rows = ws.ws_row;}
 
-ZV cli_shutdown(I itr) {
-	fts_shutdown();
-    I res = fti_shutdown();exit(res);}
-
-ZI is_db_cmd(C c) {
-	S r=schr(CLI_DB_COMMANDS,c);
-	P(!r,-1)
-	R r-CLI_DB_COMMANDS;}
-
 ZI cli_warn(S msg){
 	TB();O("%s",msg);NL();
 	R1;}
 
-Z ID cli_parse_id(S str) {
+ID cli_parse_id(S str) {
+	X(!scnt(str), cli_warn("empty record id"), NIL);
 	errno = 0;
 	J res = strtol(str, NULL, 10);
-	P(errno||res<0, NIL)
+	X(errno||res<0, cli_warn("bad record id"), NIL);
 	R(ID)res;}
 
 ZI cli_fld_format(S fmt, ...) {
@@ -210,7 +220,7 @@ ZI cli_fld_format(S fmt, ...) {
 	va_end(ap);
 	R len;}
 
-ZI cli_rec_print(Rec r){
+V cli_rec_print(Rec r){
 	LOG("cli_rec_print");
 	I width = cols * .9;
 	I clen, gap, line_cnt=0;
@@ -250,27 +260,10 @@ ZI cli_rec_print(Rec r){
 		BOX_RIGHT(width-line_len);NL();
 	)
 	// terminate table
-	BOX_END(width, NULL,0);
-	R0;}
+	BOX_END(width, NULL,0);}
 
-ZI cli_cmd_rec_show(S arg){
-	LOG("cli_cmd_rec_show");
-	P(!scnt(arg), cli_warn("missing record id"))
-	ID rec_id = cli_parse_id(arg);
-	P(rec_id==NIL, cli_warn("bad record id"))
-	Rec r = (Rec)malloc(SZ_REC);chk(r,1);
-	P(rec_get(r, rec_id)==NIL, cli_warn("no such record"))
-	I res = cli_rec_print(r);
-	free(r);
-	R res;}
-
-ZI cli_cmd_rec_edit_loop(Rec r, S prompt, S mode, REC_FN rec_fn){
-	I res;C q[LINE_BUF];
-
-	AGAIN:
-	WIPE(q, LINE_BUF);
-	res = cli_rec_print(r);
-
+V cli_print_editor_head() {
+	cli_rec_print(edit_buf);
 	NL();TB();
 	DO(FTI_FIELD_COUNT,
 		COLOR_START_BOLD(C_YELL);O("%lu: ", i+1);COLOR_END();
@@ -280,84 +273,59 @@ ZI cli_cmd_rec_edit_loop(Rec r, S prompt, S mode, REC_FN rec_fn){
 	I pad = 6;
 	YELL("field:");BLUE("value");O(" - update field");
 	CH(" ", pad);YELL("=");O(" - save changes");
-	CH(" ", pad);YELL("\\");O(" - cancel ");O("%s", mode);
-	NL();NL();
+	CH(" ", pad);YELL("\\");O(" - cancel ");O("%s", edit_mode);
+	NL();NL();}
 
-	USR_LOOP(usr_input_str(q, prompt, "inavalid characters"),
-		cli_update_dimensions();
-		I qlen = scnt(q);
-		if(!qlen||*q==10){goto AGAIN;} //< enter
-		if(qlen==1&&*q=='='){
-			UJ res = rec_fn(r);
-			NL();TB();O("record %lu: %s %s", r->rec_id, mode, (res==NIL)?"fail":"ok");NL();NL();
-			goto DONE;}
-		if(qlen==1&&*q=='\\'){
-			NL();TB();O("record %lu: %s %s", r->rec_id, mode, "canceled");NL();NL();
-			goto DONE;}
-		S colon_pos = schr(q, ':');
-		if(!colon_pos){goto AGAIN;}
-		*colon_pos='\0';
-		I fld_id = atoi(q);
-		if(!fld_id){goto AGAIN;}
-		fld_id--;
-		if(!rec_field_names[fld_id]){goto AGAIN;}
-		TB();O("%s -> (%s)\n", rec_field_names[fld_id], colon_pos+1);
-		H num;
-		if(fld_id<2) {
-			num = (H)atoi(colon_pos+1);	
-			rec_set(r, fld_id, &num);
-		} else
-			rec_set(r, fld_id, colon_pos+1);
-		goto AGAIN;
-	)
-	DONE:
-	R res;}
+V cli_enter_edit_mode(S prompt, S mode, REC_FN rec_fn){
+	editing = 1;
+	edit_fn = rec_fn;
+	edit_mode = mode;
+	cli_set_prompt(prompt);}
 
-ZI cli_cmd_rec_edit(S arg){
-	LOG("cli_cmd_rec_edit");
-	P(!scnt(arg), cli_warn("missing record id"));
-	ID rec_id = cli_parse_id(arg);
-	P(rec_id==NIL, cli_warn("bad record id"));
-	Rec r = (Rec)malloc(SZ_REC);chk(r,1);
-	P(rec_get(r, rec_id)==NIL, cli_warn("no such record"));
-	I res = cli_cmd_rec_edit_loop(r, "  update$ ", "update", rec_update);
-	free(r);
-	R res;}
+ZV cli_leave_edit_mode() {
+	editing = 0;
+	cli_set_prompt(CLI_PROMPT);}
 
-ZI cli_cmd_rec_add(S arg){
-	LOG("cli_cmd_rec_add");
-	Rec r = (Rec)calloc(1, SZ_REC);chk(r,1);
-	r->year = 2018;
-	r->pages = 0;
-	scpy(r->author, "author", 6);
-	scpy(r->publisher, "publisher", 9);
-	scpy(r->title, "title", 5);
-	scpy(r->subject, "subject", 7);
-	I res = cli_cmd_rec_edit_loop(r, "  create$ ", "create", rec_create);
-	free(r);
-	R res;}
+V cli_print_edit_res(ID rec_id, UJ res) {
+	if(res==NIL-1)R; // pending server response
+	NL();TB();O("record %lu: %s %s", edit_buf->rec_id, edit_mode, (res==NIL)?"fail":"ok");NL();NL();}
 
-ZI cli_cmd_rec_del(S arg){
-	LOG("cli_cmd_rec_del");
-	P(!scnt(arg), cli_warn("missing record id"));
-	ID rec_id = cli_parse_id(arg);
-	P(rec_id==NIL, cli_warn("bad record id"));
-	Rec r = (Rec)malloc(SZ_REC);chk(r,1);
-	P(rec_get(r, rec_id)==NIL, cli_warn("no such record"));
-	UJ res = rec_delete(rec_id);
-	NL();TB();O("record %lu: delete %s", r->rec_id, (res==NIL)?"failed":"ok");NL();NL();
-	free(r); //< can still undo deletion here.
+ZI cli_parse_cmd_edit(S q) {
+	LOG("cli_parse_cmd_edit");
+	cli_update_term_size();
+	I qlen = scnt(q);
+	T(TEST, "qlen=%d, q=%s last=%d", qlen, q, q[qlen-1]);
+	if(!qlen||*q==10)R0; //< LF
+	if(qlen>1&&q[qlen-1]==10)
+		q[qlen-1]=0;qlen--; // strip LF
+	if(qlen==1&&*q=='='){
+		UJ res = edit_fn(edit_buf);
+		cli_print_edit_res(edit_buf->rec_id, res);
+		cli_leave_edit_mode();
+		R1;}
+	if(qlen==1&&*q=='\\'){
+		NL();TB();O("record %lu: %s %s", edit_buf->rec_id, edit_mode, "canceled");NL();NL();
+		cli_leave_edit_mode();
+		R1;}
+	S colon_pos = schr(q, ':');
+	if(!colon_pos)R0;
+	*colon_pos='\0';
+	I fld_id = atoi(q);
+	if(!fld_id)R0;
+	fld_id--;
+	if(!rec_field_names[fld_id])R0;
+	TB();O("%s -> (%s)\n", rec_field_names[fld_id], colon_pos+1);
+	H num;
+
+	if(fld_id<2) {
+		num = (H)atoi(colon_pos+1);	
+		rec_set_fn(edit_buf, fld_id, &num);
+	} else
+		rec_set_fn(edit_buf, fld_id, colon_pos+1);
+	
 	R0;}
 
-ZI cli_cmd_csv_import(S arg){O("nyi cli_cmd_csv_import\n");R0;}
-ZI cli_cmd_csv_export(S arg){O("nyi cli_cmd_csv_export\n");R0;}
-
-ZI cli_cmd_rec_sort(S arg){
-	LOG("cli_cmd_rec_sort");
-	T(TEST, "nyi");
-	R0;}
-
-Z UJ cli_list_rec(Rec r, V*arg, UJ i) {
+Z UJ cli_list_rec_each(Rec r, V*arg, UJ i) {
 	I width = cols * .9;
 	I clen, tlen, gap, line_cnt=0;
 	I title_max = width * .7;
@@ -376,69 +344,226 @@ Z UJ cli_list_rec(Rec r, V*arg, UJ i) {
 	BOX_RIGHT(gap);NL();
 	R0;}
 
-ZI cli_cmd_rec_list(S arg){
-	LOG("cli_cmd_rec_list");
+ZV cli_recalc_pager(S page) {
 	UJ page_id;
-	UJ total_recs = idx_size();
-	UJ total_pages = 1+total_recs/CLI_PAGE_SIZE;
-	if(scnt(arg) < 1)
+	UJ total_recs = db_info.total_records;
+	current_total_pages = 1+total_recs/CLI_PAGE_SIZE;
+
+	if(scnt(page) < 1)
 		page_id = ++current_page_id; // ! - next
-	else if(scnt(arg)==1&&arg[0]=='!') { // !! - prev 
+	else if(scnt(page)==1&&page[0]=='!') { // !! - prev 
 		if(current_page_id>1)
 			page_id = --current_page_id;
 		else
-			page_id = total_pages; // wrap to last
+			page_id = current_total_pages; // wrap to last
 	} else {
-		page_id = cli_parse_id(arg);	// !number - jump
+		page_id = cli_parse_id(page);	// !number - jump
 		if(page_id==NIL||page_id<1)
-			page_id=current_page_id;; // stay where we are
+			page_id = current_page_id;; // stay where we are
 	}
-	if(page_id > total_pages)
-		page_id = total_pages; // do not wrap
+	if(page_id > current_total_pages)
+		page_id = current_total_pages; // do not wrap
 
 	current_page_id = page_id; // save current position
 
-	I width = cols * .9;
-	I title_max = width * .7;
-	I author_max = width-title_max-6;
-	//T(TEST, "colwidths: %d %d %d", width, title_max, author_max);R1;
-	UI cols[3] = {6, title_max, author_max};
+	current_width = cols * .9;
+	I title_max = current_width * .7;
+	I author_max = current_width-title_max-6;
+	//T(TEST, "colwidths: %d %d %d", current_width, title_max, author_max);R1;
+	current_column_widths[0] = 6;
+	current_column_widths[1] = title_max;
+	current_column_widths[2] = author_max;
+}
 
-	// start table
-	BOX_START(width, (I*)&cols, 3);
-	UJ res = idx_page(cli_list_rec, NULL, page_id-1, CLI_PAGE_SIZE); // read records
-	BOX_END(width, (I*)&cols, 3);
+ZV cli_print_page_head(){
+	BOX_START(current_width, (I*)&current_column_widths, 3);
+}
 
+ZV cli_print_page_tail() {
+	BOX_END(current_width, (I*)&current_column_widths, 3);
 	// print paging help
-	TB();O("        [%lu/%lu]", page_id, total_pages);
+	TB();O("        [%d/%d]", current_page_id, current_total_pages);
 	CH(" ", 3);YELL("!");O(" next");
 	CH(" ", 3);YELL("!!");O(" prev");
 	CH(" ", 4);YELL("!");BLUE("page");O(" jump");
-	NL();NL();
+	NL();NL();}
+
+ZI cli_cmd_rec_sort(S arg){
+	LOG("cli_cmd_rec_sort");
+	T(TEST, "nyi");
 	R0;}
 
 ZI cli_cmd_debug(S arg){
 	LOG("cli_cmd_debug");
 	I l = scnt(arg);
-	if(!l) {
-		idx_dump(10);
-		mem_map_print();
+	T(INFO, "not yet implemented");
+	R0;}
+
+ZI cli_cmd_rec_add(S arg){
+	LOG("cli_cmd_rec_add");
+	edit_buf->year = 2018;
+	edit_buf->pages = 0;
+	scpy(edit_buf->author, "author", 6);
+	scpy(edit_buf->publisher, "publisher", 9);
+	scpy(edit_buf->title, "title", 5);
+	scpy(edit_buf->subject, "subject", 7);
+	cli_enter_edit_mode("  create$ ", "create", rec_create_fn);
+	cli_print_editor_head();
+	R0;}
+
+ZI cli_cmd_csv_import(S arg){O("nyi cli_cmd_csv_import\n");R0;}
+ZI cli_cmd_csv_export(S arg){O("nyi cli_cmd_csv_export\n");R0;}
+
+ZI cli_parse_cmd_main(S q) {
+	LOG("cli_on_stdin_main");
+	cli_update_term_size(); //< adjust cols/rows
+
+	I qlen = scnt(q);
+	if(!qlen){cli_hint();goto NEXT;}
+
+	if(qlen>1&&q[qlen-1]==10){
+		q[qlen-1]=0;qlen--; // strip LF
+	}
+	//T(TEST, "qlen=%d, q=%s last=%d", qlen, q, q[qlen-1]);
+
+	I pos = cli_is_db_cmd(*q);
+	if(pos>=0){
+		//T(TEST, "pos=%d", pos);
+		I res = cmds[pos](q+1);
+		if(res){TB();O("command error\n");}
+		goto NEXT;
+	}
+	SW(qlen){
+		CS(1,
+			SW(*q){
+				CS('\\',R-1;)
+				CS(10, cli_hint()) //< LF
+				CS('?', cli_usage())
+			}
+			goto NEXT;
+		)
+		CS(2, if(!mcmp("\\\\", q, 2))R-1;)
+	}
+	if(q[qlen-1]=='?'){
+		q[qlen-1]=0;
+		NL();TB();
+		T(INFO, "not yet implemented");
+		//fti_print_completions_for(q);
+		NL();NL();
+		goto NEXT;
+	}
+
+	// not a known command, start search
+	cli_cmd_search(q);
+
+	NEXT:
+	WIPE(q, qlen);
+	R0;
+}
+
+V cli_set_edit_buf(Rec r) {
+	mcpy(edit_buf,r,SZ_REC);
+}
+
+V cli_set_db_info(DB_INFO di) {
+	mcpy(&db_info,di,SZ_DB_INFO);
+}
+
+I cli_dispatch_cmd(S cmd) {
+	I r;
+	if(editing) {
+		r = cli_parse_cmd_edit(cmd);
+		if(!r)
+			cli_print_editor_head();
+		WIPE(cmd, scnt(cmd));
 		R0;
 	}
-	/*
-	NL();
-	DO(FTI_FIELD_COUNT,
-		SET docset = (DOCSET)fti_get_docset(i, arg, l);
-		if(docset) {
-			TSTART();
-			T(TEST, "docset(%d:%s) -> ", i, arg);
-			DO(set_size(docset), T(TEST, "%d ", *vec_at(docset->items,i,UH)))
-			TEND();
-		}
-	)
-	NL();
-	*/
+	r = cli_parse_cmd_main(cmd);
+	WIPE(cmd, scnt(cmd));
+	R r;}
+
+V cli_print_del_res(ID rec_id, UJ res) {
+	NL();TB();O("record %lu: delete %s", rec_id, (res==NIL)?"failed":"ok");NL();NL();
+}
+
+#ifndef CLI_STANDALONE
+I cli_cmd_rec_show(S arg){
+	if(!editing)
+		cli_rec_print(edit_buf);
+	else
+		cli_print_editor_head();
 	R0;}
+
+ZI cli_cmd_rec_list(S arg){R0;}
+ZI cli_cmd_rec_del(S arg){R0;}
+ZI cli_cmd_rec_edit(S arg){R0;}
+
+I cli_init() {
+	LOG("cli_init");
+	edit_buf = (Rec)calloc(1,SZ_REC);chk(edit_buf,1);
+	cli_set_prompt(CLI_PROMPT);
+	cli_banner();
+	cli_hint();
+	R0;
+}
+
+V cli_shutdown(I itr) {
+	free(edit_buf);}
+
+#else
+
+I cli_cmd_rec_show(S arg){
+	LOG("cli_cmd_rec_show");
+	ID rec_id = cli_parse_id(arg);
+	P(rec_id==NIL,1)
+	Rec r = (Rec)malloc(SZ_REC);chk(r,1);
+	P(rec_get(r, rec_id)==NIL, cli_warn("no such record"))
+	cli_rec_print(r);
+	free(r);
+	R0;}
+
+ZI cli_cmd_rec_list(S arg){
+	LOG("cli_cmd_rec_list");
+	cli_recalc_pager(arg);
+	cli_print_page_head();
+	UJ res = idx_page(cli_list_rec_each, NULL, current_page_id-1, CLI_PAGE_SIZE); // read records
+	cli_print_page_tail();
+	R0;}
+
+ZI cli_cmd_rec_del(S arg){
+	LOG("cli_cmd_rec_del");
+	ID rec_id = cli_parse_id(arg);
+	P(rec_id==NIL,1)
+	UJ res = rec_delete(rec_id);
+	cli_print_del_res(rec_id, res);
+	R0;}
+
+ZI cli_cmd_rec_edit(S arg){
+	LOG("cli_cmd_rec_edit");
+	ID rec_id = cli_parse_id(arg);
+	P(rec_id==NIL,1)
+	P(rec_get(edit_buf, rec_id)==NIL, cli_warn("no such record"));
+	cli_enter_edit_mode("  update$ ", "update", rec_update_fn);
+	cli_print_editor_head();
+	R0;}
+
+ZI cli_cmd_search_local(S arg){
+	fts_search(arg, (FTI_SEARCH_CALLBACK)NULL); // TODO
+	fts_dump_result();
+	R0;}
+
+I cli_init() {
+	LOG("cli_init");
+	edit_buf = (Rec)calloc(1,SZ_REC);chk(edit_buf,1);
+	T(TEST,"init complete");
+	cli_set_prompt(CLI_PROMPT);
+	R0;
+}
+
+V cli_shutdown(I itr) {
+	free(edit_buf);
+	fts_shutdown();
+    I res = fti_shutdown();exit(res);}
 
 I main(I ac, S* av) {
 	LOG("cli_main");
@@ -446,56 +571,28 @@ I main(I ac, S* av) {
 	setlocale(LC_NUMERIC, ""); //< format numbers
 	signal(SIGINT, cli_shutdown); //< catch SIGINT and cleanup nicely
 
-	P(fti_init(),1);
-	P(fts_init(),1);
+	cli_init();
+
+	cli_set_cmd_handler('?', cli_cmd_search_local);
+	cli_set_rec_handlers(rec_create, rec_update, rec_set);
 
 	cli_banner();
 	cli_hint();
 
+	P(fti_init(),1);
+	P(fts_init(),1);
+
+	cli_set_db_info(mem_db_info());
+
 	C q[LINE_BUF];
 
 	//! start main loop
-	USR_LOOP(usr_input_str(q, CLI_PROMPT, "invalid characters"),
-		cli_update_dimensions(); //< adjust cols/rows
-
-		I qlen = scnt(q);
-		if(!qlen){cli_hint();continue;}
-
-		I pos = is_db_cmd(*q);
-		if(pos>=0){
-			I res = cmds[pos](q+1);
-			if(res){TB();O("command error\n");}
-			goto NEXT;
-		}
-		SW(qlen){
-			CS(1,
-				SW(*q){
-					CS('\\',goto EXIT;)
-					CS(10, cli_hint()) //< LF
-					CS('?', cli_usage())
-				}
-				goto NEXT;
-			)
-			CS(2, if(!mcmp("\\\\", q, 2))goto EXIT;)
-		}
-		if(q[qlen-1]=='?'){
-			q[qlen-1]=0;
-			NL();TB();
-			fti_print_completions_for(q);
-			NL();NL();
-			goto NEXT;
-		}
-
-		// not a known command, start search
-		fts_search(q, (FTI_SEARCH_CALLBACK)NULL); // TODO
-
-		fts_dump_result();
-
-		NEXT:
-		WIPE(q, qlen);
+	USR_LOOP(usr_input_str(q, current_prompt, "invalid characters"),
+		if(-1==cli_dispatch_cmd(q))break;
 	)
-	EXIT:
 	cli_shutdown(0);
 }
+
+#endif
 
 //:~
