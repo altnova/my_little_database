@@ -6,6 +6,9 @@
 #include "idx.h"
 #include "rec.h"
 
+//! network client only uses rec_set()
+#ifndef NET_CLIENT
+
 //! debug print
 V rec_print_dbg(Rec r) {
 	LOG("rec_print_dbg");
@@ -121,6 +124,8 @@ UJ rec_update(Rec r) {
 	T(DEBUG, "updated rec_id=%lu", r->rec_id);
 	R db_pos;
 }
+
+#endif
 
 //! update field value
 V rec_set(Rec r, I fld, V* val) {
