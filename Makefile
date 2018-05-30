@@ -22,7 +22,7 @@ nsr:
 	./bin/nsr
 
 ncl:
-	$(CC) -DNET_CLIENT $(CCOPTS) -Wno-parentheses -o bin/ncl src/rec.c src/cli.c src/rpc/rpc.c src/utl/trc.c src/net/tcp.c src/net/msg.c src/net/cln.c src/ncl.c
+	$(CC) -DNET_CLIENT $(CCOPTS) -Wno-parentheses -o bin/ncl src/rec.c src/cli.c src/rpc/rpc.c src/adt/bag.c src/utl/trc.c src/net/tcp.c src/net/msg.c src/net/cln.c src/ncl.c
 	$(VLG) ./bin/ncl
 
 cln:

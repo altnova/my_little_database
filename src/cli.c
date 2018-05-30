@@ -123,6 +123,16 @@ ZV cli_set_prompt(S p){
 S cli_get_prompt(){
 	R current_prompt;}
 
+V cli_prompt() {
+	LOG("cli_prompt");
+	write(0,current_prompt, scnt(current_prompt));
+}
+
+V cli_lf() {
+	LOG("cli_lf");
+	write(0,"\n", 1);
+}
+
 ZI cli_is_db_cmd(C c) {
 	S r=schr(CLI_DB_COMMANDS,c);
 	P(!r,-1)
@@ -325,7 +335,7 @@ ZI cli_parse_cmd_edit(S q) {
 	
 	R0;}
 
-Z UJ cli_list_rec_each(Rec r, V*arg, UJ i) {
+UJ cli_list_rec_each(Rec r, V*arg, UJ i) {
 	I width = cols * .9;
 	I clen, tlen, gap, line_cnt=0;
 	I title_max = width * .7;
@@ -376,8 +386,7 @@ V cli_recalc_pager(S page) {
 }
 
 V cli_print_page_head(){
-	BOX_START(current_width, (I*)&current_column_widths, 3);
-}
+	BOX_START(current_width, (I*)&current_column_widths, 3);}
 
 V cli_print_page_tail() {
 	BOX_END(current_width, (I*)&current_column_widths, 3);
@@ -421,9 +430,7 @@ ZI cli_parse_cmd_main(S q) {
 	I qlen = scnt(q);
 	if(!qlen){cli_hint();goto NEXT;}
 
-	if(qlen>1&&q[qlen-1]==10){
-		q[qlen-1]=0;qlen--; // strip LF
-	}
+	//if(qlen>1&&q[qlen-1]==10)q[qlen-1]=0;qlen--; // strip LF
 	//T(TEST, "qlen=%d, q=%s last=%d", qlen, q, q[qlen-1]);
 
 	I pos = cli_is_db_cmd(*q);
@@ -507,18 +514,20 @@ ZI cli_cmd_rec_del(S arg){R0;}
 ZI cli_cmd_rec_edit(S arg){R0;}
 
 I cli_init() {
-	P(initialized,0);
+	P(initialized,(cli_prompt(),0));
 	LOG("cli_init");
 	edit_buf = (Rec)calloc(1,SZ_REC);chk(edit_buf,1);
 	cli_set_prompt(CLI_PROMPT);
 	cli_banner();
 	cli_hint();
+	cli_prompt();
 	initialized=1;
 	R0;
 }
 
 V cli_shutdown(I itr) {
-	free(edit_buf);}
+	//free(edit_buf);
+}
 
 #else
 

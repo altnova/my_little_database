@@ -29,6 +29,8 @@ ext V cli_set_edit_buf(Rec r);
 ext I cli_dispatch_cmd(S cmd);
 ext V cli_set_db_info(DB_INFO di);
 ext S cli_get_prompt();
+ext V cli_prompt();
+ext V cli_lf(); //< linefeed
 ext V cli_enter_edit_mode(S prompt, S mode, REC_FN rec_fn);
 ext ID cli_parse_id(S s);
 ext V cli_rec_print(Rec r);
@@ -42,5 +44,6 @@ ext V cli_print_page_head();
 ext V cli_print_page_tail();
 ext I cli_get_current_page_id();
 ext I cli_get_current_page_size();
+ext UJ cli_list_rec_each(Rec r, V*arg, UJ i);
 
 //:~

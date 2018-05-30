@@ -9,6 +9,9 @@
 #define PORT 5000
 
 I c=-1; // current connection
+I streaming = 0;
+
+I ncl_shutdown();
 
 ZS ncl_username() {
 	struct passwd*u=getpwuid(getuid());
@@ -26,13 +29,15 @@ ZI ncl_on_connect(I d) {
 ZI ncl_on_stdin(I c, UI l, S str) {
 	LOG("stdin_callback");
 	str[l-1]=0;//terminate
-	cli_dispatch_cmd(str);
-	cln_set_prompt(cli_get_prompt());
+	I res = cli_dispatch_cmd(str);
+	if(res<0)R ncl_shutdown();
+	cln_set_prompt(streaming?"":cli_get_prompt());
 	R0;}
 
 I ncl_cmd_show(S arg) { // show
 	LOG("ncl_cmd_show");
 	ID rec_id = cli_parse_id(arg);
+	streaming=1;
 	P(rec_id==NIL,1);
 	msg_send(c, rpc_GET_req(rec_id));
 	R0;}
@@ -68,15 +73,19 @@ I ncl_cmd_del(S arg) { // del
 I ncl_cmd_list(S arg) { // list
 	LOG("ncl_cmd_list");
 	cli_recalc_pager(arg);
-	cli_print_page_head();
-	msg_send(c, rpc_LST_req(
+	pPAGING_INFO p = (pPAGING_INFO){ // page_num, per_page, sort_by, sort_dir
 		cli_get_current_page_id()-1,
-		cli_get_current_page_size()));
+		cli_get_current_page_size(),
+		0, 0};
+	streaming=1;
+	cli_print_page_head();
+	msg_send(c, rpc_LST_req(1,&p));
 	R0;}
 
 I ncl_cmd_search(S arg) { // debug
 	LOG("ncl_cmd_search");
 	T(TEST,"nyi");
+R0;}
 
 I ncl_cmd_import(S arg) { // import
 	LOG("ncl_cmd_import");
@@ -93,7 +102,6 @@ R0;}
 I ncl_cmd_debug(S arg) { // debug
 	LOG("ncl_cmd_debug");
 	T(TEST,"nyi");
-R0;}
 R0;}
 
 ZI ncl_on_msg(I d, MSG_HDR *h, pMSG *m) {
@@ -112,6 +120,8 @@ ZI ncl_on_msg(I d, MSG_HDR *h, pMSG *m) {
 			pGET_res *m_get = (pGET_res*)m;
 			cli_set_edit_buf((Rec)m_get->record); // for edit cmd
 			cli_cmd_rec_show(NULL);
+			streaming=0;
+			cli_prompt();
 		)
 		CS(UPD_res,;
 			pUPD_res *m_upd = (pUPD_res*)m;
@@ -125,13 +135,33 @@ ZI ncl_on_msg(I d, MSG_HDR *h, pMSG *m) {
 			pADD_res *m_add = (pADD_res*)m;
 			cli_print_edit_res(m_add->rec_id,0);
 		)
+		CS(LST_res,;
+			pLST_res *m_lst = (pLST_res*)m;
+			//T(TEST, "LST rcvd %d records", m_lst->cnt);
+			if(m_lst->cnt) {
+				DO(m_lst->cnt,
+					cli_list_rec_each(&m_lst->records[i], NULL, i))
+			} else {
+				cli_print_page_tail(); // rcvd stream terminator
+				streaming=0;
+				cli_prompt();
+			}
+		)
 
 		CD: msg_send_err(d, ERR_UNKNOWN_MSG_TYPE, "unknown message type");
 	}
 	R0;	}
 
+I ncl_shutdown() {
+	cli_shutdown(0);
+	cln_shutdown();
+	TBUF(0);
+	R0;
+}
+
 I main() {
 	LOG("ncl");
+	TBUF(1);
 
 	cli_set_cmd_handler(':', ncl_cmd_show); // show
 	cli_set_cmd_handler('*', ncl_cmd_edit); // edit
@@ -152,6 +182,5 @@ I main() {
 
 	cln_connect(0, PORT);
 
-	cli_shutdown(0);
-	R cln_shutdown();
+	R ncl_shutdown();
 }

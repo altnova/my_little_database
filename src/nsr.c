@@ -9,9 +9,21 @@
 ZV nyi(I d) {
 	msg_send_err(d, ERR_NOT_YET_IMPLEMENTED, "not yet implemented");}
 
+Z pRec recbuf[4];
+Z UI recbufpos = 0;
+
 Z UJ nsr_rec_each(Rec r, V*conn, UJ i) {
-	I d = *conn;
-	
+	LOG("nsr_rec_each");
+	I d = *(I*)conn;
+	mcpy(&recbuf[recbufpos++], r, SZ_REC);
+	if(recbufpos==4) {
+		msg_send(d, rpc_LST_res(4, (Rec)&recbuf));
+		T(TEST, "flush at %lu", i);
+		recbufpos=0;
+	} else {
+		T(TEST, "record %lu", i);
+	}
+	R0;
 }
 
 ZI nsr_on_msg(I d, MSG_HDR *h, pMSG *m) {
@@ -61,12 +73,15 @@ ZI nsr_on_msg(I d, MSG_HDR *h, pMSG *m) {
     	)
     	CS(LST_req,
     		;pLST_req* m_lst = (pLST_req*)m;
-    		UI p = m_lst->page_num, pp = m_lst->per_page;
-			UJ res = idx_page(cli_list_rec_each, &d, p, pp);
+    		PAGING_INFO p = m_lst->pagination; // page_num, per_page, sort_by, sort_dir
+			UJ res = idx_page(nsr_rec_each, &d, p->page_num, p->per_page);
+			msg_send(d, rpc_LST_res(recbufpos, (Rec)&recbuf)); // flush buffer remainder
+			T(TEST, "flush remainining %d", recbufpos);
+			msg_send(d, rpc_LST_res(0, NULL)); // send stream terminator
+			recbufpos=0;
     	)
 
     	CS(FND_req, ;pFND_req* m_fnd = (pFND_req*)m; nyi(d);)
-    	CS(SRT_req, ;pSRT_req* m_srt = (pSRT_req*)m; nyi(d);)
     	CS(BYE_req, ;pBYE_req* m_bye = (pBYE_req*)m; nyi(d);)
     	CS(SAY_req, ;pSAY_req* m_say = (pSAY_req*)m; nyi(d);)
     	CS(ERR_req, ;pERR_req* m_err = (pERR_req*)m; nyi(d);)
