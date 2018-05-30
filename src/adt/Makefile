@@ -5,6 +5,7 @@ CCOPTS=-Og -g
 #VLG=/opt/valgrind/bin/valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes
 VLG=
 OUT=../../bin
+COMMON=../utl/trc.c bag.c
 
 all: tests
 
@@ -15,19 +16,19 @@ bag:
 	$(VLG) $(OUT)/bag
 
 vec:
-	$(CC) -DRUN_TESTS_VEC $(CCOPTS) -o $(OUT)/vec ../utl/trc.c vec.c 
+	$(CC) -DRUN_TESTS_VEC $(CCOPTS) -o $(OUT)/vec $(COMMON) vec.c 
 	$(VLG) $(OUT)/vec
 
 tri:
-	$(CC) -DRUN_TESTS_TRI $(CCOPTS) -o $(OUT)/tri ../utl/trc.c tri.c
+	$(CC) -DRUN_TESTS_TRI $(CCOPTS) -o $(OUT)/tri $(COMMON) tri.c
 	$(VLG) $(OUT)/tri
 
 set:
-	$(CC) -DRUN_TESTS_SET $(CCOPTS) -o $(OUT)/set ../utl/trc.c ../alg/bin.c vec.c set.c
+	$(CC) -DRUN_TESTS_SET $(CCOPTS) -o $(OUT)/set $(COMMON) ../alg/bin.c vec.c set.c
 	$(VLG) $(OUT)/set
 
 hsh:
-	$(CC) -DRUN_TESTS_HSH $(CCOPTS) -o $(OUT)/hsh ../utl/clk.c ../utl/rnd.c ../utl/trc.c vec.c hsh.c
+	$(CC) -DRUN_TESTS_HSH $(CCOPTS) -o $(OUT)/hsh $(COMMON) ../utl/clk.c ../utl/rnd.c vec.c hsh.c
 	$(VLG) $(OUT)/hsh
 
 #//:~
