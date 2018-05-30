@@ -10,9 +10,13 @@
 #include <stdio.h>
 #include <string.h>
 #include "../___.h"
+#include "../adt/bag.h"
 
 ZC cont = 0;
 ZC newline = 1;
+ZC use_buf = 0;
+ZC tmpbuf[1000];
+Z BAG logbuf;
 
 //! trace
 I T(I lvl, const S fn, const S file, const I line, const S fmt, ...) {
@@ -28,10 +32,25 @@ I T(I lvl, const S fn, const S file, const I line, const S fmt, ...) {
 			if(newline){newline=0;goto OUT;}
 			snprintf(buf, SZ(buf), "%s", fmt);
 		}
-		vprintf(buf, args);
+		if(use_buf) {
+			sz len = vsnprintf(tmpbuf, 1000, buf, args);
+			bag_add(logbuf,tmpbuf,len);
+		}else 
+			vprintf(buf, args);
 		va_end(args);
 	}
 	R1; //< err
+}
+
+V TBUF(C sw) {
+	if(sw) {
+		if(!logbuf){
+			logbuf = bag_init(1024);
+		}
+	} else {
+		bag_destroy(logbuf);
+	}
+	use_buf=sw;
 }
 
 //! line continuation flag
