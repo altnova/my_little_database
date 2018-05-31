@@ -85,10 +85,13 @@ I ncl_cmd_list(S arg) { // list
 	msg_send(c, rpc_LST_req(1,&p));
 	R0;}
 
-I ncl_cmd_search(S arg) { // debug
+I ncl_cmd_search(S q) { // query
 	LOG("ncl_cmd_search");
-	T(TEST,"nyi");
-R0;}
+	UI len = scnt(q);
+	P(len<2,1)
+	streaming=1;
+	msg_send(c, rpc_FND_req(FTS_MAX_HITS, len+1, q));
+	R0;}
 
 I ncl_cmd_import(S arg) { // import
 	LOG("ncl_cmd_import");

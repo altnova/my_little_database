@@ -25,16 +25,19 @@
 #define DELIM ';'			/*< csv delimiter */
 #define NUL '\0'			/*< null char */
 #define LF '\n'				/*< newline char */
-#define FLDMAX 2000			/*< longest field len*/
-#define RECBUFLEN 4096		//< record r/w buffer
+#define FLDMAX 2000			/*< longest field len */
+#define RECBUFLEN 4096		/*< record r/w buffer */
 
-#define MAX_FNAME_LEN 200	//< db and idx files
+#define MAX_FNAME_LEN 200	/*< db and idx files */
+
+//! full-text index
+#define FTS_MAX_HITS 15
 
 //! network config
-#define NET_STREAM_BUF 8	//< stream buffer size for LST and FND
-#define NET_PORT 5000		//< default tcp port
+#define NET_STREAM_BUF 4	/*< stream buffer size for LST and FND */
+#define NET_PORT 5000		/*< default tcp port */
 
-typedef UJ ID;				//< rec_id type alias
+typedef UJ ID;				/*< rec_id type alias */
 
 //! index entry
 typedef struct idx_entry {

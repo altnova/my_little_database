@@ -53,6 +53,7 @@ ext I  tcp_init();
 ext I  tcp_shutdown();
 ext I  tcp_serve();
 ext I  tcp_active_conns();
+ext V* tcp_buf(I d,I n);
 
 //:~
 

@@ -8,7 +8,7 @@
 #define RCVBUF       0x10000
 #define LSTN_BACKLOG    1000
 
-ZI sig=0; Z Q queues[CN];
+ZI sig=0; Z Q queues[CN];Z V*buffers[CN];
 Z  fd_set mr,mw; I(*df[CN])();
 ZI D1,D2,ACTIVE_CONNS=0;
 
@@ -94,6 +94,15 @@ ZJ usec(){struct timeval tv;R gettimeofday(&tv,0),1000000*(J)(tv.tv_sec-10957*86
 I tcp_active_conns() {
 	R ACTIVE_CONNS;
 }
+
+V* tcp_buf(I d,I n) {
+	LOG("tcp_buf");
+	I i=hget(d);
+	V*b=buffers[i];
+	if(b&&!n){free(b);T(TEST,"freed tcpbuf %d",d);R0;}
+	P(b,b)
+	buffers[i]=malloc(n);chk(buffers[i],0);
+	R buffers[i];}
 
 I tcp_select(struct timeval tv) {
 	tv.tv_sec=(I)1,tv.tv_usec=(I)0;
