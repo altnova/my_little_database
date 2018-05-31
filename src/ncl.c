@@ -7,7 +7,7 @@
 #include "cli.h"
 
 I c=-1; // current connection
-I streaming = 0;
+I noprompt = 0;
 S adr = "localhost";
 I a = 0;  //< addr
 I p = NET_PORT; //<port
@@ -32,20 +32,20 @@ ZI ncl_on_stdin(I c, UI l, S str) {
 	str[l-1]=0;//terminate
 	I res = cli_dispatch_cmd(str);
 	if(res<0)R ncl_shutdown();
-	cln_set_prompt(streaming?"":cli_get_prompt());
+	cln_set_prompt(noprompt?"":cli_get_prompt());
 	R0;}
 
 I ncl_cmd_show(S arg) { // show
 	LOG("ncl_cmd_show");
 	ID rec_id = cli_parse_id(arg);
 	P(rec_id==NIL,1);
-	streaming=1;
+	noprompt=1;
 	msg_send(c, rpc_GET_req(rec_id));
 	R0;}
 
 UJ ncl_cmd_edit_send(Rec r) {
 	LOG("ncl_cmd_edit_send");
-	streaming=1;
+	noprompt=1;
 	msg_send(c, rpc_UPD_req(1, r));
 	R NIL-1;}//< defer ok
 
@@ -57,7 +57,7 @@ I ncl_cmd_edit(S arg) { // edit
 
 UJ ncl_cmd_add_send(Rec r) {
 	LOG("ncl_cmd_add_send");
-	streaming=1;
+	noprompt=1;
 	msg_send(c, rpc_ADD_req(1, r));
 	R NIL-1;}//< defer ok
 
@@ -70,18 +70,18 @@ I ncl_cmd_del(S arg) { // del
 	LOG("ncl_cmd_del");
 	ID rec_id = cli_parse_id(arg);
 	P(rec_id==NIL,1);
-	streaming=1;
+	noprompt=1;
 	msg_send(c, rpc_DEL_req(rec_id));
 	R0;}
 
 I ncl_cmd_list(S arg) { // list
 	LOG("ncl_cmd_list");
-	cli_recalc_pager(arg);
+	cli_recalc_paging(arg);
 	pPAGING_INFO p = (pPAGING_INFO){ // page_num, per_page, sort_by, sort_dir
 		cli_get_current_page_id()-1,
 		cli_get_current_page_size(),
 		0, 0};
-	streaming=1;
+	noprompt=1;
 	cli_print_page_head();
 	msg_send(c, rpc_LST_req(1,&p));
 	R0;}
@@ -90,7 +90,7 @@ I ncl_cmd_search(S q) { // query
 	LOG("ncl_cmd_search");
 	UI len = scnt(q);
 	P(len<2,1)
-	streaming=1;
+	noprompt=1;
 	msg_send(c, rpc_FND_req(FTS_MAX_HITS, len+1, q));
 	R0;}
 
@@ -116,7 +116,7 @@ ZI ncl_on_msg(I d, MSG_HDR *h, pMSG *m) {
 	if(msg_is_err(h)) {
 		pERR_res *e = (pERR_res*)m;
 		cli_warn(e->err_id, (S)e->msg);
-		streaming=0;
+		noprompt=0;
 		R1;}	
 
 	SW(h->type){
@@ -133,34 +133,38 @@ ZI ncl_on_msg(I d, MSG_HDR *h, pMSG *m) {
 			pGET_res *m_get = (pGET_res*)m;
 			cli_set_edit_buf((Rec)m_get->record); // for edit cmd
 			cli_cmd_rec_show(NULL);
-			streaming=0;
+			noprompt=0;
 			cli_prompt();
 		)
 		CS(UPD_res,;
 			pUPD_res *m_upd = (pUPD_res*)m;
 			cli_print_cmd_result(m_upd->rec_id,0);
-			streaming=0;
+			noprompt=0;
 			cli_prompt();
 		)
 		CS(DEL_res,;
 			pDEL_res *m_del = (pDEL_res*)m;
 			cli_print_cmd_result(m_del->rec_id,0);
-			streaming=0;
+			noprompt=0;
 		)
 		CS(ADD_res,;
 			pADD_res *m_add = (pADD_res*)m;
 			cli_print_cmd_result(m_add->rec_id,0);
-			streaming=0;
+			noprompt=0;
 		)
 		CS(LST_res,;
 			pLST_res *m_lst = (pLST_res*)m;
-			T(TRACE, "LST rcvd %d records", m_lst->cnt);
+			
+			if(m_lst->cnt==NET_START_STREAM) {
+				T(TEST, "LST begins to stream records");
+			}
+			T(TEST, "LST rcvd %d records", m_lst->cnt);
 			if(m_lst->cnt) {
-				DO(m_lst->cnt,
-					cli_list_rec_each(&m_lst->records[i], NULL, i))
+				//DO(m_lst->cnt,
+				//	cli_list_rec_each(&m_lst->records[i], NULL, i))
 			} else {
 				cli_print_page_tail(); // rcvd stream terminator
-				streaming=0;
+				noprompt=0;
 				cli_prompt();
 			}
 		)
