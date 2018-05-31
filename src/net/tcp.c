@@ -8,7 +8,8 @@
 #define RCVBUF       0x10000
 #define LSTN_BACKLOG    1000
 
-ZI sig=0; Z Q queues[CN];Z V*buffers[CN];
+ZI sig=0; Z Q queues[CN];
+ZV*sbf[CN];ZI sbc[CN];ZC sbl[CN];//bufs,cnts,lcks
 Z  fd_set mr,mw; Z I(*df[CN])();
 ZI D1,D2,ACTIVE_CONNS=0;
 ZJ timer = 1500;
@@ -97,14 +98,33 @@ ZJ usec(){struct timeval tv;R gettimeofday(&tv,0),1000000*(J)(tv.tv_sec-10957*86
 I tcp_active_conns() {
 	R ACTIVE_CONNS;}
 
-V* tcp_buf(I d,I n) {
-	LOG("tcp_buf");
+V* sbuf(I d,I n){ //< create/destroy snd buf
+	LOG("sbuf");
 	I i=hget(d);
-	V*b=buffers[i];
-	if(b&&!n){free(b);buffers[i]=0;T(TEST,"freed tcpbuf %d",d);R0;}
-	P(b,b)
-	buffers[i]=malloc(n);chk(buffers[i],0);
-	R buffers[i];}
+	P(n&&sbl[i],0);//< buffer is locked by another stream
+	V*b=sbf[i];
+	if(b&&!n){free(b);sbf[i]=0;T(TEST,"freed sbuf %d",d);R0;}
+	P(b,b)sbf[i]=malloc(n);chk(sbf[i],0);
+	sbl[i]=1; //< lock
+	R sbf[i];}
+
+V* sbpt(I d,V*o,I n){ //< put bytes
+	I i = hget(d);
+	V*b = sbf[i]+sbc[i];
+
+}
+
+V sblk(I d,C l){ //< set lock
+	LOG("sblk");
+	sbl[hget(d)]=l;}
+
+V sbc1(I d,I n){ //< inc size
+	LOG("sbc1");
+	sbc[hget(d)]+=n;}
+
+V sbfl(I d,I n){ //< flush
+	LOG("sbc1");
+	sbc[hget(d)]+=n;}
 
 I tcp_select(struct timeval tv) {
 	tv.tv_sec=(I)1,tv.tv_usec=(I)0;

@@ -49,6 +49,10 @@ ext I  sd1(I d,I(*fn)(I));
 ext I  sd2(I d,I(*fn)(I),I addr);
 ext I  cons(I d);
 
+ext V* sbuf(I d,I n);
+ext V  sbc1(I d,I n);
+ext V* sbgt(I d);
+
 ext I  tcp_trigger_reads();
 ext I  tcp_select(struct timeval tv);
 ext I  tcp_init();
@@ -56,7 +60,7 @@ ext I  tcp_shutdown();
 ext I  tcp_serve();
 ext I  tcp_active_conns();
 ext V  tcp_set_timer(J t, TCP_TIMER_FN fn);
-ext V* tcp_buf(I d,I n);
+
 
 //:~
 
