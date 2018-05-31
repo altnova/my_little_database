@@ -8,21 +8,25 @@
 Z IDX idx;		//< in-memory instance of the index
 Z bufRec buf;	//< readbuffer RECBUFLEN records
 
+VEC sort_vectors[FTI_FIELD_COUNT+1]; //< plus rec_id=0
+
 C db_file[MAX_FNAME_LEN+1];
 C idx_file[MAX_FNAME_LEN+1];
 
+ZI sort_field;
+ZC sort_dir;
+V* sort_dbmap;
+
 //! current idx size
 UJ idx_size() {
-	R vec_size(idx->pairs);
-}
+	R vec_size(idx->pairs);}
 
 //! returns specific index entry
 Pair* idx_get_entry(UJ idx_pos) {
-	R vec_at(idx->pairs, idx_pos, Pair);
-}
+	R vec_at(idx->pairs, idx_pos, Pair);}
 
 //! persist index in a file
-//! \return NIL on error, index bytesize on success
+//! \return NIL on error, byte size on success
 Z UJ idx_save() {
 	LOG("idx_save");
 	FILE*out;
@@ -33,10 +37,9 @@ Z UJ idx_save() {
 	UJ idx_fsize = fsize(out);
 	fclose(out);
 	T(DEBUG, "saved %lu+%lu = %lu bytes", SZ_IDX, vec_mem(idx->pairs), idx_fsize);
-	R idx_fsize;
-}
+	R idx_fsize;}
 
-//! squash index entry at given pos
+//! squash index entry at given pos and sync index to disk
 //! \return NIL on error, new index size on success
 UJ idx_shift(UJ pos) {
 	LOG("idx_shift");
@@ -44,55 +47,92 @@ UJ idx_shift(UJ pos) {
 	T(DEBUG, "squashed idx_pos=%lu", pos);
 	UJ b_written = idx_save();
 	X(b_written==NIL, T(WARN, "idx_save failed"), NIL);
-	R idx_size();
-}
+	R idx_size();}
 
 //! returns pointer to indexes' data section
 Pair* idx_data() {
-	R(Pair*)idx->pairs->data;
-}
+	R(Pair*)idx->pairs->data;}
 
-//! create db file if not exists \returns number of records
+//! create a new db file if not exists \returns number of records
 Z UJ db_touch(S fname) {
 	LOG("db_touch");
 	FILE*f;
 	xfopen(f, fname, "a", NIL);
 	UJ size = fsize(f)/SZ_REC;
 	fclose(f);
-	R size;
-}
+	R size;}
 
 //! comparator kernel
 ZJ _c(const V*a, const V*b) {
 	ID x = ((Pair*)a)->rec_id;
 	ID y = ((Pair*)b)->rec_id;
 	P(x==y,0)
-	R x>y?1:-1;
-}
+	R x>y?1:-1;}
 
 //! comparator for binfn()
 C cmp_binsearch(V* a, V* b, sz t) {
 	LOG("cmp_binsearch");
 	J r = _c(a,b);
 	T(TRACE, "r=%ld\n", r);
-	R !r?r:r<0?-1:1;
-}
+	R !r?r:r<0?-1:1;}
 
 //! comparator for qsort()
 ZI cmp_qsort(const V*a, const V*b) {
 	LOG("cmp_qsort");
 	J r = _c(a,b);
 	T(TRACE, "%ld\n", r);
-	R(I)r;
-}
+	R(I)r;}
+
+//! string comparator for db_sort()
+ZI db_cmp_str(const V*a, const V*b){
+	LOG("db_cmp_str");
+	UJ x = *(UJ*)a;
+	UJ y = *(UJ*)b;
+	T(TEST, "xy %lu %lu", x, y);
+	V*rx = sort_dbmap + x * SZ_REC;
+	V*ry = sort_dbmap + y * SZ_REC;
+	//T(TEST, "rx ry %p %p", rx, ry);
+	//T(TEST, "rx ry %lu %lu", *(UJ*)rx, *(UJ*)ry);
+	S fx = (S)(rx+rec_field_offsets[sort_field]);
+	S fy = (S)(ry+rec_field_offsets[sort_field]);
+	//T(TEST, "fx fy %s %s", fx, fy);
+	//T(TEST, "comparing (%s) (%s)\n",fx,fy);
+	I r = strcmp(fx,fy);
+	R r;}
 
 //! sort index by rec_id
 ZV idx_sort() {
 	LOG("idx_sort");
 	VEC p = idx->pairs;
 	qsort(p->data, p->used, SZ(Pair), cmp_qsort);
-	T(DEBUG, "index sorted");
-}
+	T(DEBUG, "index sorted");}
+
+//! creates a vector of db_positions according to given order
+//! and caches it to disk. if vector already exists, do nothing.
+UJ db_sort(I f, C d){
+	LOG("db_sort");
+	FILE*db;xfopen(db, db_file, "r", NIL);
+	sz fsz = fsize(db);
+	fclose(db);
+
+	I fd = open(db_file, O_RDONLY, 0);
+	T(TEST, "fd %d fsz %d", fd, fsz);
+	sort_dbmap = mmap(0, fsz, PROT_READ, MAP_SHARED, fd, 0);
+	X(sort_dbmap==MAP_FAILED, (close(fd),T(WARN, "mmap failed")), NIL);
+	T(TEST, "mmap ok");
+	sort_field = f;
+	sort_dir = d;
+	T(TEST, "mmapped %p", sort_dbmap);
+	//sort_fn = db_cmp_str;
+	VEC a = sort_vectors[f];
+	//if(field<3)sort_fn = db_cmp_num;
+	DO(a->used, O("%lu ", *(UJ*)(a->data+i*SZ(UJ))));O("\n");
+	qsort(a->data, a->used, SZ(UJ), db_cmp_str);
+	DO(a->used, O("%lu ", *(UJ*)(a->data+i*SZ(UJ))));O("\n");
+	munmap(sort_dbmap,fsz);
+	close(fd);
+
+	R0;}
 
 //! dump index to stdout
 V idx_dump(UJ head) {
@@ -106,24 +146,28 @@ V idx_dump(UJ head) {
 			T(TEST, " %lu:(%lu -> %lu)", i, e->rec_id, e->pos);
 	)
 	if(head&&head<idx_size())T(TEST,"...");
-	TEND();
-}
+	TEND();}
 
-UJ idx_each(IDX_EACH fn, V*arg) {
+UJ idx_each(IDX_EACH fn, V*arg, UI batch_size) {
 	LOG("idx_each")
 	FILE*in;
+	X(batch_size>RECBUFLEN,T(WARN,"requested batch size is larger than internal read buffer"),NIL)
 	xfopen(in, db_file, "r", NIL);
 	UJ rcnt, pos = 0;
 	W((rcnt = fread(buf, SZ_REC, RECBUFLEN, in))) {
-		T(DEBUG, "read %lu records", rcnt);
-		DO(rcnt-1,
-			Rec b = &buf[i];
-			fn(b, arg, pos++,0))
-		fn(&buf[rcnt-1], arg, pos, 1); //< is_last
+		T(TEST, "read %lu records, RECBUFLEN=%d", rcnt, RECBUFLEN);
+		Rec b;I batches=rcnt/batch_size;
+		T(TEST, "whole batches: %d", batches);
+		DO(batches,
+			T(TEST, "batch offset=%d", i*batch_size);
+			b = &buf[i*batch_size];
+			fn(b, arg, pos, batch_size);pos+=batch_size;)
+		I tail=rcnt%batch_size;
+		T(TEST, "batch tail %d records", tail);
+		if(tail){fn(b+batch_size, arg, pos, tail);pos+=tail;}
 	}
 	fclose(in);
-	R pos;
-}
+	R pos;}
 
 UJ idx_page(IDX_EACH fn, V*arg, I page, I page_sz) {
 	LOG("idx_page")
@@ -139,8 +183,7 @@ UJ idx_page(IDX_EACH fn, V*arg, I page, I page_sz) {
 		fn(b, arg, pos++, 0))
 	fn(&buf[rcnt-1], arg, pos, 1); //< is_last
 	fclose(in);
-	R pos;
-}
+	R pos;}
 
 //! rebuild index from scratch
 //! \return # recs loaded, NIL on error
@@ -164,20 +207,18 @@ Z UJ idx_rebuild() {
 	fclose(in);
 
 	idx_sort();
-	// after sorting, it is easy to recover last_id
+	// once sorted, it is easy to recover last_id
 	e = *vec_last(idx->pairs,Pair);
 	idx->last_id = e.rec_id;
 
 	T(INFO, "rebuilt, entries=%lu, last_id=%lu", idx_size(), idx->last_id);
-	R idx_size();
-}
+	R idx_size();}
 
 //! free memory
 Z sz idx_close() {
 	sz mem = vec_destroy(idx->pairs);
 	free(idx);
-	R SZ_IDX+mem;
-}
+	R SZ_IDX+mem;}
 
 //! map index into memory from file
 //! \return number of entries, NIL on error
@@ -199,7 +240,7 @@ Z UJ idx_load() {
 	R idx_size();
 }
 
-//! update index header on disk
+//! sync index header to disk
 UJ idx_update_hdr() {
 	LOG("idx_update_hdr");
 	FILE*out;
@@ -207,20 +248,16 @@ UJ idx_update_hdr() {
 	fwrite(idx, SZ_IDX, 1, out);
 	fclose(out);
 	T(DEBUG, "idx header updated");
-	R0;
-}
+	R0;}
 
 //! get next available id and store it on disk
 UJ next_id() {
 	ID id = ++idx->last_id;
 	idx_update_hdr();
-	R id;
-}
+	R id;}
 
 Z UJ last_id() {
-	R idx->last_id;
-}
-
+	R idx->last_id;}
 
 //! patch record's pos pointer and store it on disk
 UJ idx_update_pos(UJ rec_id, UJ new_pos) {
@@ -236,8 +273,7 @@ UJ idx_update_pos(UJ rec_id, UJ new_pos) {
 	fwrite(i, SZ(Pair), 1, out);
 	fclose(out);
 	T(DEBUG, "rec_id=%lu, idx_pos=%lu, new_pos=%ld", rec_id, idx_pos, new_pos==NIL?-1:(J)new_pos);
-	R new_pos;
-}
+	R new_pos;}
 
 //! add new index element and save
 UJ idx_add(ID rec_id, UJ db_pos) {
@@ -260,9 +296,9 @@ UJ idx_add(ID rec_id, UJ db_pos) {
 	fwrite(&e, SZ(Pair), 1, out); //< write new pair
 	UJ new_fsize = fsize(out);
 	fclose(out);
+
 	T(DEBUG, "appended index entry, old fsize=%lu, new fsize=%lu", old_fsize, new_fsize);
-	R new_fsize;
-}
+	R new_fsize;}
 
 //! perform sample index lookup
 Z UJ idx_peek(ID rec_id){
@@ -272,8 +308,7 @@ Z UJ idx_peek(ID rec_id){
 	X(pos==NIL, T(WARN,"rec_get failed"), NIL); //< no such record
 	T(TRACE, "rec_id=%lu pos=%ld", rec_id, pos);
 	rec_print_dbg(b);
-	R pos;
-}
+	R pos;}
 
 Z sz idx_dbsize() {
 	LOG("idx_dbsize");
@@ -281,8 +316,7 @@ Z sz idx_dbsize() {
 	xfopen(db,db_file,"r",NIL);
 	sz db_sz = fsize(db);
 	fclose(db);
-	R db_sz;
-}
+	R db_sz;}
 
 Z sz idx_fsize() {
 	LOG("idx_fsize");
@@ -290,8 +324,7 @@ Z sz idx_fsize() {
 	xfopen(idxh,idx_file,"r",1);
 	sz fsz = fsize(idxh);
 	fclose(idxh);
-	R fsz;
-}
+	R fsz;}
 
 //! dump db to stdout
 Z UJ db_dump() {
@@ -304,8 +337,7 @@ Z UJ db_dump() {
 		DO(rcnt, rec_print_dbg(&buf[i]);)
 	}
 	fclose(in);
-	R 0;
-}
+	R0;}
 
 //! check the environment and create/rebuild index if necessary
 //! \return NIL if error, record count on success
@@ -344,7 +376,28 @@ Z UJ idx_open() {
 	} else
 		T(INFO, "loaded existing index, idx_size=%lu", idx_count);
 
-	R idx_size();
+	R idx_size();}
+
+ZV idx_reset_sort_vectors() {
+	LOG("idx_reset_sort_vectors");
+	mem_reset("sort_vectors");
+	DO(FTI_FIELD_COUNT+1, //< init sort vectors
+		if(!sort_vectors[i])
+			sort_vectors[i] = vec_init(50,UJ);
+		/*T(TEST, "vec_mem %d vec_size %d idx_size %d", 
+			vec_mem(sort_vectors[i]),
+			vec_size(sort_vectors[i]), idx_size());*/
+		vec_clear(sort_vectors[i]);
+		VEC v = sort_vectors[i];
+		DO(idx_size(), vec_add(v, i)); //< prime with unsorted
+		vec_compact(&sort_vectors[i]);
+		mem_inc("sort_vectors", vec_mem(sort_vectors[i]));
+	)	
+}
+ZV idx_destroy_sort_vectors() {
+	DO(FTI_FIELD_COUNT+1,
+		mem_dec("sort_vectors", vec_destroy(sort_vectors[i]))
+	)
 }
 
 UJ db_init(S d, S i) {
@@ -352,15 +405,26 @@ UJ db_init(S d, S i) {
 	scpy(db_file, d, MAX_FNAME_LEN);
 	scpy(idx_file, i, MAX_FNAME_LEN);
 	UJ idx_size = idx_open();
+
+	idx_reset_sort_vectors();
+
 	T(DEBUG, "database initialized");
-	R SZ_IDX + vec_mem(idx->pairs);
-}
+	R SZ_IDX + vec_mem(idx->pairs);}
 
 sz db_close() {
-	R idx_close();
-}
+	idx_destroy_sort_vectors();
+	R idx_close();}
 
 #ifdef RUN_TESTS_IDX
+
+UJ test_walk(Rec r, V*arg, UJ i, I batch_size) {
+	LOG("test_walk");
+	I*cnt = (I*)arg;
+	*cnt+=batch_size;
+	T(TEST, "rec_id=%lu i=%lu batch=%d", r->rec_id, i, batch_size);
+	R0;
+}
+
 ZI idx_test() {
 	LOG("idx_test");
 	Rec r=malloc(SZ_REC);chk(r,1);
@@ -492,12 +556,67 @@ ZI idx_test() {
 	ASSERT(!scmp(r1->publisher, "Hachette"), "record data should match expected (#2)")
 	ASSERT(scnt(r1->subject)==r1->lengths[3], "r->lengths[] should agree with reality")
 
+
+	DO(100, rec_create(r))
+	ASSERT(idx_size()==103, "bulk add looks good");
+
+	I cnt=0;
+	total = idx_each((IDX_EACH)test_walk, &cnt, 1);
+	T(TEST,"cnt %d", cnt);
+	ASSERT(cnt==103, "idx_each batch=1 works as expected");
+	ASSERT(total==103, "idx_each batch=1 works as expected");
+
+	cnt=0;
+	total = idx_each((IDX_EACH)test_walk, &cnt, 2);
+	T(TEST,"cnt %d", cnt);
+	ASSERT(cnt==103, "idx_each batch=2 works as expected");
+	ASSERT(total==103, "idx_each batch=2 works as expected");
+
+	cnt=0;
+	total = idx_each((IDX_EACH)test_walk, &cnt, 11);
+	T(TEST,"cnt %d", cnt);
+	ASSERT(cnt==103, "idx_each batch=11 works as expected");
+	ASSERT(total==103, "idx_each batch=11 works as expected");
+
+	cnt=0;
+	total = idx_each((IDX_EACH)test_walk, &cnt, 100);
+	T(TEST,"cnt %d", cnt);
+	ASSERT(cnt==103, "idx_each batch=100 works as expected");
+	ASSERT(total==103, "idx_each batch=100 works as expected");
+
+	cnt=0;
+	total = idx_each((IDX_EACH)test_walk, &cnt, idx_size());
+	T(TEST,"cnt %d", cnt);
+	ASSERT(cnt==103, "idx_each batch=idx_size() works as expected");
+	ASSERT(total==103, "idx_each batch=idx_size() works as expected");
+
+	cnt=0;
+	total = idx_each((IDX_EACH)test_walk, &cnt, idx_size()+30);
+	T(TEST,"cnt %d", cnt);
+	ASSERT(cnt==103, "idx_each batch=idx_size()+n works as expected");
+	ASSERT(total==103, "idx_each batch=idx_size()+n works as expected");
+
+
+	T(TEST,"idx_size %d", idx_size());
+
+	ASSERT(1, "database index looks good");
+
+	idx_close();
 	free(r);
 	free(r1);
+	R0;}
+
+I main() {
+	mem_init();
+	db_init("dat/books.dat", "dat/books.idx");
+	//idx_test();
+
+	db_sort(4,0);
+
+	db_close();
+	mem_shutdown();
 	R0;
 }
-
-I main() { R idx_test(); }
 #endif
 
 //:~

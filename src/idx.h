@@ -2,10 +2,16 @@
 
 #pragma once
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+
 #include "adt/vec.h"
 #include "rec.h"
 #include "utl/fio.h"
 #include "utl/clk.h"
+#include "mem.h"
 
 typedef struct idx {
 	ID   last_id;
@@ -28,13 +34,13 @@ ext Pair* idx_get_entry(UJ idx_pos);
 ext UJ    idx_size();
 
 //! idx_each function interface
-typedef UJ(*IDX_EACH)(Rec r, V*arg, UJ i, C is_last);
+typedef UJ(*IDX_EACH)(Rec r, V*arg, UJ i, I batch_size);
 
-//! apply fn() to each record in the database
+//! apply fn() to each record in the database, optionally in batches
 //! \param fn function that takes (Rec r, V* arg, UJ i)
 //! \param arg argument to be passed to each fn() call
 //! \return 0 on success, NIL on error
-ext UJ    idx_each(IDX_EACH fn, V*arg);
+ext UJ    idx_each(IDX_EACH fn, V*arg, UI batch_size);
 ext UJ    idx_page(IDX_EACH fn, V*arg, I page, I page_sz);
 
 ext V     idx_dump(UJ head); // debug
