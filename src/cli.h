@@ -45,6 +45,6 @@ ext V cli_print_page_head();
 ext V cli_print_page_tail();
 ext I cli_get_current_page_id();
 ext I cli_get_current_page_size();
-ext UJ cli_list_rec_each(Rec r, V*arg, UJ i);
+ext UJ cli_list_rec_each(Rec r, V*arg, UJ i, C is_last);
 
 //:~

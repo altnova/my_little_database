@@ -355,7 +355,7 @@ ZI cli_parse_cmd_edit(S q) {
 	
 	R0;}
 
-UJ cli_list_rec_each(Rec r, V*arg, UJ i) {
+UJ cli_list_rec_each(Rec r, V*arg, UJ i, C is_last) {
 	I width = cols * .9;
 	I clen, tlen, gap, line_cnt=0;
 	I title_max = width * .7;
@@ -563,7 +563,7 @@ ZI cli_cmd_rec_del(S arg){
 	ID rec_id = cli_parse_id(arg);
 	P(rec_id==NIL,1)
 	UJ res = rec_delete(rec_id);
-	cli_print_del_res(rec_id, res);
+	cli_print_cmd_result(rec_id, res);
 	R0;}
 
 ZI cli_cmd_rec_edit(S arg){
@@ -576,8 +576,8 @@ ZI cli_cmd_rec_edit(S arg){
 	R0;}
 
 ZI cli_cmd_search_local(S q){
-	fts_search(q, (FTI_SEARCH_CALLBACK)NULL); // TODO
-	fts_dump_result();
+	//fts_search(q, (FTS_CALLBACK)NULL); // TODO
+	//fts_dump_result();
 	R0;}
 
 I cli_init() {
@@ -598,22 +598,21 @@ I main(I ac, S* av) {
 	setlocale(LC_NUMERIC, ""); //< format numbers
 	signal(SIGINT, cli_shutdown); //< catch SIGINT and cleanup nicely
 
+	P(fti_init(),1);
+	P(fts_init(),1);
+
 	cli_init();
 
 	cli_set_cmd_handler('?', cli_cmd_search_local);
 	cli_set_rec_handlers(rec_create, rec_update, rec_set);
+	cli_update_db_info(mem_db_info());
 
 	cli_banner();
 	cli_hint();
 
-	P(fti_init(),1);
-	P(fts_init(),1);
-
-	cli_update_db_info(mem_db_info());
-
 	C q[LINE_BUF];
 
-	//! start main loop
+	//! enter event loop
 	USR_LOOP(usr_input_str(q, current_prompt, "invalid characters"),
 		if(-1==cli_dispatch_cmd(q))break;
 	)
