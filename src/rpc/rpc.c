@@ -30,7 +30,7 @@ MSG rpc_UPD_res(ID rec_id) { MSG m = rpc_alloc(UPD_res, 0, NULL); m->as.UPD_res 
 MSG rpc_ADD_req(SIZETYPE records_cnt, Rec records) { MSG m = rpc_alloc(ADD_req, records_cnt, (V*)records); m->as.ADD_req = (pADD_req){records_cnt}; R m;};
 MSG rpc_ADD_res(ID rec_id) { MSG m = rpc_alloc(ADD_res, 0, NULL); m->as.ADD_res = (pADD_res){rec_id}; R m;};
 MSG rpc_FND_req(UI max_hits, SIZETYPE query_cnt, S query) { MSG m = rpc_alloc(FND_req, query_cnt, (V*)query); m->as.FND_req = (pFND_req){max_hits, query_cnt}; R m;};
-MSG rpc_FND_res(SIZETYPE records_cnt, Rec records) { MSG m = rpc_alloc(FND_res, records_cnt, (V*)records); m->as.FND_res = (pFND_res){records_cnt}; R m;};
+MSG rpc_FND_res(SIZETYPE matches_cnt, FTI_MATCH matches) { MSG m = rpc_alloc(FND_res, matches_cnt, (V*)matches); m->as.FND_res = (pFND_res){matches_cnt}; R m;};
 MSG rpc_LST_req(SIZETYPE paging_cnt, PAGING_INFO paging) { MSG m = rpc_alloc(LST_req, paging_cnt, (V*)paging); m->as.LST_req = (pLST_req){paging_cnt}; R m;};
 MSG rpc_LST_res(SIZETYPE records_cnt, Rec records) { MSG m = rpc_alloc(LST_res, records_cnt, (V*)records); m->as.LST_res = (pLST_res){records_cnt}; R m;};
 //msg_create_fn2(        SRT_req, UI, field_id, UI, dir);
@@ -61,7 +61,7 @@ I rpc_init() {
     MSG_TAIL_OFFSET[UPD_req] = offsetof(pUPD_req,cnt); ITEM_SIZE[UPD_req]=SZ(pRec);
     MSG_TAIL_OFFSET[ADD_req] = offsetof(pADD_req,cnt); ITEM_SIZE[ADD_req]=SZ(pRec);
     MSG_TAIL_OFFSET[FND_req] = offsetof(pFND_req,cnt); ITEM_SIZE[FND_req]=SZ(C);
-    MSG_TAIL_OFFSET[FND_res] = offsetof(pFND_res,cnt); ITEM_SIZE[FND_res]=SZ(pRec);
+    MSG_TAIL_OFFSET[FND_res] = offsetof(pFND_res,cnt); ITEM_SIZE[FND_res]=SZ(pFTI_MATCH);
     MSG_TAIL_OFFSET[LST_req] = offsetof(pLST_req,cnt); ITEM_SIZE[LST_req]=SZ(PAGING_INFO);
     MSG_TAIL_OFFSET[LST_res] = offsetof(pLST_res,cnt); ITEM_SIZE[LST_res]=SZ(pRec);
     //msg_has_tail(SRT_res, pRec)

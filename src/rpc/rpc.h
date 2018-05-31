@@ -1,6 +1,7 @@
 //:~
 //! \file rpc.h \brief rpc api
  #pragma once
+ #include "../fts.h"
 /*!
  * message header
  */
@@ -19,7 +20,7 @@ typedef struct msg_1 { ID rec_id; } __attribute__((packed)) pGET_req; typedef st
 typedef struct msg_2 { ID rec_id; } __attribute__((packed)) pDEL_req; typedef struct msg_12 { ID rec_id; } __attribute__((packed)) pDEL_res;
 typedef struct msg_3 { SIZETYPE cnt; pRec records[0]; } __attribute__((packed)) pUPD_req; typedef struct msg_13 { ID rec_id; } __attribute__((packed)) pUPD_res;
 typedef struct msg_4 { SIZETYPE cnt; pRec records[0]; } __attribute__((packed)) pADD_req; typedef struct msg_14 { ID rec_id; } __attribute__((packed)) pADD_res;
-typedef struct msg_5 { UI max_hits; SIZETYPE cnt; S query[0]; } __attribute__((packed)) pFND_req; typedef struct msg_15 { SIZETYPE cnt; pRec records[0]; } __attribute__((packed)) pFND_res;
+typedef struct msg_5 { UI max_hits; SIZETYPE cnt; S query[0]; } __attribute__((packed)) pFND_req; typedef struct msg_15 { SIZETYPE cnt; pFTI_MATCH matches[0]; } __attribute__((packed)) pFND_res;
 typedef struct msg_6 { SIZETYPE cnt; pPAGING_INFO pagination[0]; } __attribute__((packed)) pLST_req; typedef struct msg_16 { SIZETYPE cnt; pRec records[0]; } __attribute__((packed)) pLST_res;
 //mtype( 7, SRT,     _2(tUI(field_id), tUI(dir)),
 //                   _3(tUI(page_num), tUI(out_of), tARR(pRec,records)))
@@ -68,6 +69,7 @@ typedef struct {
 /*!
  * message factory
  */
+typedef MSG(*RPC_STREAM_FN)(SIZETYPE cnt, V*items);
 ext MSG rpc_HEY_req(SIZETYPE username_cnt, S username);
 ext MSG rpc_HEY_res(SIZETYPE info_cnt, DB_INFO info);
 ext MSG rpc_GET_req(ID rec_id);
@@ -79,7 +81,7 @@ ext MSG rpc_UPD_res(ID rec_id);
 ext MSG rpc_ADD_req(SIZETYPE records_cnt, Rec records);
 ext MSG rpc_ADD_res(ID rec_id);
 ext MSG rpc_FND_req(UI max_hits, SIZETYPE query_cnt, S query);
-ext MSG rpc_FND_res(SIZETYPE records_cnt, Rec records);
+ext MSG rpc_FND_res(SIZETYPE matches_cnt, FTI_MATCH matches);
 ext MSG rpc_LST_req(SIZETYPE pagination_cnt, PAGING_INFO pagination);
 ext MSG rpc_LST_res(SIZETYPE records_cnt, Rec records);
 //msg_create_proto2(        SRT_req, _arg(UI,field_id), _arg(UI,dir));
@@ -88,8 +90,8 @@ ext MSG rpc_BYE_req();
 ext MSG rpc_BYE_res();
 ext MSG rpc_SAY_req(SIZETYPE msg_cnt, S msg);
 ext MSG rpc_SAY_res(SIZETYPE msg_cnt, S msg);
-ext MSG rpc_ERR_req(UI errno, SIZETYPE msg_cnt, S msg);
-ext MSG rpc_ERR_res(UI errno, SIZETYPE msg_cnt, S msg);
+ext MSG rpc_ERR_req(UI err_id, SIZETYPE msg_cnt, S msg);
+ext MSG rpc_ERR_res(UI err_id, SIZETYPE msg_cnt, S msg);
 /*!
  * public methods
  */

@@ -12,6 +12,7 @@
 
 #define INCL_GLOBAL_HEADER ??=include "../___.h"
 #define INCL_OWN_HEADER ??=include "rpc.h"
+#define INCL_FTS_HEADER ??=include "../fts.h"
 
 #define INCL_STDLIB ??=include <stdlib.h>
 #define INCL_STRING ??=include <string.h>

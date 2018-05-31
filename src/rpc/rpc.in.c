@@ -39,7 +39,7 @@ msg_create_fn1(        UPD_res, ID, rec_id);
 msg_create_fn_w_tail0( ADD_req, Rec, records);
 msg_create_fn1       ( ADD_res, ID, rec_id);
 msg_create_fn_w_tail1( FND_req, UI, max_hits, S, query);
-msg_create_fn_w_tail0( FND_res, Rec, records);
+msg_create_fn_w_tail0( FND_res, FTI_MATCH, matches);
 msg_create_fn_w_tail0( LST_req, PAGING_INFO, paging);
 msg_create_fn_w_tail0( LST_res, Rec, records);
 //msg_create_fn2(        SRT_req, UI, field_id, UI, dir);
@@ -76,7 +76,7 @@ I rpc_init() {
     msg_has_tail(UPD_req, pRec)
     msg_has_tail(ADD_req, pRec)
     msg_has_tail(FND_req, C)
-    msg_has_tail(FND_res, pRec)
+    msg_has_tail(FND_res, pFTI_MATCH)
     msg_has_tail(LST_req, PAGING_INFO)
     msg_has_tail(LST_res, pRec)
     //msg_has_tail(SRT_res, pRec)
@@ -134,6 +134,7 @@ Z MSG rpc_alloc(I m_type, SIZETYPE tail_cnt, V*tail_src) {
 
 PRAGMA_ONCE
 
+INCL_FTS_HEADER
 /*!
  * message header
  */
@@ -167,7 +168,7 @@ mtype( 4, ADD,     _1(tARR(pRec,records)),
                    _1(tID(rec_id)))
 
 mtype( 5, FND,     _2(tUI(max_hits), tARR(S,query)),
-                   _1(tARR(pRec,records)))
+                   _1(tARR(pFTI_MATCH,matches)))
 
 mtype( 6, LST,     _1(tARR(pPAGING_INFO,pagination)),
                    _1(tARR(pRec,records)))
@@ -228,7 +229,7 @@ typedef struct {
 /*!
  * message factory
  */
-
+typedef MSG(*RPC_STREAM_FN)(SIZETYPE cnt, V*items);
 msg_create_proto_w_tail0( HEY_req, _tail(S,username));
 msg_create_proto_w_tail0( HEY_res, _tail(DB_INFO,info));
 msg_create_proto1(        GET_req, _arg(ID,rec_id));
@@ -240,7 +241,7 @@ msg_create_proto1(        UPD_res, _arg(ID,rec_id));
 msg_create_proto_w_tail0( ADD_req, _tail(Rec,records));
 msg_create_proto1       ( ADD_res, _arg(ID,rec_id));
 msg_create_proto_w_tail1( FND_req, _arg(UI,max_hits), _tail(S,query));
-msg_create_proto_w_tail0( FND_res, _tail(Rec,records));
+msg_create_proto_w_tail0( FND_res, _tail(FTI_MATCH,matches));
 msg_create_proto_w_tail0( LST_req, _tail(PAGING_INFO,pagination));
 msg_create_proto_w_tail0( LST_res, _tail(Rec,records));
 //msg_create_proto2(        SRT_req, _arg(UI,field_id), _arg(UI,dir));
@@ -249,8 +250,8 @@ msg_create_proto0(        BYE_req);
 msg_create_proto0(        BYE_res);
 msg_create_proto_w_tail0( SAY_req, _tail(S,msg));
 msg_create_proto_w_tail0( SAY_res, _tail(S,msg));
-msg_create_proto_w_tail1( ERR_req, _arg(UI,errno), _tail(S,msg));
-msg_create_proto_w_tail1( ERR_res, _arg(UI,errno), _tail(S,msg));
+msg_create_proto_w_tail1( ERR_req, _arg(UI,err_id), _tail(S,msg));
+msg_create_proto_w_tail1( ERR_res, _arg(UI,err_id), _tail(S,msg));
 /*!
  * public methods
  */
