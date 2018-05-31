@@ -24,7 +24,7 @@ UJ rec_get_idx_pos(ID rec_id) {
 
 //! substring search in a given field \return 1 if match found
 C rec_search_txt_field(V*r, I fld, S needle) {
-	S haystack = (S)r + rec_field_offsets[fld];
+	S haystack = (S)r + rec_field_offsets[fld+1];
 	R !!sstr(haystack, needle);
 }
 
@@ -130,7 +130,7 @@ UJ rec_update(Rec r) {
 //! update field value
 V rec_set(Rec r, I fld, V* val) {
 	LOG("rec_set");
-	I offset = rec_field_offsets[fld];
+	I offset = rec_field_offsets[fld+1]; //< 0 is reserved for rec_id;
 	I len = fld<2?SZ(H)-1:MIN(csv_max_field_widths[fld],scnt(val));
 	if(fld>=2)r->lengths[fld-2]=len;
 	mcpy(((V*)r)+offset, val, len+1);
