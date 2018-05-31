@@ -34,7 +34,7 @@
 #define FTS_MAX_HITS 15
 
 //! network config
-#define NET_STREAM_BUF 4	/*< stream buffer size for LST and FND */
+#define NET_STREAM_BUF_SZ 4	/*< stream buffer size for LST and FND */
 #define NET_PORT 5000		/*< default tcp port */
 
 typedef UJ ID;				/*< rec_id type alias */
