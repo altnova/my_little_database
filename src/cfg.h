@@ -36,6 +36,7 @@
 //! network config
 #define NET_STREAM_BUF_SZ 4	/*< stream buffer size for LST and FND */
 #define NET_PORT 5000		/*< default tcp port */
+#define NET_START_STREAM 0xffffffff /*< magic value for stream header packet uint_max */
 
 typedef UJ ID;				/*< rec_id type alias */
 
@@ -57,7 +58,7 @@ typedef struct record {
    UH lengths[4];
 } __attribute__((packed)) pRec;
 typedef pRec bufRec[RECBUFLEN];
-typedef pRec* Rec; //< use this one
+typedef pRec* Rec;
 #define SZ_REC SZ(pRec)
 
 typedef struct db_info {
@@ -65,7 +66,7 @@ typedef struct db_info {
 	UJ total_words;
 	UJ total_mem;
 } __attribute__((packed)) pDB_INFO;
-typedef pDB_INFO* DB_INFO; //< use this one
+typedef pDB_INFO* DB_INFO;
 #define SZ_DB_INFO SZ(pDB_INFO)
 
 enum rec_fields { fld_pages, fld_year,   fld_publisher,
@@ -77,6 +78,7 @@ ZS rec_field_names[] = {"pages", "year",   "publisher",
 ZI csv_max_field_widths[] = { 4, 4, 100, 200, 50, 2000 };
 
 ZI rec_field_offsets[] = {
+	offsetof(pRec, rec_id),
 	offsetof(pRec, pages), offsetof(pRec, year), offsetof(pRec, publisher),
 	offsetof(pRec, title), offsetof(pRec, author), offsetof(pRec, subject)
 };
