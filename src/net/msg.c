@@ -8,8 +8,7 @@
 ON_MSG_CALLBACK on_msg;
 
 UI msg_size(MSG m) {
-	R SZ_MSG_HDR + m->hdr.len;
-}
+	R SZ_MSG_HDR + m->hdr.len;}
 
 V msg_hdr_dump(MSG_HDR *h) {
 	LOG("msg_hdr_dump");
@@ -19,27 +18,30 @@ V msg_hdr_dump(MSG_HDR *h) {
 }
 
 I msg_is_err(MSG_HDR *h) {
-	R h->type==50||h->type==150;
-}
-
-I msg_is_req(MSG_HDR *h) {
-	R h->type<100; //TODO
-}
+	R h->type==50||h->type==150;}
 
 I msg_send(I p, MSG m) {
 	LOG("msg_send");
 	snd(p, m, msg_size(m));
 	free(m);
-	R0;
-}
+	R0;}
+
+V msg_stream(V*obj,UI osz,I d,UJ i,RPC_STREAM_FN rpc_fn){
+	LOG("nsr_stream");
+	V*buf=tcp_buf(d, osz * NET_STREAM_BUF_SZ);
+	I pos = i%NET_STREAM_BUF_SZ;
+	if(i&&!pos){
+		msg_send(d, rpc_fn(NET_STREAM_BUF_SZ, buf));
+		T(TEST, "flush at %lu", i);}
+	mcpy(buf + osz * pos, obj, osz);
+	T(TEST, "buffered obj%lu -> pos=%d", i,pos);}
 
 I msg_send_err(I p, I err_id, S msg) {
 	LOG("msg_err");
 	T(WARN, "send err (%d) %s", err_id, msg);
 	MSG m = rpc_ERR_res((UI)err_id, scnt(msg), msg);
 	msg_send(p, m);
-	R0;
-}
+	R0;}
 
 I msg_recv(I d) {
 	LOG("recv_msg");
@@ -66,16 +68,13 @@ I msg_recv(I d) {
 	R r;}
 
 V msg_set_callback(ON_MSG_CALLBACK fn) {
-	on_msg = fn;
-}
+	on_msg = fn;}
 
 I msg_shutdown() {
-	R0;
-}
+	R0;}
 
 I msg_init() {
-	R rpc_init();
-}
+	R rpc_init();}
 
 #ifdef RUN_TESTS_MSG
 

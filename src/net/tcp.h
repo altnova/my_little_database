@@ -27,6 +27,7 @@ typedef pQ* Q;
 
 #define CN              1024 //< max connections
 
+typedef V(*TCP_TIMER_FN)(UJ i);
 typedef I(*STDIN_CALLBACK)(I d,UI strlen,S str);
 ext I  tcp_stdin(I d, STDIN_CALLBACK fn);
 
@@ -53,6 +54,7 @@ ext I  tcp_init();
 ext I  tcp_shutdown();
 ext I  tcp_serve();
 ext I  tcp_active_conns();
+ext V  tcp_set_timer(J t, TCP_TIMER_FN fn);
 ext V* tcp_buf(I d,I n);
 
 //:~

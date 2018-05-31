@@ -9,8 +9,11 @@
 #define LSTN_BACKLOG    1000
 
 ZI sig=0; Z Q queues[CN];Z V*buffers[CN];
-Z  fd_set mr,mw; I(*df[CN])();
+Z  fd_set mr,mw; Z I(*df[CN])();
 ZI D1,D2,ACTIVE_CONNS=0;
+ZJ timer = 1500;
+Z  TCP_TIMER_FN timer_fn;
+Z UJ ctr=0;
 
 Z V Q0(I i){Q q=queues[i];queues[i]=q->next,free(q);}
 Z Q Q1(I i){Q q=(Q)calloc(SZ(pQ),1);R q->size=0,q->obj=0,queues[i]=q;}
@@ -92,39 +95,43 @@ I  poke(){LOG("poke");
 ZJ usec(){struct timeval tv;R gettimeofday(&tv,0),1000000*(J)(tv.tv_sec-10957*86400)+tv.tv_usec;}
 
 I tcp_active_conns() {
-	R ACTIVE_CONNS;
-}
+	R ACTIVE_CONNS;}
 
 V* tcp_buf(I d,I n) {
 	LOG("tcp_buf");
 	I i=hget(d);
 	V*b=buffers[i];
-	if(b&&!n){free(b);T(TEST,"freed tcpbuf %d",d);R0;}
+	if(b&&!n){free(b);buffers[i]=0;T(TEST,"freed tcpbuf %d",d);R0;}
 	P(b,b)
 	buffers[i]=malloc(n);chk(buffers[i],0);
 	R buffers[i];}
 
 I tcp_select(struct timeval tv) {
 	tv.tv_sec=(I)1,tv.tv_usec=(I)0;
-	R select(D2,&mr,&mw,0,&tv);
-}
+	R select(D2,&mr,&mw,0,&tv);}
 
 I tcp_trigger_reads() {
 	I d; LOG("tcp_trigger_reads");
 	DO(D1,if(d=dd[i],-1!=d&&FD_ISSET(d,&mr))df[i](d);)
 	R1;}
 
+V tcp_set_timer(J t, TCP_TIMER_FN fn) {
+	timer = t; ctr = 0;
+	timer_fn = fn;}
+
 I tcp_serve() {
-	struct timeval tv; J t = 1500;
+	LOG("tcp_serve");
+	struct timeval tv;
 	I d,u=1000000;J j=usec(),j1=usec();
 	W(ACTIVE_CONNS){
 		if(sig)goto DONE;
-
 		j=usec();
 		if(j>=j1){
-		do j1+=t?t*(J)1000:u;W(j>j1);}
+			if(timer_fn)timer_fn(ctr++);
+		do j1+=timer?timer * (J)1000:u;W(j>j1);}
+
 		if(poke(),j=j1-j,tv.tv_sec=(I)(j/u),tv.tv_usec=(I)(j%u),
-			d=select(D2,&mr,&mw,0,&tv),d>0){
+			d=select(D2,&mr,&mw,0,&tv),d>0){//T(TEST,"tick");
 			DO(D1,if(d=dd[i],-1!=d&&FD_ISSET(d,&mw))queues[i]?qsnd(d):0;)
 			DO(D1,if(d=dd[i],-1!=d&&FD_ISSET(d,&mr))df[i](d))}}
 	DONE:
