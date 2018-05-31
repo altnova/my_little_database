@@ -26,6 +26,23 @@ I msg_send(I p, MSG m) {
 	free(m);
 	R0;}
 
+V* msg_stream(I d,RPC_STREAM_FN rpc_fn){
+	LOG("msg_stream");
+	MSG m = rpc_fn(0,NULL); //< empty envelope
+	I tail_offset = rpc_tail_offset(m->hdr.type);
+	SIZETYPE el_size = rpc_item_size(m->hdr.type);
+	I buf_prefix_size = SZ_MSG_HDR + SZ(SIZETYPE);
+	V*buf=sbuf(d, buf_prefix_size + el_size * NET_STREAM_BUF_SZ);
+	P(!buf,(free(m),NULL)) //< locked
+	SIZETYPE*tail_cnt = (SIZETYPE*)(((V*)&m->as)+tail_offset);
+	mcpy(buf,m,buf_prefix_size);
+	*tail_cnt=NET_START_STREAM; //< set magic
+	snd(d, m, msg_size(m));
+	sbc1(d,buf_prefix_size); //< init buf counter
+	T(TEST, "start stream type %d for %d", m->hdr.type, d);
+	R buf+buf_prefix_size;} // first usable location
+
+/*
 V msg_stream(V*obj,UI osz,I d,UJ i,RPC_STREAM_FN rpc_fn, C is_last){
 	LOG("nsr_stream");
 	V*buf=tcp_buf(d, osz * NET_STREAM_BUF_SZ);
@@ -43,6 +60,7 @@ V msg_stream(V*obj,UI osz,I d,UJ i,RPC_STREAM_FN rpc_fn, C is_last){
 		tcp_buf(d,0); //< release buffer
 	}
 }
+*/
 
 I msg_send_err(I p, I err_id, S msg) {
 	LOG("msg_err");
@@ -50,6 +68,10 @@ I msg_send_err(I p, I err_id, S msg) {
 	MSG m = rpc_ERR_res((UI)err_id, scnt(msg), msg);
 	msg_send(p, m);
 	R0;}
+
+I msg_is_stream_head(pMSG*m){
+	R NET_START_STREAM==*(SIZETYPE*)((V*)m);
+}
 
 I msg_recv(I d) {
 	LOG("recv_msg");
@@ -63,6 +85,10 @@ I msg_recv(I d) {
 	pMSG *m = malloc(h.len); chk(m,-1);
 	n=rcv(d,m,h.len);
 	T(TRACE, "rcvd payload %d bytes, expected %d", n, h.len);
+
+	if(msg_is_stream_head(m)) {
+		T(TEST, "start STREAM");
+	}
 
 	if(msg_is_err(&h)) {
 		pERR_res *e = (pERR_res*)m;

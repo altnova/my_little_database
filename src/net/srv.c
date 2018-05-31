@@ -23,8 +23,7 @@ ZI srv_bind_stdin(I d) {
 
 V srv_set_stdin_callback(STDIN_CALLBACK fn) {
 	stdin_fn = fn;
-	sd1(0,srv_bind_stdin);
-}
+	sd1(0,srv_bind_stdin);}
 
 I srv_listen(I addr, I port, RECV_CALLBACK fn) {
 	LOG("srv_listen");
@@ -44,8 +43,7 @@ V srv_shutdown() {
 	LOG("srv_shutdown");
 	msg_shutdown();
 	tcp_shutdown();
-	exit(0);
-}
+	exit(0);}
 
 I srv_init() {
 	msg_init();
@@ -65,8 +63,7 @@ ZI srv_on_msg(I d, MSG_HDR *h, pMSG *m) {
 		T(TEST, "sent SAY %d bytes", msg_size(m));
 		//msg_hdr_dump(&m->hdr);
 	}
-	R0;	
-}
+	R0;}
 
 I srv_test_stdin(I d, UI l, S str) {
 	LOG("srv_stdin_callback");

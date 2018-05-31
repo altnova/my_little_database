@@ -18,7 +18,8 @@ ext UI  msg_size(MSG m);
 ext V   msg_set_callback(ON_MSG_CALLBACK fn);
 ext V   msg_hdr_dump(MSG_HDR *h);
 ext I   msg_is_err(MSG_HDR *h);
-ext V   msg_stream(V*obj,UI osz,I d,UJ i,RPC_STREAM_FN rpc_fn, C is_last);
+//ext V   msg_stream(V*obj,UI osz,I d,UJ i,RPC_STREAM_FN rpc_fn, C is_last);
+ext V*  msg_stream(I d,RPC_STREAM_FN rpc_fn);
 
 //:~
 
