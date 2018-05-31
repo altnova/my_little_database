@@ -83,22 +83,18 @@ ZI cmp_qsort(const V*a, const V*b) {
 	T(TRACE, "%ld\n", r);
 	R(I)r;}
 
+ZV*db_mmap_get_field(const V*a){
+	UJ x = *(UJ*)a;
+	V*rx = sort_dbmap + x * SZ_REC;
+	R rx+rec_field_offsets[sort_field];}
+
 //! string comparator for db_sort()
 ZI db_cmp_str(const V*a, const V*b){
 	LOG("db_cmp_str");
-	UJ x = *(UJ*)a;
-	UJ y = *(UJ*)b;
-	T(TEST, "xy %lu %lu", x, y);
-	V*rx = sort_dbmap + x * SZ_REC;
-	V*ry = sort_dbmap + y * SZ_REC;
-	//T(TEST, "rx ry %p %p", rx, ry);
-	//T(TEST, "rx ry %lu %lu", *(UJ*)rx, *(UJ*)ry);
-	S fx = (S)(rx+rec_field_offsets[sort_field]);
-	S fy = (S)(ry+rec_field_offsets[sort_field]);
-	//T(TEST, "fx fy %s %s", fx, fy);
-	//T(TEST, "comparing (%s) (%s)\n",fx,fy);
-	I r = strcmp(fx,fy);
-	R r;}
+	S x = (S)db_mmap_get_field(a);
+	S y = (S)db_mmap_get_field(b);
+	//T(TEST, "comparing (%s) (%s)\n",x,y);
+	R strcmp(x,y);}
 
 //! sort index by rec_id
 ZV idx_sort() {
@@ -114,24 +110,17 @@ UJ db_sort(I f, C d){
 	FILE*db;xfopen(db, db_file, "r", NIL);
 	sz fsz = fsize(db);
 	fclose(db);
-
 	I fd = open(db_file, O_RDONLY, 0);
-	T(TEST, "fd %d fsz %d", fd, fsz);
 	sort_dbmap = mmap(0, fsz, PROT_READ, MAP_SHARED, fd, 0);
 	X(sort_dbmap==MAP_FAILED, (close(fd),T(WARN, "mmap failed")), NIL);
-	T(TEST, "mmap ok");
 	sort_field = f;
 	sort_dir = d;
-	T(TEST, "mmapped %p", sort_dbmap);
 	//sort_fn = db_cmp_str;
 	VEC a = sort_vectors[f];
 	//if(field<3)sort_fn = db_cmp_num;
-	DO(a->used, O("%lu ", *(UJ*)(a->data+i*SZ(UJ))));O("\n");
 	qsort(a->data, a->used, SZ(UJ), db_cmp_str);
-	DO(a->used, O("%lu ", *(UJ*)(a->data+i*SZ(UJ))));O("\n");
 	munmap(sort_dbmap,fsz);
 	close(fd);
-
 	R0;}
 
 //! dump index to stdout
@@ -237,8 +226,7 @@ Z UJ idx_load() {
 	T(INFO, "%lu bytes, %lu entries, capacity=%lu, last_id=%lu", \
 		size, p->used, p->size, idx->last_id);
 
-	R idx_size();
-}
+	R idx_size();}
 
 //! sync index header to disk
 UJ idx_update_hdr() {
@@ -611,7 +599,12 @@ I main() {
 	db_init("dat/books.dat", "dat/books.idx");
 	//idx_test();
 
+	I srt_fld = 4;
+	VEC a = sort_vectors[4];
+	//if(field<3)sort_fn = db_cmp_num;
+	DO(a->used, O("%lu ", *(UJ*)(a->data+i*SZ(UJ))));O("\n");
 	db_sort(4,0);
+	DO(a->used, O("%lu ", *(UJ*)(a->data+i*SZ(UJ))));O("\n");
 
 	db_close();
 	mem_shutdown();
