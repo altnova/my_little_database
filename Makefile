@@ -33,7 +33,7 @@ srv:
 	make -C src/net srv
 
 idx: clean
-	$(CC) -DRUN_TESTS_IDX $(CCOPTS) -o bin/idx $(COMMON) src/alg/bin.c src/adt/vec.c src/idx.c src/utl/fio.c src/rec.c
+	$(CC) -DRUN_TESTS_IDX $(CCOPTS) -o bin/idx $(COMMON) src/mem.c src/adt/hsh.c src/alg/bin.c src/adt/vec.c src/idx.c src/utl/fio.c src/rec.c
 	rm -f dat/test.dat dat/test.idx
 	$(VLG) ./bin/idx
 
