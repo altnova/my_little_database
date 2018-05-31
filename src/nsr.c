@@ -11,12 +11,17 @@ ZV nyi(I d) {
 
 ZV nsr_fts_each(FTI_MATCH m, V*conn, UI i, C is_last) {
 	LOG("nsr_fts_each");
-	msg_stream(m, SZ_FTI_MATCH, *(I*)conn, i, (RPC_STREAM_FN)rpc_FND_res, is_last);}
+//	msg_stream(m, SZ_FTI_MATCH, *(I*)conn, i, (RPC_STREAM_FN)rpc_FND_res, is_last);
+}
 
-Z UJ nsr_rec_each(Rec r, V*conn, UJ i, C is_last) {
+Z UJ nsr_rec_each(Rec r, V*buf, UJ i, C is_last) {
 	LOG("nsr_rec_each");
-	msg_stream(r, SZ_REC, *(I*)conn, i, (RPC_STREAM_FN)rpc_LST_res, is_last);
-	R0;}
+	I pos = i%NET_STREAM_BUF_SZ;
+	mcpy(buf+pos, r, SZ_REC);
+	sbc1()
+//	msg_stream(r, SZ_REC, *(I*)conn, i, (RPC_STREAM_FN)rpc_LST_res, is_last);
+	R0;
+}
 
 ZI nsr_on_msg(I d, MSG_HDR *h, pMSG *m) {
 	LOG("nsr_on_msg");
@@ -66,6 +71,8 @@ ZI nsr_on_msg(I d, MSG_HDR *h, pMSG *m) {
     	CS(LST_req,
     		;pLST_req* m_lst = (pLST_req*)m;
     		PAGING_INFO p = m_lst->pagination; // page_num, per_page, sort_by, sort_dir
+    		V*buf = msg_stream(d, (RPC_STREAM_FN)rpc_LST_res); // send stream start
+    		X(!buf,msg_send_err(d,ERR_CMD_FAILED,"send buffer is locked"),-1);
 			cnt = idx_page(nsr_rec_each, &d, p->page_num, p->per_page);
     	)
     	CS(FND_req,
