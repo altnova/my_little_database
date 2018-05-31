@@ -36,8 +36,7 @@ ext V cli_lf(); //< linefeed
 ext V cli_enter_edit_mode(S prompt, S mode, REC_FN rec_fn);
 ext ID cli_parse_id(S s);
 ext V cli_rec_print(Rec r);
-ext V cli_print_del_res(ID rec_id, UJ res);
-ext V cli_print_edit_res(ID rec_id, UJ res);
+ext V cli_print_cmd_result(ID rec_id, UJ res);
 ext V cli_print_editor_head();
 ext I cli_cmd_rec_show(S arg);
 ext I cli_cmd_rec_add(S arg);

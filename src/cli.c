@@ -103,7 +103,7 @@ ZC fldbuf[FLDMAX];
 ZI       editing = 0;
 Z Rec    edit_buf;
 Z REC_FN edit_fn;
-Z S      edit_mode;
+Z S      edit_mode="delete";
 
 //! rec handlers
 Z REC_FN  rec_create_fn;
@@ -196,7 +196,7 @@ ZV cli_help_db() {
 ZV cli_usage() {
 	cli_banner();
 	C buf[100];
-	I len = snprintf(buf,100, "%s:%d", hostname, prt);
+	I len = snprintf(buf,100, "tcp://%s:%d", hostname, prt);
 	TB();GREEN("index server:");CH(" ",53-13-len);
 		COLOR_START(C_BLUE);O("%s", buf);COLOR_END();
 	NL();NL();
@@ -313,9 +313,13 @@ ZV cli_leave_edit_mode() {
 	editing = 0;
 	cli_set_prompt(CLI_PROMPT);}
 
-V cli_print_edit_res(ID rec_id, UJ res) {
+V cli_print_cmd_result(ID rec_id, UJ res) {
 	if(res==NIL-1)R; // pending server response
-	NL();TB();O("record %lu: %s %s", rec_id, edit_mode, (res==NIL)?"fail":"ok");NL();NL();}
+	NL();TB();TB();
+	if(res==NIL)RED("[!] ");
+	O("record %lu: ", rec_id);COLOR_START_BOLD(C_YELL);O("%s %s", edit_mode, (res==NIL)?"fail":"ok");
+	COLOR_END();NL();NL();
+	edit_mode="delete";}
 
 ZI cli_parse_cmd_edit(S q) {
 	LOG("cli_parse_cmd_edit");
@@ -326,11 +330,11 @@ ZI cli_parse_cmd_edit(S q) {
 	//if(qlen>1&&q[qlen-1]==10)q[qlen-1]=0;qlen--; // strip LF
 	if(qlen==1&&*q=='='){
 		UJ res = edit_fn(edit_buf);
-		cli_print_edit_res(edit_buf->rec_id, res);
+		cli_print_cmd_result(edit_buf->rec_id, res);
 		cli_leave_edit_mode();
 		R1;}
 	if(qlen==1&&*q=='\\'){
-		NL();TB();O("record %lu: %s %s", edit_buf->rec_id, edit_mode, "canceled");NL();NL();
+		NL();TB();O("record %lu: %s %s", edit_buf->rec_id, edit_mode, "cancelled");NL();NL();
 		cli_leave_edit_mode();
 		R1;}
 	S colon_pos = schr(q, ':');
@@ -500,10 +504,6 @@ I cli_dispatch_cmd(S cmd) {
 	r = cli_parse_cmd_main(cmd);
 	WIPE(cmd, scnt(cmd));
 	R r;}
-
-V cli_print_del_res(ID rec_id, UJ res) {
-	NL();TB();O("record %lu: delete %s", rec_id, (res==NIL)?"failed":"ok");NL();NL();
-}
 
 I cli_get_current_page_id() {
 	R current_page_id;

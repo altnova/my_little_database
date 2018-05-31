@@ -57,6 +57,7 @@ I ncl_cmd_edit(S arg) { // edit
 
 UJ ncl_cmd_add_send(Rec r) {
 	LOG("ncl_cmd_add_send");
+	streaming=1;
 	msg_send(c, rpc_ADD_req(1, r));
 	R NIL-1;}//< defer ok
 
@@ -137,18 +138,19 @@ ZI ncl_on_msg(I d, MSG_HDR *h, pMSG *m) {
 		)
 		CS(UPD_res,;
 			pUPD_res *m_upd = (pUPD_res*)m;
-			cli_print_edit_res(m_upd->rec_id,0);
+			cli_print_cmd_result(m_upd->rec_id,0);
 			streaming=0;
 			cli_prompt();
 		)
 		CS(DEL_res,;
 			pDEL_res *m_del = (pDEL_res*)m;
-			cli_print_del_res(m_del->rec_id,0);
+			cli_print_cmd_result(m_del->rec_id,0);
 			streaming=0;
 		)
 		CS(ADD_res,;
 			pADD_res *m_add = (pADD_res*)m;
-			cli_print_edit_res(m_add->rec_id,0);
+			cli_print_cmd_result(m_add->rec_id,0);
+			streaming=0;
 		)
 		CS(LST_res,;
 			pLST_res *m_lst = (pLST_res*)m;
