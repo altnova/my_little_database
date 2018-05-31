@@ -489,7 +489,7 @@ ZI cli_parse_cmd_main(S q) {
 V cli_set_edit_buf(Rec r) {
 	mcpy(edit_buf,r,SZ_REC);}
 
-V cli_set_db_info(DB_INFO di) {
+V cli_update_db_info(DB_INFO di) {
 	mcpy(&db_info,di,SZ_DB_INFO);}
 
 I cli_dispatch_cmd(S cmd) {
@@ -499,19 +499,16 @@ I cli_dispatch_cmd(S cmd) {
 		if(!r)
 			cli_print_editor_head();
 		WIPE(cmd, scnt(cmd));
-		R0;
-	}
+		R0;}
 	r = cli_parse_cmd_main(cmd);
 	WIPE(cmd, scnt(cmd));
 	R r;}
 
 I cli_get_current_page_id() {
-	R current_page_id;
-}
+	R current_page_id;}
 
 I cli_get_current_page_size() {
-	R CLI_PAGE_SIZE;
-}
+	R CLI_PAGE_SIZE;}
 
 #ifndef CLI_STANDALONE
 I cli_cmd_rec_show(S arg){
@@ -588,8 +585,7 @@ I cli_init() {
 	edit_buf = (Rec)calloc(1,SZ_REC);chk(edit_buf,1);
 	T(TEST,"init complete");
 	cli_set_prompt(CLI_PROMPT);
-	R0;
-}
+	R0;}
 
 V cli_shutdown(I itr) {
 	free(edit_buf);
@@ -613,7 +609,7 @@ I main(I ac, S* av) {
 	P(fti_init(),1);
 	P(fts_init(),1);
 
-	cli_set_db_info(mem_db_info());
+	cli_update_db_info(mem_db_info());
 
 	C q[LINE_BUF];
 

@@ -126,7 +126,7 @@ ZI ncl_on_msg(I d, MSG_HDR *h, pMSG *m) {
 		)
 		CS(HEY_res,;
 			pHEY_res *m_hey = (pHEY_res*)m;
-			cli_set_db_info((DB_INFO)m_hey->db_info);
+			cli_update_db_info((DB_INFO)m_hey->db_info);
 			cli_init(); //< will only initialize once
 		)
 		CS(GET_res,;

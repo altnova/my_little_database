@@ -28,7 +28,7 @@ ext I cli_set_cmd_handler(C cmd, CLI_CMD fn);
 ext V cli_set_rec_handlers(REC_FN create_fn, REC_FN update_fn, REC_SET_FN set_fn);
 ext V cli_set_edit_buf(Rec r);
 ext I cli_dispatch_cmd(S cmd);
-ext V cli_set_db_info(DB_INFO di);
+ext V cli_update_db_info(DB_INFO di);
 ext S cli_get_prompt();
 ext V cli_prompt();
 ext I cli_warn(I err_id, S msg);
