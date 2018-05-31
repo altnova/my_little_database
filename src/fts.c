@@ -114,7 +114,7 @@ ZV fts_intersect(I field) {
 	if(TRACE_NWAY)TEND();
 }
 
-I fts_search(S query, FTI_SEARCH_CALLBACK fn) {
+sz fts_search(S query, UI max_hits, V*arg, FTS_CALLBACK fn) {
 	LOG("fts_search");
 	I qlen = scnt(query);
 	lcse(query,qlen); //< lowercase
