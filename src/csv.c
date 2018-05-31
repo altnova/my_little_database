@@ -15,25 +15,23 @@ Z UJ currline;
 ZV rec_print(Rec r){
 	LOG("rec_print");
 	T(DEBUG, "id=(%lu) pages=(%d) year=(%d) title=(%s) author=(%s)",
-		r->rec_id, r->pages, r->year, r->title, r->author);
-}
+		r->rec_id, r->pages, r->year, r->title, r->author);}
 
 ZV recbuf_flush(){
 	LOG("recbuf_flush");
 	fwrite(recbuf, SZ_REC, recbufpos, outfile);	//< flush current buffer to outfile
 	T(DEBUG, "flushed %d records", recbufpos);
-	recbufpos = 0; //< rewind buffer
-}
+	recbufpos = 0; //< rewind buffer}
 
 Z ID next_id(){R last_id++;}
 
-ZI add_field(I fld, S val){
+ZV add_field(UJ line, I fld, S val){
 	LOG("add_field");
 	if (fld>=COLS)
-		R T(WARN, "too many columns, skipping: line=(%lu) fld=(%d) val=(%s)", currline, fld, val);
+		R T(WARN, "too many columns, skipping: line=(%lu) fld=(%d) val=(%s)", line, fld, val);
 
 	V*r = (V*)&recbuf[recbufpos];			//< void ptr to current record
-	I offset = rec_field_offsets[fld];		//< offset of current field
+	I offset = rec_field_offsets[fld+1];	//< offset of current field (0 is reserved for rec_id)
 	V*f = r+offset;							//< void pointer to field
 
 	if (fld<2) {							//< pages and year are shorts
@@ -54,16 +52,22 @@ ZI add_field(I fld, S val){
 
 	if (recbufpos==RECBUFLEN)				//< record buffer is full...
 		recbuf_flush();						//< ...flush it to disk.
-	R0;
 }
 
-UJ csv_load(S fname){
-	LOG("csv_load");
-
+UJ csv_load_file(S fname) {
+	LOG("csv_load_file");
 	FILE* csv;
 	xfopen(csv, fname, "r+", NIL);
 
-    currline = 1;
+	UJ cnt = csv_parse_stream();
+
+	recbuf_flush();	//< flush remaining buffer to disk
+	fclose(csv);
+}
+
+UJ csv_parse_stream(CSV_INPUT_STREAM read_fn, CSV_ADD_FIELD field_fn){
+	LOG("csv_load");
+    UJ currline = 1;
 	I bytesRead, fld=-1, fldpos=0;
 	C buf[BUF], is_line_end, is_fld_end, in_skip, in_field, in_quotes, curr, prev, fldbuf[FLDMAX+1];
 	in_skip = in_field = in_quotes = 0;
@@ -95,9 +99,9 @@ UJ csv_load(S fname){
 				fld++;
 				FLUSH:					//< catch-all field flush routine
 				prev = fldbuf[fldpos-(prev==QUO)] = NUL; //< terminate string
-				T(TRACE, "field fld=%d len=%d buf=%s", fld, (I)strlen(fldbuf), fldbuf);
+				T(TRACE, "field fld=%d len=%d buf=%s", fld, (I)scnt(fldbuf), fldbuf);
 
-				add_field(fld, fldbuf);
+				field_fn(currline, fld, fldbuf);
 
 				in_skip = in_field = in_quotes = fldpos = 0; //< reset states
 				if (is_line_end) {
@@ -127,8 +131,6 @@ UJ csv_load(S fname){
 			}
 		)
 	}
-	fclose(csv);
-	recbuf_flush();						//< flush remaining buffer to disk
 	R currline-1; //< lines parsed
 }
 
