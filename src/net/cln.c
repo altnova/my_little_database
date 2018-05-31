@@ -42,10 +42,11 @@ V cln_set_prompt(S p) {
 
 ZI check_conn(I addr, I port) {
 	LOG("check_conn");
+	C ip[30];ipv4(addr,ip);
 	P(connected,0);
 	if(c<=0){
 		if(errno>0)
-			T(INFO, "no connection to port %d:%d (%d: %s)", addr, port, errno, strerror(errno));
+			T(INFO, "%s:%d (%d: %s)", ip, port, errno, strerror(errno));
 		c = conn(addr,port); 
 		R1;
 	}else {

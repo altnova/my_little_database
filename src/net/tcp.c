@@ -29,9 +29,9 @@ ZI exe(I d){R fcntl(d,F_SETFD,FD_CLOEXEC)?-1:d;}
 ZI snb(I d,I f){R fcntl(d,F_SETFL,f?O_NDELAY:0);}
 ZI cls(I d){R close(d);}
 
+V  ipv4(I a, S b){sprintf(b,"%d.%d.%d.%d",255&a>>24,255&a>>16,255&a>>8,255&a);}
 I  port(I d){I n=16;R getsockname(d,(Sa)&sa,(UI*)&n),ntohs(sa.sin_port);}
 S  host(I a){R a=htonl(a),(h=gethostbyaddr((S)&a,4,AF_INET))?h->h_name:"";}
-
 I  addr(S s){I a;R!*s?LOCALHOST:ntohl((a=inet_addr((S)s))!=-1?a
 	:(h=gethostbyname((S)s))?*(I*)h->h_addr_list[0]:(hrr(),-1));}
 

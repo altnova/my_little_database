@@ -34,6 +34,7 @@ ext I  tcp_stdin(I d, STDIN_CALLBACK fn);
 ext I  port(I d);
 ext S  host(I a);
 ext I  addr(S s);
+ext V  ipv4(I a,S b);
 ext I  conn(I a,I p);
 ext I  lstn(I a,I p);
 ext I  acc(I*p,I d);
