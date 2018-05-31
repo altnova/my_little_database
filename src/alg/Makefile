@@ -20,5 +20,10 @@ stm:
 	$(CC) -DRUN_TESTS_STM $(CCOPTS) -o $(OUT)/stm $(COMMON) stm.c
 	$(VLG) $(OUT)/stm ../../fxt/input.txt ../../fxt/output.txt
 
+lcs:
+	$(CC) -DRUN_TESTS_LCS $(CCOPTS) -o $(OUT)/lcs $(COMMON) lcs.c
+	$(VLG) $(OUT)/lcs
+
+
 #//:~
 
