@@ -118,7 +118,7 @@ Z MSG rpc_alloc(I m_type, SIZETYPE tail_cnt, V*tail_src) {
     SIZETYPE tail_len = tail_cnt * el_size;
     MSG m = calloc(1, SZ_MSG_HDR+m_len+tail_len);chk(m,0);
     m->hdr = (MSG_HDR){ver, m_type, m_len+tail_len};
-    if(tail_offset>=0) {
+    if(tail_len&&tail_offset>=0) {
       V* tail_dest = ((V*)&m->as)+tail_offset+SZ(SIZETYPE);
       mcpy(tail_dest, tail_src, tail_len);
       //T(TEST, "tail copied, %d bytes at offset %d", tail_len, tail_offset+SZ(SIZETYPE));
@@ -126,6 +126,12 @@ Z MSG rpc_alloc(I m_type, SIZETYPE tail_cnt, V*tail_src) {
     //rpc_dump_header(m);
     R m;
 }
+
+SIZETYPE rpc_item_size(I m_type) {
+  R ITEM_SIZE[m_type];}
+
+SIZETYPE rpc_tail_offset(I m_type) {
+  R MSG_TAIL_OFFSET[m_type];}
 
 
 #else
@@ -258,6 +264,8 @@ msg_create_proto_w_tail1( ERR_res, _arg(UI,err_id), _tail(S,msg));
 ext I rpc_init();
 ext G rpc_ver();
 ext V rpc_dump_header(MSG m);
+ext SIZETYPE rpc_item_size(I m_type);
+ext SIZETYPE rpc_tail_offset(I m_type);
 
 Z MSG rpc_alloc(I m_type, SIZETYPE tail_len, V*tail_src);
 #endif

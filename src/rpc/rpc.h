@@ -98,5 +98,7 @@ ext MSG rpc_ERR_res(UI err_id, SIZETYPE msg_cnt, S msg);
 ext I rpc_init();
 ext G rpc_ver();
 ext V rpc_dump_header(MSG m);
+ext SIZETYPE rpc_item_size(I m_type);
+ext SIZETYPE rpc_tail_offset(I m_type);
 Z MSG rpc_alloc(I m_type, SIZETYPE tail_len, V*tail_src);
 //:~
