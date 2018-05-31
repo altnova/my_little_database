@@ -374,7 +374,7 @@ UJ cli_list_rec_each(Rec r, V*arg, UJ i, C is_last) {
 	BOX_RIGHT(gap);NL();
 	R0;}
 
-V cli_recalc_pager(S page) {
+V cli_recalc_paging(S page) {
 	UJ page_id;
 	UJ total_recs = db_info.total_records;
 	current_total_pages = 1+total_recs/CLI_PAGE_SIZE;
@@ -531,8 +531,7 @@ I cli_init() {
 	cli_hint();
 	cli_prompt();
 	initialized=1;
-	R0;
-}
+	R0;}
 
 V cli_shutdown(I itr) {
 	//free(edit_buf);
@@ -552,7 +551,7 @@ I cli_cmd_rec_show(S arg){
 
 ZI cli_cmd_rec_list(S arg){
 	LOG("cli_cmd_rec_list");
-	cli_recalc_pager(arg);
+	cli_recalc_paging(arg);
 	cli_print_page_head();
 	UJ res = idx_page(cli_list_rec_each, NULL, current_page_id-1, CLI_PAGE_SIZE); // read records
 	cli_print_page_tail();

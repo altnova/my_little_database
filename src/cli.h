@@ -40,7 +40,7 @@ ext V cli_print_cmd_result(ID rec_id, UJ res);
 ext V cli_print_editor_head();
 ext I cli_cmd_rec_show(S arg);
 ext I cli_cmd_rec_add(S arg);
-ext V cli_recalc_pager(S page);
+ext V cli_recalc_paging(S page);
 ext V cli_print_page_head();
 ext V cli_print_page_tail();
 ext I cli_get_current_page_id();
