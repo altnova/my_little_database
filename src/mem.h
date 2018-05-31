@@ -25,6 +25,7 @@ ext FTI_INFO mem_info();
 ext DB_INFO mem_db_info();
 ext V mem_inc(S label, J bytes);
 ext V mem_dec(S label, J bytes);
+ext V mem_reset(S label);
 ext V mem_map_print();
 
 //:~

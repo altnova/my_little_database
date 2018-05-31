@@ -10,6 +10,13 @@ Z FTI_INFO fti_info;
 Z DB_INFO db_info;
 
 ZC MEM_TRACE=0;
+
+V mem_reset(S label) {
+	BKT b = hsh_ins(fti_info->memmap, label, scnt(label), NULL);
+	fti_info->total_mem -= (UJ)b->payload;
+	b->payload = 0;
+}
+
 V mem_inc(S label, J bytes) {
 	LOG("mem_inc");
 	if(MEM_TRACE)
