@@ -28,7 +28,7 @@ ext Pair* idx_get_entry(UJ idx_pos);
 ext UJ    idx_size();
 
 //! idx_each function interface
-typedef UJ(*IDX_EACH)(Rec r, V*arg, UJ i);
+typedef UJ(*IDX_EACH)(Rec r, V*arg, UJ i, C is_last);
 
 //! apply fn() to each record in the database
 //! \param fn function that takes (Rec r, V* arg, UJ i)

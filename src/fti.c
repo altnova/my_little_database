@@ -168,7 +168,7 @@ UJ fti_index_field(ID rec_id, I field, S s, I flen, FTI_DOCID doc_id) {
 
 	R tok_cnt;}
 
-Z UJ fti_index_rec(Rec r, V*arg, UJ i) {
+Z UJ fti_index_rec(Rec r, V*arg, UJ i, C is_last) {
 	fti_index_field(r->rec_id, fld_publisher, r->publisher, r->lengths[0], i);
 	fti_index_field(r->rec_id, fld_title, r->title, r->lengths[1], i);
 	fti_index_field(r->rec_id, fld_author, r->author, r->lengths[2], i);

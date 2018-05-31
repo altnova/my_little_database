@@ -26,7 +26,7 @@ I msg_send(I p, MSG m) {
 	free(m);
 	R0;}
 
-V msg_stream(V*obj,UI osz,I d,UJ i,RPC_STREAM_FN rpc_fn){
+V msg_stream(V*obj,UI osz,I d,UJ i,RPC_STREAM_FN rpc_fn, C is_last){
 	LOG("nsr_stream");
 	V*buf=tcp_buf(d, osz * NET_STREAM_BUF_SZ);
 	I pos = i%NET_STREAM_BUF_SZ;
@@ -34,7 +34,15 @@ V msg_stream(V*obj,UI osz,I d,UJ i,RPC_STREAM_FN rpc_fn){
 		msg_send(d, rpc_fn(NET_STREAM_BUF_SZ, buf));
 		T(TEST, "flush at %lu", i);}
 	mcpy(buf + osz * pos, obj, osz);
-	T(TEST, "buffered obj%lu -> pos=%d", i,pos);}
+	T(TEST, "buffered obj%lu -> pos=%d", i,pos);
+	if(is_last){
+		if(pos<NET_STREAM_BUF_SZ){
+			T(TEST, "flushing stream remainder=%d", pos+1);
+			msg_send(d, rpc_fn(pos+1, buf));}
+		msg_send(d, rpc_fn(0, NULL)); //< send stream terminator
+		tcp_buf(d,0); //< release buffer
+	}
+}
 
 I msg_send_err(I p, I err_id, S msg) {
 	LOG("msg_err");

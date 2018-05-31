@@ -578,8 +578,8 @@ ZI cli_cmd_rec_edit(S arg){
 	cli_print_editor_head();
 	R0;}
 
-ZI cli_cmd_search_local(S arg){
-	fts_search(arg, (FTI_SEARCH_CALLBACK)NULL); // TODO
+ZI cli_cmd_search_local(S q){
+	fts_search(q, (FTI_SEARCH_CALLBACK)NULL); // TODO
 	fts_dump_result();
 	R0;}
 

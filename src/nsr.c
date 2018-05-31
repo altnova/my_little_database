@@ -9,22 +9,18 @@
 ZV nyi(I d) {
 	msg_send_err(d, ERR_NOT_YET_IMPLEMENTED, "not yet implemented");}
 
-Z UJ nsr_rec_each(Rec r, V*conn, UJ i) {
+ZV nsr_fts_each(FTI_MATCH m, V*conn, UI i, C is_last) {
+	LOG("nsr_fts_each");
+	msg_stream(m, SZ_FTI_MATCH, *(I*)conn, i, (RPC_STREAM_FN)rpc_FND_res, is_last);}
+
+Z UJ nsr_rec_each(Rec r, V*conn, UJ i, C is_last) {
 	LOG("nsr_rec_each");
-	I d = *(I*)conn;
-	V*buf=tcp_buf(d,SZ_REC*NET_STREAM_BUF);
-	I pos = i%NET_STREAM_BUF;
-	if(i&&!pos){
-		msg_send(d, rpc_LST_res(NET_STREAM_BUF, (Rec)buf));
-		T(TEST, "flush at %lu", i);
-	}
-	mcpy(buf+SZ_REC*pos, r, SZ_REC);
-	T(TEST, "buffered rec%lu -> pos=%d", i,pos);
+	msg_stream(r, SZ_REC, *(I*)conn, i, (RPC_STREAM_FN)rpc_LST_res, is_last);
 	R0;}
 
 ZI nsr_on_msg(I d, MSG_HDR *h, pMSG *m) {
 	LOG("nsr_on_msg");
-	C b[100];UJ res;ID rec_id;
+	C b[100];UJ res,cnt;ID rec_id;
 	
 	SW(h->type) {
 		CS(HEY_req,;
@@ -70,18 +66,11 @@ ZI nsr_on_msg(I d, MSG_HDR *h, pMSG *m) {
     	CS(LST_req,
     		;pLST_req* m_lst = (pLST_req*)m;
     		PAGING_INFO p = m_lst->pagination; // page_num, per_page, sort_by, sort_dir
-			UJ res = idx_page(nsr_rec_each, &d, p->page_num, p->per_page);
-			I rem = res%NET_STREAM_BUF;
-			Rec buf = (Rec)tcp_buf(d,SZ_REC*NET_STREAM_BUF);
-			msg_send(d, rpc_LST_res(rem, buf)); // flush buffer remainder
-			T(TEST, "flush remainining res=%lu remainder=%d", res, rem);
-			if(rem)
-				msg_send(d, rpc_LST_res(0, NULL)); // send stream terminator
-			tcp_buf(d,0);
+			cnt = idx_page(nsr_rec_each, &d, p->page_num, p->per_page);
     	)
     	CS(FND_req,
     		;pFND_req* m_fnd = (pFND_req*)m; nyi(d);
-    		//fts_search(m_fnd->query)
+    		cnt = fts_search((S)m_fnd->query, m_fnd->max_hits, &d, nsr_fts_each);
     	)
     	CS(BYE_req, ;pBYE_req* m_bye = (pBYE_req*)m; nyi(d);)
     	CS(SAY_req, ;pSAY_req* m_say = (pSAY_req*)m; nyi(d);)
@@ -98,11 +87,17 @@ I nsr_stdin(I d, UI l, S str) {
 	write(d, PROMPT, scnt(PROMPT));
 	R0;}
 
+V nsr_timer(UJ ctr){
+	LOG("nsr_timer");
+	O("\b\b%c ", "|/-\\"[ctr%4]);
+	fflush(0);}
+
 V nsr_init() {
 	srv_init();
 	fts_init();
 	msg_set_callback(nsr_on_msg);
 	srv_set_stdin_callback(nsr_stdin);
+	tcp_set_timer(500, nsr_timer);
 	srv_listen(0, NET_PORT, msg_recv);}
 
 V nsr_shutdown() {

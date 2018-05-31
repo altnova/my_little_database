@@ -116,10 +116,10 @@ UJ idx_each(IDX_EACH fn, V*arg) {
 	UJ rcnt, pos = 0;
 	W((rcnt = fread(buf, SZ_REC, RECBUFLEN, in))) {
 		T(DEBUG, "read %lu records", rcnt);
-		DO(rcnt,
+		DO(rcnt-1,
 			Rec b = &buf[i];
-			UJ res = fn(b, arg, pos++);
-		)
+			fn(b, arg, pos++,0))
+		fn(&buf[rcnt-1], arg, pos, 1); //< is_last
 	}
 	fclose(in);
 	R pos;
@@ -134,10 +134,10 @@ UJ idx_page(IDX_EACH fn, V*arg, I page, I page_sz) {
 	UJ rcnt, pos = 0;
 	rcnt = fread(buf, SZ_REC, page_sz, in);
 	T(DEBUG, "read page: %lu records", rcnt);
-	DO(rcnt,
+	DO(rcnt-1,
 		Rec b = &buf[i];
-		UJ res = fn(b, arg, pos++);
-	)
+		fn(b, arg, pos++, 0))
+	fn(&buf[rcnt-1], arg, pos, 1); //< is_last
 	fclose(in);
 	R pos;
 }
