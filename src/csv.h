@@ -27,7 +27,6 @@ ext CSV_STATE csv_stream_init(CSV_ADD_FIELD field_fn);
 ext       UJ csv_stream_parse(CSV_STATE s,C buf[],UI bytes);
 ext         UJ csv_stream_end(CSV_STATE s);
 
-
 //! initialize csv parser
 //! \return 0 on success, NIL on error
 ext UJ csv_init();

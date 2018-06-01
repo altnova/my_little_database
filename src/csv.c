@@ -260,6 +260,8 @@ I main(I argc, S*argv){
 	LOG("csv_main");
 	UJ res;
 
+	
+
 	ASSERT(argc==4, "should have 3 arguments")
 	ASSERT(fexist(argv[1]), "source csv file should exist")
 	UJ expected = atoi(argv[3]);
