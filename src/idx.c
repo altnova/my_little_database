@@ -94,7 +94,15 @@ ZI db_cmp_str(const V*a, const V*b){
 	S x = (S)db_mmap_get_field(a);
 	S y = (S)db_mmap_get_field(b);
 	//T(TEST, "comparing (%s) (%s)\n",x,y);
-	R strcmp(x,y);}
+	R sort_dir?strcmp(x,y):strcmp(y,x);}
+
+//! string comparator for db_sort()
+ZI db_cmp_uint(const V*a, const V*b){
+	LOG("db_cmp_str");
+	UI x = (UI)db_mmap_get_field(a);
+	UI y = (UI)db_mmap_get_field(b);
+	//T(TEST, "comparing (%s) (%s)\n",x,y);
+	R sort_dir?(y-x):(x-y);}
 
 //! sort index by rec_id
 ZV idx_sort() {
@@ -115,10 +123,8 @@ UJ db_sort(I f, C d){
 	X(sort_dbmap==MAP_FAILED, (close(fd),T(WARN, "mmap failed")), NIL);
 	sort_field = f;
 	sort_dir = d;
-	//sort_fn = db_cmp_str;
 	VEC a = sort_vectors[f];
-	//if(field<3)sort_fn = db_cmp_num;
-	qsort(a->data, a->used, SZ(UJ), db_cmp_str);
+	qsort(a->data, a->used, SZ(UJ), f<3?db_cmp_uint:db_cmp_str);
 	munmap(sort_dbmap,fsz);
 	close(fd);
 	R0;}
@@ -173,6 +179,16 @@ UJ idx_page(IDX_EACH fn, V*arg, I page, I page_sz) {
 	fn(&buf[rcnt-1], arg, pos, 1); //< is_last
 	fclose(in);
 	R pos;}
+
+UJ idx_csv_batch(Rec r, V*arg, UJ i, I batch_size) {
+	LOG("idx_csv_batch");
+	T(TEST,"csv tick %lu %d", i, batch_size);
+	R0;
+}
+
+UJ idx_csv_export(I batch_size) {
+	R idx_each(idx_csv_batch,NULL,5);
+}
 
 //! rebuild index from scratch
 //! \return # recs loaded, NIL on error
@@ -395,7 +411,6 @@ UJ db_init(S d, S i) {
 	UJ idx_size = idx_open();
 
 	idx_reset_sort_vectors();
-
 	T(DEBUG, "database initialized");
 	R SZ_IDX + vec_mem(idx->pairs);}
 
@@ -599,12 +614,19 @@ I main() {
 	db_init("dat/books.dat", "dat/books.idx");
 	//idx_test();
 
-	I srt_fld = 4;
-	VEC a = sort_vectors[4];
-	//if(field<3)sort_fn = db_cmp_num;
-	DO(a->used, O("%lu ", *(UJ*)(a->data+i*SZ(UJ))));O("\n");
-	db_sort(4,0);
-	DO(a->used, O("%lu ", *(UJ*)(a->data+i*SZ(UJ))));O("\n");
+	DO(FTI_FIELD_COUNT+1,
+		I srt_fld = i;
+		VEC v = sort_vectors[srt_fld];
+		O("orig ");DO(v->used, O("%lu ", *(UJ*)(v->data+i*SZ(UJ))));O("\n");
+		db_sort(srt_fld,0);
+		O("xasc ");DO(v->used, O("%lu ", *(UJ*)(v->data+i*SZ(UJ))));O("\n");
+		db_sort(srt_fld,1);
+		O("desc ");DO(v->used, O("%lu ", *(UJ*)(v->data+i*SZ(UJ))));O("\n");
+		O("---------------------------------------------\n");
+	)
+
+	idx_csv_export(5);
+
 
 	db_close();
 	mem_shutdown();
