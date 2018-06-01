@@ -122,8 +122,7 @@ UJ rec_update(Rec r) {
 	fclose(db);
 
 	T(DEBUG, "updated rec_id=%lu", r->rec_id);
-	R db_pos;
-}
+	R db_pos;}
 
 #endif
 
