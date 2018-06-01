@@ -13,6 +13,20 @@ J zseek(FILE* d,J j,I f){R fseek(d,j,f);}
 I ftrunc(FILE* d,UJ n){R zseek(d,n,0),ftruncate(fileno(d),n);}
 #endif
 
+V* xmmap(S fname) {
+	LOG("xmmap");
+	FILE*f;xfopen(f, fname, "r", 0);
+	sz fsz = fsize(f);
+	fclose(f);
+	I fd = open(fname, O_RDONLY, 0);
+	V*r = mmap(0, fsz, PROT_READ, MAP_SHARED, fd, 0);
+	X(r==MAP_FAILED, (close(fd),T(WARN, "mmap failed")), 0);
+	close(fd); // safe to close now
+	R r;}
+
+V xmunmap(V*map,sz size){
+	munmap(map, size);}
+
 //! filesize
 UJ fsize(FILE* fp) {
 	LOG("fsize");

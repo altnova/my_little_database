@@ -15,7 +15,9 @@ C idx_file[MAX_FNAME_LEN+1];
 
 ZI sort_field;
 ZC sort_dir;
-V* sort_dbmap;
+
+ZI  db_mapped=0;
+ZV* db_memmap;
 
 //! current idx size
 UJ idx_size() {
@@ -85,7 +87,7 @@ ZI cmp_qsort(const V*a, const V*b) {
 
 ZV*db_mmap_get_field(const V*a){
 	UJ x = *(UJ*)a;
-	V*rx = sort_dbmap + x * SZ_REC;
+	V*rx = db_memmap + x * SZ_REC;
 	R rx+rec_field_offsets[sort_field];}
 
 //! string comparator for db_sort()
@@ -94,15 +96,27 @@ ZI db_cmp_str(const V*a, const V*b){
 	S x = (S)db_mmap_get_field(a);
 	S y = (S)db_mmap_get_field(b);
 	//T(TEST, "comparing (%s) (%s)\n",x,y);
-	R sort_dir?strcmp(x,y):strcmp(y,x);}
+	R !sort_dir?strcmp(x,y):strcmp(y,x);}
 
 //! string comparator for db_sort()
-ZI db_cmp_uint(const V*a, const V*b){
-	LOG("db_cmp_str");
-	UI x = (UI)db_mmap_get_field(a);
-	UI y = (UI)db_mmap_get_field(b);
+ZI db_cmp_ushort(const V*a, const V*b){
+	LOG("db_cmp_ushort");
+	UH x = *(UH*)db_mmap_get_field(a);
+	UH y = *(UH*)db_mmap_get_field(b);
+	P(x==y,0);
+	I r=(x>y)?1:-1;
+	//T(TRACE, "comparing (%d) (%d) -> %d\n",x,y,r);
+	R !sort_dir?r:-r;}
+
+//! string comparator for db_sort()
+ZI db_cmp_ulong(const V*a, const V*b){
+	LOG("db_cmp_ulong");
+	UJ x = *(UJ*)db_mmap_get_field(a);
+	UJ y = *(UJ*)db_mmap_get_field(b);
 	//T(TEST, "comparing (%s) (%s)\n",x,y);
-	R sort_dir?(y-x):(x-y);}
+	P(x==y,0);
+	I r=(x>y)?1:-1;
+	R !sort_dir?r:-r;}
 
 //! sort index by rec_id
 ZV idx_sort() {
@@ -111,22 +125,26 @@ ZV idx_sort() {
 	qsort(p->data, p->used, SZ(Pair), cmp_qsort);
 	T(DEBUG, "index sorted");}
 
+ZV* db_mmap() {
+	LOG("db_mmap");
+	P(db_mapped,db_memmap);
+	db_memmap=xmmap(db_file);chk(db_memmap,NULL);
+	db_mapped=1;R0;}
+
+ZV db_munmap() {
+	if(!db_mapped)R;
+	xmunmap(db_memmap, idx_dbsize());db_mapped=0;}
+
 //! creates a vector of db_positions according to given order
 //! and caches it to disk. if vector already exists, do nothing.
 UJ db_sort(I f, C d){
 	LOG("db_sort");
-	FILE*db;xfopen(db, db_file, "r", NIL);
-	sz fsz = fsize(db);
-	fclose(db);
-	I fd = open(db_file, O_RDONLY, 0);
-	sort_dbmap = mmap(0, fsz, PROT_READ, MAP_SHARED, fd, 0);
-	X(sort_dbmap==MAP_FAILED, (close(fd),T(WARN, "mmap failed")), NIL);
-	sort_field = f;
 	sort_dir = d;
+	sort_field = f;
+	db_mmap();
 	VEC a = sort_vectors[f];
-	qsort(a->data, a->used, SZ(UJ), f<3?db_cmp_uint:db_cmp_str);
-	munmap(sort_dbmap,fsz);
-	close(fd);
+	qsort(a->data, a->used, SZ(UJ), sort_field==0?db_cmp_ulong:(f<3?db_cmp_ushort:db_cmp_str));
+	db_munmap();
 	R0;}
 
 //! dump index to stdout
@@ -143,6 +161,7 @@ V idx_dump(UJ head) {
 	if(head&&head<idx_size())T(TEST,"...");
 	TEND();}
 
+//! linear scan
 UJ idx_each(IDX_EACH fn, V*arg, UI batch_size) {
 	LOG("idx_each")
 	FILE*in;
@@ -150,44 +169,60 @@ UJ idx_each(IDX_EACH fn, V*arg, UI batch_size) {
 	xfopen(in, db_file, "r", NIL);
 	UJ rcnt, pos = 0;
 	W((rcnt = fread(buf, SZ_REC, RECBUFLEN, in))) {
-		T(TEST, "read %lu records, RECBUFLEN=%d", rcnt, RECBUFLEN);
+		T(TRACE, "read %lu records, RECBUFLEN=%d", rcnt, RECBUFLEN);
 		Rec b;I batches=rcnt/batch_size;
-		T(TEST, "whole batches: %d", batches);
+		T(TRACE, "whole batches: %d", batches);
 		DO(batches,
-			T(TEST, "batch offset=%d", i*batch_size);
+			T(TRACE, "batch offset=%d", i*batch_size);
 			b = &buf[i*batch_size];
 			fn(b, arg, pos, batch_size);pos+=batch_size;)
 		I tail=rcnt%batch_size;
-		T(TEST, "batch tail %d records", tail);
+		T(TRACE, "batch tail %d records", tail);
 		if(tail){fn(b+batch_size, arg, pos, tail);pos+=tail;}
 	}
 	fclose(in);
 	R pos;}
 
-UJ idx_page(IDX_EACH fn, V*arg, I page, I page_sz) {
-	LOG("idx_page")
-	FILE* in;
-	xfopen(in, db_file, "r", NIL);
-	UJ fpos = SZ_REC * page * page_sz;
-	zseek(in, fpos, SEEK_SET);
-	UJ rcnt, pos = 0;
-	rcnt = fread(buf, SZ_REC, page_sz, in);
-	T(DEBUG, "read page: %lu records", rcnt);
-	DO(rcnt-1,
-		Rec b = &buf[i];
-		fn(b, arg, pos++, 0))
-	fn(&buf[rcnt-1], arg, pos, 1); //< is_last
-	fclose(in);
-	R pos;}
+UJ idx_page(PAGE_EACH fn, V*arg, I page, I page_sz, I sort_fld, C sort_dir){
+	LOG("idx_page");
+	db_mmap(); // ensure db is mapped
+	VEC sv = sort_vectors[sort_fld];
+	UI pos = page * page_sz;I j;
+	V*a = (V*)sv->data;sz recs = MIN(vec_size(sv)-pos,page_sz);
+	//UJ*a = (UJ*)sv->data;sz recs = MIN(vec_size(sv)-pos,page_sz);
+	Rec out[recs]; //< array of pointers to mmap
+	UI start = !sort_dir?pos:(vec_size(sv)-pos);
+	DO(recs,j=!sort_dir?(start+i):(start-i);
+		UJ file_pos = *(UJ*)(a + j * SZ(UJ));
+		//UJ file_pos = a[j];
+		Rec rptr = (Rec)(db_memmap + file_pos * SZ_REC);
+		out[i]=rptr;
+		T(DEBUG,"page %d: %d:%lu file_pos=%lu -> rec_id=%lu",page,j,i,file_pos,out[i]->rec_id);
+	)
+	fn(out, recs, arg);
+	R recs;}
 
-UJ idx_csv_batch(Rec r, V*arg, UJ i, I batch_size) {
+UJ idx_csv_batch(Rec ptrs[], UI ptr_cnt, V*arg) {
 	LOG("idx_csv_batch");
-	T(TEST,"csv tick %lu %d", i, batch_size);
-	R0;
-}
+	T(TRACE,"csv tick %d", ptr_cnt);
+	DO(ptr_cnt,
+		Rec r = ptrs[i];
+		/*T(TEST,"%5lu -> %5d -> %5d -> %.10s -> %.10s -> %.10s -> %.10s",
+			r->rec_id, r->pages, r->year, r->publisher,
+			r->title, r->author, r->subject);*/
 
-UJ idx_csv_export(I batch_size) {
-	R idx_each(idx_csv_batch,NULL,5);
+	//	DO(FTI_FIELD_COUNT,{})
+	)
+	R0;}
+
+UJ idx_csv_export(I sort_fld, C sort_dir, I fd) {
+	LOG("idx_csv_export");
+	//UI page_size = RECBUFLEN;
+	UI page_size = 5;
+	DO(1+idx_size()/page_size, //< total pages
+		T(TRACE,"requesting page %d",i);
+		idx_page(idx_csv_batch,&fd,i,page_size,sort_fld,sort_dir);)
+	R0;
 }
 
 //! rebuild index from scratch
@@ -314,7 +349,7 @@ Z UJ idx_peek(ID rec_id){
 	rec_print_dbg(b);
 	R pos;}
 
-Z sz idx_dbsize() {
+sz idx_dbsize() {
 	LOG("idx_dbsize");
 	FILE*db;
 	xfopen(db,db_file,"r",NIL);
@@ -322,7 +357,7 @@ Z sz idx_dbsize() {
 	fclose(db);
 	R db_sz;}
 
-Z sz idx_fsize() {
+sz idx_fsize() {
 	LOG("idx_fsize");
 	FILE*idxh;
 	xfopen(idxh,idx_file,"r",1);
@@ -398,11 +433,14 @@ ZV idx_reset_sort_vectors() {
 		mem_inc("sort_vectors", vec_mem(sort_vectors[i]));
 	)	
 }
+
+ZV idx_sort_all_vectors() {
+	DO(FTI_FIELD_COUNT+1, db_sort(i,0))}
+
 ZV idx_destroy_sort_vectors() {
 	DO(FTI_FIELD_COUNT+1,
 		mem_dec("sort_vectors", vec_destroy(sort_vectors[i]))
-	)
-}
+	)}
 
 UJ db_init(S d, S i) {
 	LOG(" db_init");
@@ -411,6 +449,7 @@ UJ db_init(S d, S i) {
 	UJ idx_size = idx_open();
 
 	idx_reset_sort_vectors();
+	idx_sort_all_vectors();
 	T(DEBUG, "database initialized");
 	R SZ_IDX + vec_mem(idx->pairs);}
 
@@ -425,10 +464,39 @@ UJ test_walk(Rec r, V*arg, UJ i, I batch_size) {
 	I*cnt = (I*)arg;
 	*cnt+=batch_size;
 	T(TEST, "rec_id=%lu i=%lu batch=%d", r->rec_id, i, batch_size);
-	R0;
-}
+	R0;}
 
-ZI idx_test() {
+ZI idx_test_sort() {
+	DO(FTI_FIELD_COUNT+1,
+		I srt_fld = i;
+		VEC v = sort_vectors[srt_fld];
+		O("  ---------------------------------------------\n");
+		O("  orig ");DO(v->used, O("%lu ", *(UJ*)(v->data+i*SZ(UJ))));O("\n");
+		db_sort(srt_fld,1);
+		O("  desc ");DO(v->used, O("%lu ", *(UJ*)(v->data+i*SZ(UJ))));O("\n");
+		db_sort(srt_fld,0);
+		O("  xasc ");DO(v->used, O("%lu ", *(UJ*)(v->data+i*SZ(UJ))));O("\n"))
+		O("  ---------------------------------------------\n");
+	R0;}
+
+UJ idx_test_page_batch(Rec ptrs[], UI ptr_cnt, V*arg) {
+	LOG("idx_test_page_batch");
+	T(TRACE,"pager tick %d", ptr_cnt);
+	DO(ptr_cnt,
+		Rec r = ptrs[i];
+		T(TEST,"%5lu -> %5d -> %5d -> %.10s -> %.10s -> %.10s -> %.10s",
+			r->rec_id, r->pages, r->year, r->publisher,
+			r->title, r->author, r->subject);)
+	R0;}
+
+UJ idx_test_pagination(UI page_size, I sort_fld, C sort_dir) {
+	LOG("idx_test_pagination");
+	DO(1+idx_size()/page_size, //< total pages
+		T(TRACE,"requesting page %d",i);
+		idx_page(idx_test_page_batch,NULL,i,page_size,sort_fld,sort_dir))
+	R0;}
+
+ZI idx_test_core() {
 	LOG("idx_test");
 	Rec r=malloc(SZ_REC);chk(r,1);
 	Rec r1=malloc(SZ_REC);chk(r1,1);
@@ -599,8 +667,9 @@ ZI idx_test() {
 	ASSERT(cnt==103, "idx_each batch=idx_size()+n works as expected");
 	ASSERT(total==103, "idx_each batch=idx_size()+n works as expected");
 
-
 	T(TEST,"idx_size %d", idx_size());
+
+	idx_test_sort();
 
 	ASSERT(1, "database index looks good");
 
@@ -611,22 +680,17 @@ ZI idx_test() {
 
 I main() {
 	mem_init();
+	//idx_test_core();
+
 	db_init("dat/books.dat", "dat/books.idx");
-	//idx_test();
-
+	
+	idx_test_sort();
+	
 	DO(FTI_FIELD_COUNT+1,
-		I srt_fld = i;
-		VEC v = sort_vectors[srt_fld];
-		O("orig ");DO(v->used, O("%lu ", *(UJ*)(v->data+i*SZ(UJ))));O("\n");
-		db_sort(srt_fld,0);
-		O("xasc ");DO(v->used, O("%lu ", *(UJ*)(v->data+i*SZ(UJ))));O("\n");
-		db_sort(srt_fld,1);
-		O("desc ");DO(v->used, O("%lu ", *(UJ*)(v->data+i*SZ(UJ))));O("\n");
-		O("---------------------------------------------\n");
+		//O("------------------------------------\n");
+		O("\n");
+		idx_test_pagination(5,i,0);//page_size,sort_fld,sort_dir
 	)
-
-	idx_csv_export(5);
-
 
 	db_close();
 	mem_shutdown();
