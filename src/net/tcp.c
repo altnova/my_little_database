@@ -108,11 +108,10 @@ V* sbuf(I d,I n){ //< create/destroy snd buf
 	sbl[i]=1; //< lock
 	R sbf[i];}
 
-V* sbpt(I d,V*o,I n){ //< put bytes
+V  sbpt(I d,V*o,I n){ //< put bytes
 	I i = hget(d);
 	V*b = sbf[i]+sbc[i];
-
-}
+	mcpy(b,o,n);}
 
 V sblk(I d,C l){ //< set lock
 	LOG("sblk");

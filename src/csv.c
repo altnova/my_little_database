@@ -59,7 +59,7 @@ UJ csv_fread(C buf[], UI buflen) {
 	R fread(buf, 1, buflen, infile);}
 
 UJ csv_load_stream(S csv_fname, S db_fname) {
-	LOG("csv_load_file");
+	LOG("csv_load_stream");
 	xfopen(infile, csv_fname, "r+", NIL);
 	xfopen(outfile, db_fname, "w+", NIL);
 	CSV_STATE s = csv_stream_init(csv_add_field);
@@ -259,9 +259,6 @@ Z UJ csv_test_file(S csv_file, S db_file) {
 I main(I argc, S*argv){
 	LOG("csv_main");
 	UJ res;
-
-	
-
 	ASSERT(argc==4, "should have 3 arguments")
 	ASSERT(fexist(argv[1]), "source csv file should exist")
 	UJ expected = atoi(argv[3]);

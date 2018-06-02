@@ -55,7 +55,7 @@ ZI srv_on_msg(I d, MSG_HDR *h, pMSG *m) {
 	LOG("srv_on_msg");
 	if(h->type==SAY_res) {
 		pSAY_res *t = (pSAY_res*)m;
-		T(TEST, "rcvd SAY(%d): %.*s", t->data_len, t->data_len, t->msg);
+		T(TEST, "rcvd SAY(%d): %.*s", t->cnt, t->cnt, t->msg);
 	}
 	else if(h->type==HEY_req) {
 		MSG m = rpc_SAY_res(20,"Pleased to meet you.");

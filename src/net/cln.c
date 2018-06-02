@@ -111,7 +111,7 @@ ZI cln_on_msg_test(I d, MSG_HDR *h, pMSG *m) {
 	SW(h->type){
 		CS(SAY_res,;
 			pSAY_res *m_say = (pSAY_res*)m;
-			T(TEST, "rcvd SAY(%d): %.*s", m_say->data_len, m_say->data_len, m_say->msg);
+			T(TEST, "rcvd SAY(%d): %.*s", m_say->cnt, m_say->cnt, m_say->msg);
 		)
 		CS(HEY_res,;
 			pHEY_res *m_hey = (pHEY_res*)m;
@@ -120,7 +120,7 @@ ZI cln_on_msg_test(I d, MSG_HDR *h, pMSG *m) {
 		)
 		CS(GET_res,;
 			pGET_res *m_get = (pGET_res*)m;
-			T(TEST, "GET res: %d", m_get->data_len);
+			T(TEST, "GET res: %d", m_get->cnt);
 		)
 		CS(DEL_res,;
 			pDEL_res *m_del = (pDEL_res*)m;
@@ -138,7 +138,7 @@ I main() {
 
 	msg_set_callback(cln_on_msg_test);
 	cln_set_stdin_callback(stdin_test_callback);
-	cln_set_on_connect_callback(on_connect_test);
+	cln_set_on_connect_callback((ON_CONNECT_CALLBACK)on_connect_test);
 	cln_set_prompt(PROMPT);
 
 	cln_connect(0,PORT);
