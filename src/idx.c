@@ -693,7 +693,7 @@ I main() {
 	db_close();
 	mem_shutdown();
 
-	ASSERT(1, "file index looks good");
+	ASSERT(1, "db indexing looks good");
 	R0;
 }
 #endif
