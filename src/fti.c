@@ -168,7 +168,7 @@ UJ fti_index_field(ID rec_id, I field, S s, I flen, FTI_DOCID doc_id) {
 
 	R tok_cnt;}
 
-Z UJ fti_index_rec(Rec r, V*arg, UJ i, C is_last) {
+Z UJ fti_index_rec(Rec r, V*arg, UJ i, I batch_size) {
 	fti_index_field(r->rec_id, fld_publisher, r->publisher, r->lengths[0], i);
 	fti_index_field(r->rec_id, fld_title, r->title, r->lengths[1], i);
 	fti_index_field(r->rec_id, fld_author, r->author, r->lengths[2], i);
@@ -281,7 +281,7 @@ I fti_init() {
 	clock_t idx_start = clk_start();
 
 	//! build inverted index
-	UJ res = idx_each(fti_index_rec, NULL);
+	UJ res = idx_each(fti_index_rec, NULL, 1);
 
 	X(res==NIL,T(FATAL, "unable to index records"), 1);
 	T(INFO, "indexed \e[1;37m%lu records in %lums\e[0m", res, clk_diff(idx_start, clk_start()));
