@@ -268,7 +268,7 @@ I main(I argc, S*argv){
 	ASSERT(res!=NIL, "csv parser should complete normally")
 	ASSERT(res==expected, "imported record count should match expected value")
 
-	ASSERT(res==expected, "csv import complete")
+	ASSERT(res==expected, argv[2])
 	R0;
 }
 #endif
