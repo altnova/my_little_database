@@ -8,7 +8,7 @@
 Z IDX idx;		//< in-memory instance of the index
 Z bufRec buf;	//< readbuffer RECBUFLEN records
 
-VEC sort_vectors[FTI_FIELD_COUNT+1]; //< plus rec_id=0
+VEC sort_vectors[FTI_FIELD_COUNT+1] = {0}; //< plus rec_id=0
 
 C db_file[MAX_FNAME_LEN+1];
 C idx_file[MAX_FNAME_LEN+1];
@@ -20,6 +20,7 @@ ZI  db_mapped=0;
 ZV* db_memmap;
 
 Z sz idx_close();
+ZV idx_reset_sort_vectors();
 
 //! current idx size
 UJ idx_size() {
@@ -251,6 +252,8 @@ Z UJ idx_rebuild() {
 	e = *vec_last(idx->pairs,Pair);
 	idx->last_id = e.rec_id;
 
+	idx_reset_sort_vectors();
+
 	T(INFO, "rebuilt, entries=%lu, last_id=%lu", idx_size(), idx->last_id);
 	R idx_size();}
 
@@ -377,12 +380,17 @@ ZV idx_reset_sort_vectors() {
 	LOG("idx_reset_sort_vectors");
 	mem_reset("sort_vectors");
 	DO(FTI_FIELD_COUNT+1, //< init sort vectors
-		if(!sort_vectors[i])
+		if(!sort_vectors[i]) {
 			sort_vectors[i] = vec_init(50,UJ);
-		vec_clear(sort_vectors[i]);
+			//T(TEST, "new sort vector %lu=%p", i, sort_vectors[i]);
+		} else {
+			//T(TEST, "use sort vector %lu=%p", i, sort_vectors[i]);
+			vec_clear(sort_vectors[i]);
+		}
 		VEC v = sort_vectors[i];
 		DO(idx_size(), vec_add(v, i)); //< prime with unsorted
-		vec_compact(&sort_vectors[i]);
+		vec_compact(&v);
+		sort_vectors[i] = v;
 		mem_inc("sort_vectors", vec_mem(sort_vectors[i]));
 	)}
 
