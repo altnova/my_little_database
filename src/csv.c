@@ -93,7 +93,7 @@ UJ csv_stream_end(CSV_STATE s) {
 	R s->currline-1;}
 
 UJ csv_stream_parse(CSV_STATE s, C buf[], UI bytes){
-	LOG("csv_stream_read");
+	LOG("csv_stream_parse");
 	if(!bytes){s->done=1;R0;}
 	DO(bytes,
 		s->curr = buf[i];					//< current char
@@ -109,7 +109,7 @@ UJ csv_stream_parse(CSV_STATE s, C buf[], UI bytes){
 			if (!s->is_fld_end){		//< field continues, keep skipping
 				s->prev = s->curr;
 				continue;
-			} else {				//< reached field end, flush first FLDMAX chars
+			} else {					//< reached field end, flush first FLDMAX chars
 				s->fld++;
 				s->prev = NUL;			//< if long field was quoted, discard closing quote
 				goto FLUSH;
@@ -118,7 +118,7 @@ UJ csv_stream_parse(CSV_STATE s, C buf[], UI bytes){
 
 		if (s->is_line_end){			//< reached line end
 			s->fld++;
-			FLUSH:					//< catch-all field flush routine
+			FLUSH:						//< catch-all field flush routine
 			s->prev = s->fldbuf[s->fldpos-(s->prev==QUO)] = NUL; //< terminate string
 			T(TRACE, "field fld=%d len=%d buf=%s",
 				s->fld, (I)scnt(s->fldbuf), s->fldbuf);
@@ -156,7 +156,7 @@ UJ csv_stream_parse(CSV_STATE s, C buf[], UI bytes){
 	R s->currline-1;} //< lines parsed
 
 
-/* blocking version
+/*! blocking version
 UJ csv_load_file(S csv_fname, S db_fname) {
 	LOG("csv_load_file");
 	xfopen(infile, csv_fname, "r+", NIL);
@@ -168,7 +168,6 @@ UJ csv_load_file(S csv_fname, S db_fname) {
 	fclose(infile);
 	fclose(outfile);
 	R cnt;}
-
 UJ csv_parse(CSV_INPUT_STREAM read_fn, CSV_ADD_FIELD field_fn){
 	LOG("csv_load");
 	UJ currline = 1;
@@ -251,10 +250,7 @@ V csv_close(){
 Z UJ csv_test_file(S csv_file, S db_file) {
 	LOG("csv_test");
 	X(csv_init(),T(WARN, "csv_init reports error"),NIL)
-	UJ r;
-	//r = csv_load_file(csv_file, db_file);
-	r = csv_load_stream(csv_file, db_file);
-	R r;}
+	R csv_load_stream(csv_file, db_file);}
 
 I main(I argc, S*argv){
 	LOG("csv_main");
