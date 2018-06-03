@@ -72,7 +72,7 @@ sz  vec_compact(VEC*aptr) {
 	P(a->size==a->used, 0) // good enough already
 	sz mem = vec_mem(a);
 	a->size = MAX(1,a->used); // ensure at least 1 element
-	//T(TRACE, "size: %lu, used: %lu", a->size, a->used);
+	//T(TEST, "size: %lu, used: %lu", a->size, a->used);
 	sz new_size = SZ_VEC + a->el_size * a->size;
 	a = realloc(a, new_size);chk(a,0);
 	sz save = mem - new_size;
