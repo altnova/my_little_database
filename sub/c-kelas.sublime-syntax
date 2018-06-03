@@ -65,10 +65,10 @@ contexts:
       scope: comment.line.doxygen.tag.c
 
   comments:
-    - match: ^/\* =(\s*.*?)\s*= \*/$\n?
-      scope: comment.block.c
-      captures:
-        1: meta.toc-list.banner.block.c
+#    - match: ^/\* =(\s*.*?)\s*= \*/$\n?
+#      scope: comment.block.c
+#      captures:
+#        1: meta.toc-list.banner.block.c
 
     - match: /\*\*?([<!])
       scope: punctuation.definition.comment.c
