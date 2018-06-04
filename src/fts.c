@@ -24,7 +24,7 @@ V fts_dump_result() {
 	TSTART();T(TEST, "result (%d) -> ", vec_size(HITS));
 	DO(vec_size(HITS),
 		FTI_MATCH m = vec_at_(HITS,i);
-		T(TEST, "%lu(%.3f) ", m->rec_id, m->score);
+		T(TEST, "%lu(%.3f) ", m->r.rec_id, m->score);
 	)TEND();}
 
 ZI fts_find_shortest_docset(VEC docsets){
@@ -66,7 +66,6 @@ ZV fts_sort_matches() {
 
 Z FTI_MATCH fts_add_match(FTI_DOCID doc_id, I field, F score) {
 		ID rec_id = fti_docmap_translate(doc_id);
-		mbuf->rec_id = rec_id;
 		mbuf->field = 1<<field;
 		mbuf->score = score;
 		vec_add_((V**)&HITS, mbuf);	
@@ -109,7 +108,7 @@ ZV fts_intersect(I field) {
 
 		FTI_MATCH m = fts_add_match(needle, field, score);
 
-		if(TRACE_NWAY)T(TEST, " %d", m->rec_id);
+		if(TRACE_NWAY)T(TEST, " %d", m->r.rec_id);
 	)
 	if(TRACE_NWAY)TEND();
 }
@@ -188,7 +187,7 @@ I main() {
 	mcpy(qqq,Q,scnt(Q)+1);
 
 	clk_start();
-	I hits = fts_search(qqq, NULL);
+	I hits = fts_search(qqq, 10, NULL, NULL); //q, max_hits, arg, callback
 	T(TEST, "found %d documents in %lums", hits, clk_stop());	
 
 	fts_dump_result();

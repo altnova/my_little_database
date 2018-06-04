@@ -130,10 +130,14 @@ UJ fti_index_field(ID rec_id, I field, S s, I flen, FTI_DOCID doc_id) {
 			//T(TEST, "STM %s -> (%d)", tok, tok_len);
 
 			//! add stem to wordbag
-			S bagtok = (S)bag_add(wordbag_store, tok, tok_len+1);
+			S bagtok = (S)bag_add(wordbag_store, tok, SZ(UH) + tok_len+1);
 
 			if(wordbag_store->offset)
 				hsh_each(wordbag, (HT_EACH)fti_wordbag_adjust_ptr, (V*)wordbag_store->offset);
+
+			UH*freq = (UH*)(((V*)bagtok)+tok_len+1);
+			*freq = 1; //< init freq
+			//T(TEST, "%s %u", bagtok, *freq);
 
 			//! link stem to word
 			b->payload = bagtok;
@@ -141,6 +145,8 @@ UJ fti_index_field(ID rec_id, I field, S s, I flen, FTI_DOCID doc_id) {
 		} else {
 			tok = b->payload;
 			tok_len = scnt(tok);
+			UH*freq = (UH*)(((V*)tok)+tok_len+1);
+			(*freq)++;//< update freq
 		}
 		#else
 		//! apply stemmer
@@ -307,7 +313,7 @@ I fti_init() {
 	mem_inc("statbag", bag_mem(statbag));
 	T(TEST, "packed docsets in %lums", clk_stop());
 
-	hsh_pack(wordbag);
+	//hsh_pack(wordbag);
 	hsh_info(wordbag);
 
 	R0;}
@@ -369,10 +375,17 @@ V fti_bench() {
 	T(TEST, "htab rounds: %d hits in %lums", HITS, clk_stop());	
 }*/
 
+ZV fti_wordbag_dump(BKT bkt, V*arg, UJ i) {
+	O("%s,%lu,%u\n", bkt->s, scnt(bkt->s), *(UH*)(((V*)bkt->payload)+scnt(bkt->payload)+1));
+}
+
 I main() {
 	LOG("fti_test");
 	srand(time(NULL));
 	P(fti_init(),1);
+
+	//hsh_each(wordbag, (HT_EACH)fti_wordbag_dump, NULL);
+
 	R fti_shutdown();}
 
 #endif

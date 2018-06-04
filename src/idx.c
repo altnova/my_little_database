@@ -188,6 +188,7 @@ UJ idx_each(IDX_EACH fn, V*arg, UI batch_size) {
 
 UJ idx_page(PAGE_EACH fn, V*arg, I page, I page_sz, I sort_fld, C sort_dir){
 	LOG("idx_page");
+	T(TRACE, "page=%d page_sz=%d sort_fld=%d sort_dir=%d", page, page_sz, sort_fld, sort_dir);
 	db_mmap(); // ensure db is mapped
 	VEC sv = sort_vectors[sort_fld];
 	UI pos = page * page_sz;I j;

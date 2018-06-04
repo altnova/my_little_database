@@ -6,7 +6,6 @@
 #include "fti.h"
 
 typedef struct fti_match {
-	ID rec_id;
 	 G field;
 	 F score;
   pRec r;
