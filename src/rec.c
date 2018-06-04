@@ -87,8 +87,8 @@ UJ rec_delete(ID rec_id) {
 	UJ new_size = idx_shift(rec_get_idx_pos(rec_id));
 	ftrunc(db, SZ_REC * new_size);
 	T(DEBUG, "db file truncated");
-
 	fclose(db);
+	idx_reset_sort_vectors();
 	R db_pos;}
 
 //! create a new record and add it to index
@@ -104,6 +104,7 @@ UJ rec_create(Rec r) {
 
 	idx_add(r->rec_id, db_pos);	
 	T(DEBUG, "created rec_id=%lu, pos=%lu", r->rec_id, db_pos);
+	idx_reset_sort_vectors();
 	R db_pos;
 }
 
@@ -122,6 +123,7 @@ UJ rec_update(Rec r) {
 	fclose(db);
 
 	T(DEBUG, "updated rec_id=%lu", r->rec_id);
+	idx_reset_sort_vectors();
 	R db_pos;}
 
 #endif
