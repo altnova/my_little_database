@@ -41,11 +41,13 @@ cli:
 	$(CC) -DCLI_STANDALONE $(CCOPTS) -o bin/cli $(COMMON) src/fts.c src/mem.c src/adt/set.c src/utl/rnd.c src/utl/usr.c src/alg/stm.c src/utl/clk.c src/alg/bin.c src/adt/vec.c src/idx.c src/rec.c src/adt/hsh.c src/utl/fio.c src/fti.c src/cli.c
 	$(VLG) ./bin/cli
 
+rpc:
+	make -C src/rpc # requires gnu preprocessor
+
 dep: clean
 	make -C src/adt
 	make -C src/alg
 	make -C src/utl
-	#make -C src/rpc # requires gnu preprocessor
 	make -C src/net
 
 vim:
