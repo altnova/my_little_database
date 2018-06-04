@@ -8,7 +8,8 @@
 Z IDX idx;		//< in-memory instance of the index
 Z bufRec buf;	//< readbuffer RECBUFLEN records
 
-VEC sort_vectors[FTI_FIELD_COUNT+1] = {0}; //< plus rec_id=0
+Z VEC sort_vectors[FTI_FIELD_COUNT+1] = {0};
+Z I sort_status[FTI_FIELD_COUNT+1] = {0};
 
 C db_file[MAX_FNAME_LEN+1];
 C idx_file[MAX_FNAME_LEN+1];
@@ -20,7 +21,7 @@ ZI  db_mapped=0;
 ZV* db_memmap;
 
 Z sz idx_close();
-ZV idx_reset_sort_vectors();
+V idx_reset_sort_vectors();
 
 //! current idx size
 UJ idx_size() {
@@ -139,8 +140,9 @@ ZV db_munmap() {
 	xmunmap(db_memmap, idx_dbsize());db_mapped=0;}
 
 //! creates a vector of db_positions according to given order
-//! and caches it to disk. if vector already exists, do nothing.
+//! and caches it to disk. if vector is sorted, do nothing.
 UJ db_sort(I f, C d){
+	P(sort_status[f],0) //< already sorted
 	LOG("db_sort");
 	sort_dir = d;
 	sort_field = f;
@@ -148,6 +150,7 @@ UJ db_sort(I f, C d){
 	VEC a = sort_vectors[f];
 	qsort(a->data, a->used, SZ(UJ), sort_field==0?db_cmp_ulong:(f<3?db_cmp_ushort:db_cmp_str));
 	db_munmap();
+	sort_status[f] = 1;
 	R0;}
 
 //! dump index to stdout
@@ -189,16 +192,15 @@ UJ idx_each(IDX_EACH fn, V*arg, UI batch_size) {
 UJ idx_page(PAGE_EACH fn, V*arg, I page, I page_sz, I sort_fld, C sort_dir){
 	LOG("idx_page");
 	T(TRACE, "page=%d page_sz=%d sort_fld=%d sort_dir=%d", page, page_sz, sort_fld, sort_dir);
+	db_sort(sort_fld,0); //< make sure vector is sorted
 	db_mmap(); // ensure db is mapped
 	VEC sv = sort_vectors[sort_fld];
 	UI pos = page * page_sz;I j;
 	V*a = (V*)sv->data;sz recs = MIN(vec_size(sv)-pos,page_sz);
-	//UJ*a = (UJ*)sv->data;sz recs = MIN(vec_size(sv)-pos,page_sz);
-	Rec out[recs]; //< array of pointers to mmap
+	Rec out[recs]; //< array of pointers to mmap'ed file
 	UI start = !sort_dir?pos:(vec_size(sv)-pos);
 	DO(recs,j=!sort_dir?(start+i):(start-i);
 		UJ file_pos = *(UJ*)(a + j * SZ(UJ));
-		//UJ file_pos = a[j];
 		Rec rptr = (Rec)(db_memmap + file_pos * SZ_REC);
 		out[i]=rptr;
 		T(DEBUG,"page %d: %d:%lu file_pos=%lu -> rec_id=%lu",page,j,i,file_pos,out[i]->rec_id);
@@ -206,25 +208,46 @@ UJ idx_page(PAGE_EACH fn, V*arg, I page, I page_sz, I sort_fld, C sort_dir){
 	fn(out, recs, arg);
 	R recs;}
 
-UJ idx_csv_batch(Rec ptrs[], UI ptr_cnt, V*arg) {
+Z UJ idx_csv_batch(Rec ptrs[], UI ptr_cnt, V*arg) {
 	LOG("idx_csv_batch");
-	I fd = *(I*)arg;
-	//C fldbuf[];
+	BAG csvbuf = *(BAG*)arg;UJ bytes;
 	T(TEST,"csv tick %d", ptr_cnt);
+	C linebuf[SZ_REC*2]; 
 	DO(ptr_cnt,
-		Rec r = ptrs[i];
-		DO(FTI_FIELD_COUNT,{
-
+		Rec r = ptrs[i]; bytes=0;
+		C fldbuf[2*CSV_FLDMAX]={0};
+		//T(TEST, "csv cnt=%d rec=%lu",ptr_cnt, r->rec_id);
+		DO(FTI_FIELD_COUNT+1,{
+		//DO(FTI_FIELD_COUNT,{
+			//T(TEST, "csv fld=%lu",i);
+			I o = rec_field_offsets[i];
+			//I mx = csv_max_field_widths[i+1];;
+			S pos = linebuf+bytes;
+			V*val = ((V*)r)+o;
+			I len = i==0         ? sprintf(pos,"%lu;", *(ID*)val):
+					i<3          ? sprintf(pos,"%u;", *(UH*)val) //
+								 : (csv_escape((S)val,fldbuf,r->lengths[i-3]),sprintf(pos,"%s;",fldbuf));
+								 //: sprintf(pos,"%.*s;",1000,(S)val);					
+			bytes+=len;
 		})
+		linebuf[bytes-1]='\n';
+		bag_add(csvbuf,linebuf,bytes);
 	)
 	R0;}
 
-UJ idx_csv_export(I sort_fld, C sort_dir, I fd) {
+UJ idx_csv_export(CSV_EACH fn, V* arg, I sort_fld, C sort_dir) {
 	LOG("idx_csv_export");
-	UI page_size = RECBUFLEN/2;
-	DO(1+idx_size()/page_size, //< total pages
-		idx_page(idx_csv_batch,&fd,i,page_size,sort_fld,sort_dir);)
-	R0;
+	UJ bytes_total = 0;
+	BAG csvbuf = bag_init(RECBUFLEN * SZ_REC);
+	DO(1+idx_size()/RECBUFLEN, //< total pages
+		bag_clear(csvbuf);
+		idx_page(idx_csv_batch,&csvbuf,i,RECBUFLEN,sort_fld,sort_dir);
+		bytes_total+=csvbuf->used;
+		UJ res = fn((S)bag_data(csvbuf),csvbuf->used,arg);
+		X(res==NIL,{bag_destroy(csvbuf);T(WARN,"csv import aborted");},NIL)
+	)
+	bag_destroy(csvbuf);
+	R bytes_total;
 }
 
 //! rebuild index from scratch
@@ -377,7 +400,7 @@ Z UJ db_dump() {
 	R0;}
 
 //! create if missing, truncate if exist
-ZV idx_reset_sort_vectors() {
+V idx_reset_sort_vectors() {
 	LOG("idx_reset_sort_vectors");
 	mem_reset("sort_vectors");
 	DO(FTI_FIELD_COUNT+1, //< init sort vectors
@@ -392,10 +415,11 @@ ZV idx_reset_sort_vectors() {
 		DO(idx_size(), vec_add(v, i)); //< prime with unsorted
 		vec_compact(&v);
 		sort_vectors[i] = v;
+		sort_status[i] = 0;
 		mem_inc("sort_vectors", vec_mem(sort_vectors[i]));
 	)}
 
-ZV idx_sort_all_vectors() {
+V idx_sort_all_vectors() {
 	DO(FTI_FIELD_COUNT+1, db_sort(i,0))}
 
 ZV idx_destroy_sort_vectors() {
@@ -445,7 +469,7 @@ Z UJ idx_open() {
 	idx_reset_sort_vectors();
 	if(idx_count>0)
 		idx_sort_all_vectors();
-	T(INFO, "full-text index initilaized, idx_size=%lu", idx_count);
+	T(INFO, "database index initilaized, idx_size=%lu", idx_count);
 	R idx_size();}
 
 Z sz idx_close() {
@@ -676,6 +700,7 @@ UJ idx_test_page_batch(Rec ptrs[], UI ptr_cnt, V*arg) {
 			r->rec_id, r->pages, r->year, r->publisher,
 			r->title, r->author, r->subject);)
 	R0;}
+
 UJ idx_test_pagination(UI page_size, I sort_fld, C sort_dir) {
 	LOG("idx_test_pagination");
 	DO(1+idx_size()/page_size, //< total pages
@@ -683,21 +708,31 @@ UJ idx_test_pagination(UI page_size, I sort_fld, C sort_dir) {
 		idx_page(idx_test_page_batch,NULL,i,page_size,sort_fld,sort_dir))
 	R0;}
 
+UJ idx_test_csv_batch(S csvbuf, UI size, V*arg) {
+	
+	O("csv chunk %d %d\n", size, scnt(csvbuf));
+	O("(%.100s)...\n", csvbuf);
+	O("(%.100s)\n", csvbuf+size-100);
+	//exit(0);
+	R0;
+}
+
 I main() {
 	LOG("main");
 	mem_init();
 	//T(TEST,"SZ_REC=%d",SZ_REC);
 
-	idx_test_core(); //< run these first
+	//idx_test_core(); //< run these first
 
-	db_init("fxt/reference.dat", "fxt/reference.idx");
+	//db_init("fxt/reference.dat", "fxt/reference.idx");
 	
-	idx_test_sort();
+	//idx_test_sort();
 
-	DO(FTI_FIELD_COUNT+1,
-		O("\n");idx_test_pagination(5,i,0);)//page_size,sort_fld,sort_dir
+	//DO(FTI_FIELD_COUNT+1,
+	//	O("\n");idx_test_pagination(5,i,0);)//page_size,sort_fld,sort_dir
 
-	//idx_csv_export(0,0,0);
+	db_init("dat/books.dat", "dat/books.idx");
+	idx_csv_export((CSV_EACH)idx_test_csv_batch, 0,0,0);
 
 	db_close();
 	mem_shutdown();
