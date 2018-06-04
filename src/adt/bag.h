@@ -18,6 +18,8 @@ ext BAG  bag_init(sz init_sz);
 ext V*   bag_add(BAG h, V*obj, sz obj_sz);
 ext sz   bag_mem(BAG h);
 ext sz   bag_compact(BAG h);
+ext V    bag_clear(BAG h);
+ext V*   bag_data(BAG h);
 ext sz   bag_destroy(BAG h);
 
 //:~

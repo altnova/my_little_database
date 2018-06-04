@@ -52,6 +52,12 @@ sz bag_mem(BAG h) {
 E bag_lfactor(BAG h) {
 	R (E)h->used/h->size;}
 
+V bag_clear(BAG h) {
+	h->used = 0;}
+
+V* bag_data(BAG h) {
+	R h->ptr;}
+
 sz bag_destroy(BAG h) {
 	sz released = h->size;
 	free(h->ptr);
