@@ -26,41 +26,62 @@ I msg_send(I p, MSG m) {
 	free(m);
 	R0;}
 
-V* msg_stream(I d,RPC_STREAM_FN rpc_fn){
-	LOG("msg_stream");
+MSG_STREAM msg_stream_start(I d,RPC_STREAM_FN rpc_fn, UI chunk_size){
+	LOG("msg_stream_start");
 	MSG m = rpc_fn(0,NULL); //< empty envelope
 	I tail_offset = rpc_tail_offset(m->hdr.type);
 	SIZETYPE el_size = rpc_item_size(m->hdr.type);
-	I buf_prefix_size = SZ_MSG_HDR + SZ(SIZETYPE);
-	V*buf=sbuf(d, buf_prefix_size + el_size * NET_STREAM_BUF_SZ);
-	P(!buf,(free(m),NULL)) //< locked
 	SIZETYPE*tail_cnt = (SIZETYPE*)(((V*)&m->as)+tail_offset);
-	mcpy(buf,m,buf_prefix_size);
 	*tail_cnt=NET_START_STREAM; //< set magic
 	snd(d, m, msg_size(m));
-	sbc1(d,buf_prefix_size); //< init buf counter
-	T(TEST, "start stream type %d for %d", m->hdr.type, d);
-	R buf+buf_prefix_size;} // first usable location
+	MSG_STREAM st = (MSG_STREAM)calloc(1,SZ_MSG_STREAM);chk(st,NULL);
+	st->hdr=m;
+	st->d=d;
+	st->chunk_size=chunk_size;
+	T(TRACE, "start stream type %d for %d", m->hdr.type, d);
+	R st;} // chunk header template
 
-/*
-V msg_stream(V*obj,UI osz,I d,UJ i,RPC_STREAM_FN rpc_fn, C is_last){
-	LOG("nsr_stream");
-	V*buf=tcp_buf(d, osz * NET_STREAM_BUF_SZ);
-	I pos = i%NET_STREAM_BUF_SZ;
-	if(i&&!pos){
-		msg_send(d, rpc_fn(NET_STREAM_BUF_SZ, buf));
-		T(TEST, "flush at %lu", i);}
-	mcpy(buf + osz * pos, obj, osz);
-	T(TEST, "buffered obj%lu -> pos=%d", i,pos);
-	if(is_last){
-		if(pos<NET_STREAM_BUF_SZ){
-			T(TEST, "flushing stream remainder=%d", pos+1);
-			msg_send(d, rpc_fn(pos+1, buf));}
-		msg_send(d, rpc_fn(0, NULL)); //< send stream terminator
-		tcp_buf(d,0); //< release buffer
+Z UJ msg_stream_send_chunk(V* ptrs[], SIZETYPE cnt, MSG_STREAM st) {
+	LOG("msg_stream_send");
+	T(TRACE, "stream chunk %d", cnt);
+	I tail_offset = rpc_tail_offset(st->hdr->hdr.type);
+	SIZETYPE el_size = rpc_item_size(st->hdr->hdr.type);
+	SIZETYPE*tail_cnt = (SIZETYPE*)(((V*)&st->hdr->as)+tail_offset);
+	*tail_cnt=cnt;
+	SIZETYPE bytes = SZ(SIZETYPE) + el_size * cnt;
+	st->hdr->hdr.len = bytes;
+	I hres = snd(st->d, st->hdr, SZ_MSG_HDR+SZ(SIZETYPE));
+	//T(TEST, "snd hdr res: %d", hres);
+	I sent = 0;
+	if(!cnt) {
+		T(TRACE,"reached stream end");
+		free(st->hdr);
+		free(st);
+	} else {
+		DO(cnt,
+			sent = snd(st->d, ptrs[i], el_size);
+			//T(TEST, "snd res %d", sent, errno);
+			if(sent<0&&errno==EPIPE){
+				T(WARN, "stream aborted: %s", strerror(errno));
+				R NIL;}
+		);
+		T(TRACE,"sent stream chunk %d %d", cnt, sent);
 	}
+	R cnt;}
+
+UJ msg_stream_send(V* ptrs[], SIZETYPE cnt, MSG_STREAM st) {
+	UI n = st->chunk_size;
+    DO(cnt/n,
+        P(NIL==msg_stream_send_chunk(ptrs+i*n, n, st),NIL)
+    )
+    UH tail = cnt%n;
+    if(tail)
+        P(NIL==msg_stream_send_chunk(ptrs+cnt-tail, tail, st),NIL)
+    R cnt;}
+
+V msg_stream_end(MSG_STREAM st) {
+	msg_stream_send_chunk(NULL,0,st);
 }
-*/
 
 I msg_send_err(I p, I err_id, S msg) {
 	LOG("msg_err");
@@ -77,18 +98,24 @@ I msg_recv(I d) {
 	LOG("recv_msg");
 	MSG_HDR h; I n=rcv(d,&h,SZ_MSG_HDR);
 	P(n<=0,(sd0(d),-1))
-	T(TRACE, "rcvd header %d bytes", n);
+	//T(TRACE, "rcvd header %d bytes", n);
 	//msg_hdr_dump(&h);
-	X(h.ver!=rpc_ver(), {msg_send_err(d, ERR_INVALID_RPC_VERSION, "invalid rpc version");sd0(d);},-1);
+	X(h.ver!=rpc_ver(), {
+		msg_hdr_dump(&h);
+		msg_send_err(d, ERR_INVALID_RPC_VERSION, "invalid rpc version");sd0(d);},-1);
 	X(h.len > MSG_MAX_LEN, {msg_send_err(d, ERR_MSG_IS_TOO_BIG, "message is too big");sd0(d);},-1);
 
 	pMSG *m = malloc(h.len); chk(m,-1);
-	n=rcv(d,m,h.len);
-	T(TRACE, "rcvd payload %d bytes, expected %d", n, h.len);
-
-	if(msg_is_stream_head(m)) {
-		T(TEST, "start STREAM");
+	I rcvd = 0;I left=h.len;
+	T(TRACE, "expecting %d bytes...", h.len);
+	W(rcvd<h.len){
+		//T(TEST,"left %d", left);
+		I rc=rcv(d,((V*)m)+rcvd,left);
+		X(rc<0, {free(m);msg_send_err(d, ERR_MSG_WOULD_BLOCK, "message would block");sd0(d);},-1);
+		rcvd+=rc; left-=rc;
+		//T(TEST,"rcvd %d", rcvd);
 	}
+	T(TRACE, "rcvd payload %d bytes, expected %d", rcvd, h.len);
 
 	if(msg_is_err(&h)) {
 		pERR_res *e = (pERR_res*)m;

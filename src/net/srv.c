@@ -46,6 +46,7 @@ V srv_shutdown() {
 	exit(0);}
 
 I srv_init() {
+	signal(SIGPIPE, SIG_IGN);
 	msg_init();
 	R tcp_init();}
 

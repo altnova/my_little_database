@@ -77,7 +77,7 @@ I rpc_init() {
     msg_has_tail(ADD_req, pRec)
     msg_has_tail(FND_req, C)
     msg_has_tail(FND_res, pFTI_MATCH)
-    msg_has_tail(LST_req, PAGING_INFO)
+    msg_has_tail(LST_req, pPAGING_INFO)
     msg_has_tail(LST_res, pRec)
     //msg_has_tail(SRT_res, pRec)
     msg_has_tail(ERR_req, C)
@@ -149,7 +149,8 @@ DEFN_SIZETYPE UI
 typedef struct msg_hdr { G ver, type; SIZETYPE len;} __attribute__((packed)) MSG_HDR;
 
 typedef struct pagination {
-  UI page_num, per_page, sort_by, sort_dir;
+  UI page_num, per_page, sort_by;
+  C sort_dir;
 } __attribute__((packed)) pPAGING_INFO;
 typedef pPAGING_INFO *PAGING_INFO;
 

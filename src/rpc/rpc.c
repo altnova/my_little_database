@@ -62,7 +62,7 @@ I rpc_init() {
     MSG_TAIL_OFFSET[ADD_req] = offsetof(pADD_req,cnt); ITEM_SIZE[ADD_req]=SZ(pRec);
     MSG_TAIL_OFFSET[FND_req] = offsetof(pFND_req,cnt); ITEM_SIZE[FND_req]=SZ(C);
     MSG_TAIL_OFFSET[FND_res] = offsetof(pFND_res,cnt); ITEM_SIZE[FND_res]=SZ(pFTI_MATCH);
-    MSG_TAIL_OFFSET[LST_req] = offsetof(pLST_req,cnt); ITEM_SIZE[LST_req]=SZ(PAGING_INFO);
+    MSG_TAIL_OFFSET[LST_req] = offsetof(pLST_req,cnt); ITEM_SIZE[LST_req]=SZ(pPAGING_INFO);
     MSG_TAIL_OFFSET[LST_res] = offsetof(pLST_res,cnt); ITEM_SIZE[LST_res]=SZ(pRec);
     //msg_has_tail(SRT_res, pRec)
     MSG_TAIL_OFFSET[ERR_req] = offsetof(pERR_req,cnt); ITEM_SIZE[ERR_req]=SZ(C);

@@ -355,7 +355,7 @@ ZI cli_parse_cmd_edit(S q) {
 	
 	R0;}
 
-UJ cli_list_rec_each(Rec r, V*arg, UJ i, C is_last) {
+UJ cli_list_rec_each(Rec r, V*arg, UJ i) {
 	I width = cols * .9;
 	I clen, tlen, gap, line_cnt=0;
 	I title_max = width * .7;

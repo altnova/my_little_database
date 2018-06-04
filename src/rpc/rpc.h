@@ -8,7 +8,8 @@
  #define SIZETYPE UI
 typedef struct msg_hdr { G ver, type; SIZETYPE len;} __attribute__((packed)) MSG_HDR;
 typedef struct pagination {
-  UI page_num, per_page, sort_by, sort_dir;
+  UI page_num, per_page, sort_by;
+  C sort_dir;
 } __attribute__((packed)) pPAGING_INFO;
 typedef pPAGING_INFO *PAGING_INFO;
  #define SZ_MSG_HDR SZ(MSG_HDR)

@@ -77,10 +77,11 @@ I ncl_cmd_del(S arg) { // del
 I ncl_cmd_list(S arg) { // list
 	LOG("ncl_cmd_list");
 	cli_recalc_paging(arg);
-	pPAGING_INFO p = (pPAGING_INFO){ // page_num, per_page, sort_by, sort_dir
-		cli_get_current_page_id()-1,
-		cli_get_current_page_size(),
-		0, 0};
+	pPAGING_INFO p; // page_num, per_page, sort_by, sort_dir
+	p.page_num = cli_get_current_page_id()-1;
+	p.per_page = cli_get_current_page_size();
+	p.sort_by = 0;
+	p.sort_dir = 0;
 	noprompt=1;
 	cli_print_page_head();
 	msg_send(c, rpc_LST_req(1,&p));
@@ -156,12 +157,13 @@ ZI ncl_on_msg(I d, MSG_HDR *h, pMSG *m) {
 			pLST_res *m_lst = (pLST_res*)m;
 			
 			if(m_lst->cnt==NET_START_STREAM) {
-				T(TEST, "LST begins to stream records");
+				T(TRACE, "LST begins to stream records");
+				R0;
 			}
-			T(TEST, "LST rcvd %d records", m_lst->cnt);
+			T(TRACE, "LST rcvd %d records", m_lst->cnt);
 			if(m_lst->cnt) {
-				//DO(m_lst->cnt,
-				//	cli_list_rec_each(&m_lst->records[i], NULL, i))
+				DO(m_lst->cnt,
+					cli_list_rec_each(&m_lst->records[i], NULL, i))
 			} else {
 				cli_print_page_tail(); // rcvd stream terminator
 				noprompt=0;

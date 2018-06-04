@@ -85,7 +85,7 @@ ZI rec_field_offsets[] = {
 
 #define FTI_FIELD_COUNT 6 //< count of full-text search fields
 //! delimiters for text tokenizer
-#define FTI_TOKEN_DELIM "' %$`^0123456789#@_?~;&/\\,!|+-.:()[]{}<>*=\"\t\n\r\0" 
+#define FTI_TOKEN_DELIM "\"' %$`^0123456789#@_?~;&/\\,!|+-.:()[]{}<>*=\"\t\n\r" 
 
 enum msg_err_codes{
 	ERR_INVALID_RPC_VERSION = 1,
@@ -95,7 +95,8 @@ enum msg_err_codes{
 	ERR_NO_SUCH_RECORD = 5,
 	ERR_NOT_SUPPORTED = 6,
 	ERR_CMD_FAILED = 7,
-	ERR_BAD_RECORD_ID = 8
+	ERR_BAD_RECORD_ID = 8,
+	ERR_MSG_WOULD_BLOCK = 9
 };
 
 //:~
