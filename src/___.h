@@ -29,7 +29,7 @@ typedef size_t sz;
 //! better switch
 #define SW switch
 #define CD default
-#define CS(n,x)	case n:x;break;	//< never forget a break again
+#define CS(n,x)	case n:;x;break;	//< never forget a break again
 
 //! fail fast
 #define P(x,y) {if(x)R(y);}	//< panic

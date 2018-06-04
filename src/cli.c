@@ -89,15 +89,15 @@ ZI cli_cmd_csv_export(S arg);
 ZI cli_cmd_rec_list(S arg);
 ZI cli_cmd_rec_sort(S arg);
 ZI cli_cmd_debug(S arg);
-//!                        :                 *                 +                -                <                   >                   !                 ^                 ~
+//!                        :                 *                 +                -                >                   <                   !                 ^                 ~
 Z CLI_CMD cmds[] =        {cli_cmd_rec_show, cli_cmd_rec_edit, cli_cmd_rec_add, cli_cmd_rec_del, cli_cmd_csv_import, cli_cmd_csv_export, cli_cmd_rec_list, cli_cmd_rec_sort, cli_cmd_debug};
-#define CLI_DB_COMMANDS ":*+-<>!^~"
+#define CLI_DB_COMMANDS ":*+-><!^~"
 Z CLI_CMD cli_cmd_search;
 
 ZI initialized=0;
 ZS current_prompt;C ptbuf[100];
 ZI rows, cols; //< terminal dimensions
-ZC fldbuf[FLDMAX];
+ZC fldbuf[CSV_FLDMAX];
 
 //! editing state
 ZI       editing = 0;
@@ -115,6 +115,9 @@ ZI current_page_id = 0;
 ZI current_total_pages = 0;
 ZI current_width = 0;
 ZI current_column_widths[3];
+
+ZI current_sort_field = 0;
+ZC current_sort_dir = 0;
 
 Z pDB_INFO db_info;
 
@@ -185,39 +188,47 @@ ZV cli_help_db() {
     	 //YELL(">");BLUE("o.csv");O("   export");NL();
     	 NL();
     TB();YELL("!");BLUE("    "); O("list");CH(" ",9);
-    	 YELL("<");BLUE("i.csv");O("   import");
+    	 YELL(">");BLUE("i.csv");O("   import");
     	 //YELL("^");BLUE("    "); O("resort");CH(" ",9);
     	 //YELL(">");BLUE("o.csv");O("   export");
     	 NL();
     TB();YELL("^");BLUE("    "); O("sort");CH(" ",9);
-    	 YELL(">");BLUE("o.csv");O("   export");
+    	 YELL("<");BLUE("o.csv");O("   export");
 		 NL();}
 
 ZV cli_usage() {
 	cli_banner();
 	C buf[100];
+	#ifndef CLI_STANDALONE	
 	I len = snprintf(buf,100, "tcp://%s:%d", hostname, prt);
 	TB();GREEN("index server:");CH(" ",53-13-len);
 		COLOR_START(C_BLUE);O("%s", buf);COLOR_END();
 	NL();NL();
+	#endif
 	TB();GREEN("indexed fields:");CH(" ",17);
 	DO(FTI_FIELD_COUNT,
-		COLOR_START(C_BLUE);O(" %s", rec_field_names[i]);COLOR_END();
+		COLOR_START(C_BLUE);O(" %s", rec_field_names[i+1]);COLOR_END();
 		if(!((I)(i+1)%3)){O("\n");TB();CH(" ",17+15);}
 	)
 	NL();
 	TB();O("total books:%41lu\n", db_info.total_records);
-	TB();O("total words:%41lu\n", db_info.total_words);
+	//TB();O("total words:%41lu\n", db_info.total_words);
 	TB();O("total alloc:%41lu\n", db_info.total_mem);
 
 	NL();
 	TB();GREEN("search modes:\n");
     HR(53);
-	TB();O("fuzzy:");CH(" ", 30);BLUE("war peace tolstoy");NL();
-	TB();O("exact:");CH(" ", 32);YELL("\""); BLUE("War and Peace");YELL("\"");NL();
+	//TB();O("fuzzy:");CH(" ", 30);BLUE("war peace tolstoy");NL();
+	//TB();O("exact:");CH(" ", 32);YELL("\""); BLUE("War and Peace");YELL("\"");NL();
+	//TB();O("field:");CH(" ", 33);YELL("title:"); BLUE("algernon");NL();
+	//TB();O("prefix:");CH(" ", 38);BLUE("dostoev");YELL("*");NL();
+	//TB();O("completions:");CH(" ", 35);BLUE("music"); YELL("?");NL();
+	//TB();O("fuzzy:");CH(" ", 30);BLUE("war peace tolstoy");NL();
+	TB();O("all fields:");CH(" ", 29);YELL(""); BLUE("War and Peace");YELL("");NL();
 	TB();O("field:");CH(" ", 33);YELL("title:"); BLUE("algernon");NL();
-	TB();O("prefix:");CH(" ", 38);BLUE("dostoev");YELL("*");NL();
-	TB();O("completions:");CH(" ", 35);BLUE("music"); YELL("?");NL();
+	//TB();O("prefix:");CH(" ", 38);BLUE("dostoev");YELL("*");NL();
+	//TB();O("completions:");CH(" ", 35);BLUE("music"); YELL("?");NL();
+
 	cli_help_db();
 	cli_hint();
 }
@@ -243,7 +254,7 @@ ID cli_parse_id(S str) {
 ZI cli_fld_format(S fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
-	I len = vsnprintf(fldbuf, FLDMAX, fmt, ap);
+	I len = vsnprintf(fldbuf, CSV_FLDMAX, fmt, ap);
 	va_end(ap);
 	R len;}
 
@@ -294,7 +305,7 @@ V cli_print_editor_head() {
 	NL();TB();
 	DO(FTI_FIELD_COUNT,
 		COLOR_START_BOLD(C_YELL);O("%lu: ", i+1);COLOR_END();
-		COLOR_START(C_BLUE);O("%s   ", rec_field_names[i]);COLOR_END();)
+		COLOR_START(C_BLUE);O("%s   ", rec_field_names[i+1]);COLOR_END();)
 	NL();TB();
 
 	I pad = 6;
@@ -355,11 +366,17 @@ ZI cli_parse_cmd_edit(S q) {
 	
 	R0;}
 
+UJ cli_page_each(Rec ptrs[], UI ptr_cnt, V*arg) {
+	DO(ptr_cnt,
+		cli_list_rec_each(ptrs[i], arg, i)
+	)
+	R0;}
+
 UJ cli_list_rec_each(Rec r, V*arg, UJ i) {
 	I width = cols * .9;
 	I clen, tlen, gap, line_cnt=0;
 	I title_max = width * .7;
-	I author_max = width-title_max;
+	I author_max = width-title_max-10;
 	BOX_LEFT();
 	COLOR_START_BOLD(C_GREY);clen = O("%5lu", r->rec_id);COLOR_END();
 	BOX_RIGHT(0);clen+=2;
@@ -417,9 +434,34 @@ V cli_print_page_tail() {
 	CH(" ", 4);YELL("!");BLUE("page");O(" jump");
 	NL();NL();}
 
+ZV cli_cmd_sort_hint() {
+	NL();TB();
+	DO(FTI_FIELD_COUNT+1,
+		COLOR_START_BOLD(C_YELL);O("%lu: ", i+1);COLOR_END();
+		COLOR_START(C_BLUE);O("%s   ", rec_field_names[i]);COLOR_END();)
+	NL();NL();TB();
+
+	I pad = 15+13;
+	YELL("^");BLUE("field");YELL(":");BLUE("0|1");O(" - set sorting asc/desc");
+	CH(" ", pad);O("current sorting: ");COLOR_START_BOLD(C_YELL);
+	O("%d:%d",current_sort_field+1,current_sort_dir);
+	COLOR_END();
+	//CH(" ", pad);YELL("\\");O(" - cancel ");O("%s", edit_mode);
+	NL();NL();}
+
 ZI cli_cmd_rec_sort(S arg){
-	LOG("cli_cmd_rec_sort");
-	T(TEST, "nyi");
+	if(scnt(arg)!=3||arg[1]!=':') {
+		cli_cmd_sort_hint();
+		R0;}
+
+	current_sort_field = (arg[0]-'0')-1;
+	current_sort_dir = arg[2]-'0';
+
+	NL();TB();TB();
+	O("sorting set to: ");COLOR_START_BOLD(C_YELL);O("%s %s",
+		rec_field_names[current_sort_field], current_sort_dir?"ascending":"descending");
+	COLOR_END();NL();NL();
+
 	R0;}
 
 ZI cli_cmd_debug(S arg){
@@ -553,7 +595,8 @@ ZI cli_cmd_rec_list(S arg){
 	LOG("cli_cmd_rec_list");
 	cli_recalc_paging(arg);
 	cli_print_page_head();
-	UJ res = idx_page(cli_list_rec_each, NULL, current_page_id-1, CLI_PAGE_SIZE); // read records
+	UJ res = idx_page((PAGE_EACH)cli_page_each, NULL, 
+		current_page_id-1, CLI_PAGE_SIZE, current_sort_field, current_sort_dir); //p->sort_by, p->sort_dir
 	cli_print_page_tail();
 	R0;}
 
@@ -574,9 +617,50 @@ ZI cli_cmd_rec_edit(S arg){
 	cli_print_editor_head();
 	R0;}
 
+ZI str_to_field_id(S s) {
+	LOG("str_to_field_id");
+	T(TEST, "%s", s);
+	DO(FTI_FIELD_COUNT+1,
+		if(!scmp(rec_field_names[i],s))R i;
+	)
+	R-1;}
+
+S curr_search_query;
+I curr_search_fld;
+UJ cli_find_matches(Rec r, V*arg, UJ i, I batch_size) {
+	LOG("cli_find_matches");
+	//T(TEST, "%lu", r->rec_id);
+	C match = 0;
+	DO(4,
+		S txt = (S)(((V*)r)+rec_field_offsets[i+3]);
+		txt = lcase(txt,scnt(txt));
+		if(strstr(txt,curr_search_query)){
+			T(TRACE, "%lu match on fld %d", r->rec_id, i);
+			match++;break;}
+	)
+	if(match)cli_list_rec_each(r,NULL,i);
+	R match;
+}
+
 ZI cli_cmd_search_local(S q){
-	//fts_search(q, (FTS_CALLBACK)NULL); // TODO
-	//fts_dump_result();
+	LOG("cli_cmd_search_local");
+	T(TEST, "%s", q);
+	S delim = schr(q,':');
+	I fld_id=-1;
+	if(delim){*delim='\0';
+	  fld_id=str_to_field_id(q);
+	  if(fld_id<0)*delim=':';
+	  	else q=delim+1;
+	}
+	T(TRACE,"fld=%d q=%s", fld_id, q);
+	curr_search_query=lcase(q,scnt(q));
+	curr_search_fld=fld_id;
+
+	UJ matches = 0;
+	cli_recalc_paging("1");
+	cli_print_page_head();
+	idx_each((IDX_EACH)cli_find_matches, &matches, 1);
+	cli_print_page_tail();
 	R0;}
 
 I cli_init() {
@@ -588,17 +672,19 @@ I cli_init() {
 
 V cli_shutdown(I itr) {
 	free(edit_buf);
-	fts_shutdown();
-    I res = fti_shutdown();exit(res);}
+}
 
 I main(I ac, S* av) {
 	LOG("cli_main");
+	mem_init();
+
 	srand(time(NULL)); //< random seed
 	setlocale(LC_NUMERIC, ""); //< format numbers
 	signal(SIGINT, cli_shutdown); //< catch SIGINT and cleanup nicely
 
-	P(fti_init(),1);
-	P(fts_init(),1);
+	//P(fti_init(),1);
+	//P(fts_init(),1);
+	db_init("dat/books.dat","dat/books.idx");
 
 	cli_init();
 
@@ -615,7 +701,11 @@ I main(I ac, S* av) {
 	USR_LOOP(usr_input_str(q, current_prompt, "invalid characters"),
 		if(-1==cli_dispatch_cmd(q))break;
 	)
+	//fts_shutdown();
+    //fti_shutdown();
+	db_close();
 	cli_shutdown(0);
+	mem_shutdown();
 }
 
 #endif

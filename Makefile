@@ -15,7 +15,7 @@ testdb: notestdb csv
 	$(VLG) ./bin/csv csv/reference.csv fxt/reference.dat 17
 
 idx: testdb
-	$(CC) -DRUN_TESTS_IDX $(CCOPTS) -o bin/idx $(COMMON) src/mem.c src/adt/hsh.c src/alg/bin.c src/adt/vec.c src/idx.c src/utl/fio.c src/rec.c
+	$(CC) -DRUN_TESTS_IDX $(CCOPTS) -o bin/idx $(COMMON) src/csv.c src/mem.c src/adt/hsh.c src/alg/bin.c src/adt/vec.c src/idx.c src/utl/fio.c src/rec.c
 	./bin/idx # will use fxt/reference.dat fxt/reference.idx
 
 csv:
@@ -30,7 +30,7 @@ fts:
 	$(VLG) ./bin/fts
 
 nsr:
-	$(CC) -DRUN_TESTS_NSR $(CCOPTS) -Wno-parentheses -o bin/nsr $(COMMON) src/idx.c src/rec.c src/fts.c src/fti.c src/adt/vec.c src/adt/set.c src/adt/hsh.c src/alg/bin.c src/alg/stm.c src/mem.c src/utl/clk.c src/utl/fio.c src/net/srv.c src/net/tcp.c src/net/msg.c src/rpc/rpc.c src/nsr.c
+	$(CC) -DRUN_TESTS_NSR $(CCOPTS) -Wno-parentheses -o bin/nsr $(COMMON) src/csv.c src/idx.c src/rec.c src/fts.c src/fti.c src/adt/vec.c src/adt/set.c src/adt/hsh.c src/alg/bin.c src/alg/stm.c src/mem.c src/utl/clk.c src/utl/fio.c src/net/srv.c src/net/tcp.c src/net/msg.c src/rpc/rpc.c src/nsr.c
 	./bin/nsr 5000
 
 ncl:
@@ -38,7 +38,8 @@ ncl:
 	$(VLG) ./bin/ncl localhost 5000
 
 cli: 
-	$(CC) -DCLI_STANDALONE $(CCOPTS) -o bin/cli $(COMMON) src/fts.c src/mem.c src/adt/set.c src/utl/rnd.c src/utl/usr.c src/alg/stm.c src/utl/clk.c src/alg/bin.c src/adt/vec.c src/idx.c src/rec.c src/adt/hsh.c src/utl/fio.c src/fti.c src/cli.c
+	#$(CC) -DCLI_STANDALONE $(CCOPTS) -o bin/cli $(COMMON) src/utl/str.c src/csv.c src/fts.c src/mem.c src/adt/set.c src/utl/rnd.c src/utl/usr.c src/alg/stm.c src/utl/clk.c src/alg/bin.c src/adt/vec.c src/idx.c src/rec.c src/adt/hsh.c src/utl/fio.c src/fti.c src/cli.c
+	$(CC) -DCLI_STANDALONE $(CCOPTS) -o bin/cli $(COMMON) src/utl/str.c src/csv.c src/mem.c src/utl/usr.c src/utl/clk.c src/alg/bin.c src/adt/vec.c src/idx.c src/rec.c src/adt/hsh.c src/utl/fio.c src/cli.c
 	$(VLG) ./bin/cli
 
 rpc:

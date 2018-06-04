@@ -7,7 +7,7 @@
 #define CLI_PROMPT_UPDATE "  \e[37m[%s@%s]\e[0m \e[1;32mupdate$\e[0m "
 #define CLI_PROMPT_CREATE "  \e[37m[%s@%s]\e[0m \e[1;32mcreate$\e[0m "
 #define VER "0.0.1"
-#define CLI_PAGE_SIZE 30
+#define CLI_PAGE_SIZE 15
 
 #include "utl/usr.h"
 #include "utl/str.h"

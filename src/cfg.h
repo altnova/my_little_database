@@ -22,10 +22,10 @@
 #define COLS 6				 /*< csv column count */
 #define CSV_READ_BUF 2000000 /*< csv read buffer */
 #define QUO '"'				 /*< quote char */
-#define DELIM ';'			 /*< csv delimiter */
+#define CSV_DELIM ';'		 /*< csv delimiter */
 #define NUL '\0'			 /*< null char */
 #define LF '\n'				 /*< newline char */
-#define FLDMAX 2000			 /*< longest field len */
+#define CSV_FLDMAX 2000			 /*< longest field len */
 #define RECBUFLEN 4096		 /*< record r/w buffer */
 
 #define MAX_FNAME_LEN 200	 /*< db and idx files */
@@ -57,6 +57,7 @@ typedef struct record {
 	C subject[2001];
    UH lengths[4];
 } __attribute__((packed)) pRec;
+
 typedef pRec bufRec[RECBUFLEN];
 typedef pRec* Rec;
 #define SZ_REC SZ(pRec)
@@ -72,7 +73,7 @@ typedef pDB_INFO* DB_INFO;
 enum rec_fields { fld_pages, fld_year,   fld_publisher,
                   fld_title, fld_author, fld_subject };
 
-ZS rec_field_names[] = {"pages", "year",   "publisher",
+ZS rec_field_names[] = {"rec_id", "pages", "year",   "publisher",
                         "title", "author", "subject"};
 
 ZI csv_max_field_widths[] = { 4, 4, 100, 200, 50, 2000 };
