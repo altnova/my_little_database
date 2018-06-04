@@ -99,8 +99,8 @@ UJ csv_stream_parse(CSV_STATE s, C buf[], UI bytes){
 		s->curr = buf[i];					//< current char
 		s->is_line_end = s->curr==LF;		//< line end flag
 		s->is_fld_end = s->is_line_end
-			||s->in_quotes && s->prev==QUO && s->curr==DELIM
-			||!s->in_quotes && s->curr==DELIM; //< field end flag
+			||s->in_quotes && s->prev==QUO && s->curr==CSV_DELIM
+			||!s->in_quotes && s->curr==CSV_DELIM; //< field end flag
 		//O("fld=%d maxw=%d\n", fld+1, csv_max_field_widths[fld+1]);
 		if (s->fldpos==csv_max_field_widths[s->fld+1]) //< field is longer than max length, enter skip state
 			s->in_skip=1;
@@ -236,6 +236,17 @@ UJ csv_parse(CSV_INPUT_STREAM read_fn, CSV_ADD_FIELD field_fn){
 	}
 	R currline-1;} //< lines parsed
 */
+
+V csv_escape(S s, C b[], UI len) {
+	C need_quotes=!!schr(s,CSV_DELIM);
+	UJ j;UH o=0;if(need_quotes){b[0]='"';o++;}
+	DO(len,j=i+o;C c=s[i];
+		if(c=='\n'||c=='\r'){b[j]=' ';continue;}
+		if(need_quotes&&c==QUO){b[j]=b[j+1]=QUO;o++;continue;}
+		b[j]=c;
+	)
+	if(need_quotes)b[++j]=QUO;
+	b[j+1]='\0';}
 
 UJ csv_init(){
 	LOG("csv_init");
