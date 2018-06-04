@@ -23,8 +23,7 @@ typedef struct msg_3 { SIZETYPE cnt; pRec records[0]; } __attribute__((packed)) 
 typedef struct msg_4 { SIZETYPE cnt; pRec records[0]; } __attribute__((packed)) pADD_req; typedef struct msg_14 { ID rec_id; } __attribute__((packed)) pADD_res;
 typedef struct msg_5 { UI max_hits; SIZETYPE cnt; S query[0]; } __attribute__((packed)) pFND_req; typedef struct msg_15 { SIZETYPE cnt; pFTI_MATCH matches[0]; } __attribute__((packed)) pFND_res;
 typedef struct msg_6 { SIZETYPE cnt; pPAGING_INFO pagination[0]; } __attribute__((packed)) pLST_req; typedef struct msg_16 { SIZETYPE cnt; pRec records[0]; } __attribute__((packed)) pLST_res;
-//mtype( 7, SRT,     _2(tUI(field_id), tUI(dir)),
-//                   _3(tUI(page_num), tUI(out_of), tARR(pRec,records)))
+typedef struct msg_7 { UI sort_by; C sort_dir; } __attribute__((packed)) pEXP_req; typedef struct msg_17 { SIZETYPE cnt; S csv[0]; } __attribute__((packed)) pEXP_res;
 typedef struct msg_8 { G empty[0]; } __attribute__((packed)) pBYE_req; typedef struct msg_18 { G empty[0]; } __attribute__((packed)) pBYE_res;
 typedef struct msg_9 { SIZETYPE cnt; S msg[0]; } __attribute__((packed)) pSAY_req; typedef struct msg_19 { SIZETYPE cnt; S msg[0]; } __attribute__((packed)) pSAY_res;
 typedef struct msg_50 { UI err_id; SIZETYPE cnt; S msg[0]; } __attribute__((packed)) pERR_req; typedef struct msg_150 { UI err_id; SIZETYPE cnt; S msg[0]; } __attribute__((packed)) pERR_res;
@@ -39,7 +38,7 @@ enum msg_codes {
     ADD_req = 4, ADD_res = 14,
     FND_req = 5, FND_res = 15,
     LST_req = 6, LST_res = 16,
-    //msg_code(7,SRT),
+    EXP_req = 7, EXP_res = 17,
     BYE_req = 8, BYE_res = 18,
     SAY_req = 9, SAY_res = 19,
     ERR_req = 50, ERR_res = 150
@@ -55,7 +54,7 @@ typedef union {
     pADD_req ADD_req; pADD_res ADD_res;
     pFND_req FND_req; pFND_res FND_res;
     pLST_req LST_req; pLST_res LST_res;
-    //msg_ref(SRT)
+    pEXP_req EXP_req; pEXP_res EXP_res;
     pBYE_req BYE_req; pBYE_res BYE_res;
     pSAY_req SAY_req; pSAY_res SAY_res;
     pERR_req ERR_req; pERR_res ERR_res;
@@ -85,8 +84,8 @@ ext MSG rpc_FND_req(UI max_hits, SIZETYPE query_cnt, S query);
 ext MSG rpc_FND_res(SIZETYPE matches_cnt, FTI_MATCH matches);
 ext MSG rpc_LST_req(SIZETYPE pagination_cnt, PAGING_INFO pagination);
 ext MSG rpc_LST_res(SIZETYPE records_cnt, Rec records);
-//msg_create_proto2(        SRT_req, _arg(UI,field_id), _arg(UI,dir));
-//msg_create_proto_w_tail2( SRT_res, _arg(UI,page_num), _arg(UI,out_of), _tail(Rec,records));
+ext MSG rpc_EXP_req(UI sort_by, C sort_dir);
+ext MSG rpc_EXP_res(SIZETYPE csv_cnt, S csv);
 ext MSG rpc_BYE_req();
 ext MSG rpc_BYE_res();
 ext MSG rpc_SAY_req(SIZETYPE msg_cnt, S msg);

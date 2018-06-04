@@ -7,7 +7,7 @@ G RPC_VERSION;
 UI MSG_SIZES[2*100];
 SIZETYPE ITEM_SIZE[2*100];
 I MSG_TAIL_OFFSET[2*100];
-S MSG_LABELS[]={"HEY","GET","DEL","UPD","ADD","FND","LST","***","BYE"};
+S MSG_LABELS[]={"HEY","GET","DEL","UPD","ADD","FND","LST","EXP","BYE"};
 sz SZ_HEY_req = SZ(pHEY_req), SZ_HEY_res = SZ(pHEY_res);;
 sz SZ_GET_req = SZ(pGET_req), SZ_GET_res = SZ(pGET_res);;
 sz SZ_DEL_req = SZ(pDEL_req), SZ_DEL_res = SZ(pDEL_res);;
@@ -15,7 +15,7 @@ sz SZ_UPD_req = SZ(pUPD_req), SZ_UPD_res = SZ(pUPD_res);;
 sz SZ_ADD_req = SZ(pADD_req), SZ_ADD_res = SZ(pADD_res);;
 sz SZ_FND_req = SZ(pFND_req), SZ_FND_res = SZ(pFND_res);;
 sz SZ_LST_req = SZ(pLST_req), SZ_LST_res = SZ(pLST_res);;
-//msg_prea_len(7,SRT);
+sz SZ_EXP_req = SZ(pEXP_req), SZ_EXP_res = SZ(pEXP_res);;
 sz SZ_BYE_req = SZ(pBYE_req), SZ_BYE_res = SZ(pBYE_res);;
 sz SZ_SAY_req = SZ(pSAY_req), SZ_SAY_res = SZ(pSAY_res);;
 sz SZ_ERR_req = SZ(pERR_req), SZ_ERR_res = SZ(pERR_res);;
@@ -33,8 +33,8 @@ MSG rpc_FND_req(UI max_hits, SIZETYPE query_cnt, S query) { MSG m = rpc_alloc(FN
 MSG rpc_FND_res(SIZETYPE matches_cnt, FTI_MATCH matches) { MSG m = rpc_alloc(FND_res, matches_cnt, (V*)matches); m->as.FND_res = (pFND_res){matches_cnt}; R m;};
 MSG rpc_LST_req(SIZETYPE paging_cnt, PAGING_INFO paging) { MSG m = rpc_alloc(LST_req, paging_cnt, (V*)paging); m->as.LST_req = (pLST_req){paging_cnt}; R m;};
 MSG rpc_LST_res(SIZETYPE records_cnt, Rec records) { MSG m = rpc_alloc(LST_res, records_cnt, (V*)records); m->as.LST_res = (pLST_res){records_cnt}; R m;};
-//msg_create_fn2(        SRT_req, UI, field_id, UI, dir);
-//msg_create_fn_w_tail2( SRT_res, UI, page_num, UI, out_of, Rec, records);
+MSG rpc_EXP_req(UI sort_by, C sort_dir) { MSG m = rpc_alloc(EXP_req, 0, NULL); m->as.EXP_req = (pEXP_req){sort_by, sort_dir}; R m;};
+MSG rpc_EXP_res(SIZETYPE csv_cnt, S csv) { MSG m = rpc_alloc(EXP_res, csv_cnt, (V*)csv); m->as.EXP_res = (pEXP_res){csv_cnt}; R m;};
 MSG rpc_BYE_req() { MSG m = rpc_alloc(BYE_req, 0, NULL); R m;};
 MSG rpc_BYE_res() { MSG m = rpc_alloc(BYE_res, 0, NULL); R m;};
 MSG rpc_ERR_req(UI err_id, SIZETYPE msg_cnt, S msg) { MSG m = rpc_alloc(ERR_req, msg_cnt, (V*)msg); m->as.ERR_req = (pERR_req){err_id, msg_cnt}; R m;};
@@ -51,7 +51,7 @@ I rpc_init() {
     MSG_SIZES[ADD_req]=SZ_ADD_req; MSG_SIZES[ADD_res]=SZ_ADD_res;
     MSG_SIZES[FND_req]=SZ_FND_req; MSG_SIZES[FND_res]=SZ_FND_res;
     MSG_SIZES[LST_req]=SZ_LST_req; MSG_SIZES[LST_res]=SZ_LST_res;
-    //msg_set_size(SRT)
+    MSG_SIZES[EXP_req]=SZ_EXP_req; MSG_SIZES[EXP_res]=SZ_EXP_res;
     MSG_SIZES[BYE_req]=SZ_BYE_req; MSG_SIZES[BYE_res]=SZ_BYE_res;
     MSG_SIZES[SAY_req]=SZ_SAY_req; MSG_SIZES[SAY_res]=SZ_SAY_res;
     MSG_SIZES[ERR_req]=SZ_ERR_req; MSG_SIZES[ERR_res]=SZ_ERR_res;
@@ -64,7 +64,7 @@ I rpc_init() {
     MSG_TAIL_OFFSET[FND_res] = offsetof(pFND_res,cnt); ITEM_SIZE[FND_res]=SZ(pFTI_MATCH);
     MSG_TAIL_OFFSET[LST_req] = offsetof(pLST_req,cnt); ITEM_SIZE[LST_req]=SZ(pPAGING_INFO);
     MSG_TAIL_OFFSET[LST_res] = offsetof(pLST_res,cnt); ITEM_SIZE[LST_res]=SZ(pRec);
-    //msg_has_tail(SRT_res, pRec)
+    MSG_TAIL_OFFSET[EXP_res] = offsetof(pEXP_res,cnt); ITEM_SIZE[EXP_res]=SZ(C);
     MSG_TAIL_OFFSET[ERR_req] = offsetof(pERR_req,cnt); ITEM_SIZE[ERR_req]=SZ(C);
     MSG_TAIL_OFFSET[ERR_res] = offsetof(pERR_res,cnt); ITEM_SIZE[ERR_res]=SZ(C);
     MSG_TAIL_OFFSET[SAY_req] = offsetof(pSAY_req,cnt); ITEM_SIZE[SAY_req]=SZ(C);

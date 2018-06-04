@@ -14,7 +14,7 @@ UI MSG_SIZES[2*100];
 SIZETYPE ITEM_SIZE[2*100];
 I  MSG_TAIL_OFFSET[2*100];
 
-S MSG_LABELS[]={"HEY","GET","DEL","UPD","ADD","FND","LST","***","BYE"};
+S MSG_LABELS[]={"HEY","GET","DEL","UPD","ADD","FND","LST","EXP","BYE"};
 
 msg_prea_len(0,HEY);
 msg_prea_len(1,GET);
@@ -23,7 +23,7 @@ msg_prea_len(3,UPD);
 msg_prea_len(4,ADD);
 msg_prea_len(5,FND);
 msg_prea_len(6,LST);
-//msg_prea_len(7,SRT);
+msg_prea_len(7,EXP);
 msg_prea_len(8,BYE);
 msg_prea_len(9,SAY);
 msg_prea_len(50,ERR);
@@ -42,8 +42,8 @@ msg_create_fn_w_tail1( FND_req, UI, max_hits, S, query);
 msg_create_fn_w_tail0( FND_res, FTI_MATCH, matches);
 msg_create_fn_w_tail0( LST_req, PAGING_INFO, paging);
 msg_create_fn_w_tail0( LST_res, Rec, records);
-//msg_create_fn2(        SRT_req, UI, field_id, UI, dir);
-//msg_create_fn_w_tail2( SRT_res, UI, page_num, UI, out_of, Rec, records);
+msg_create_fn2(        EXP_req, UI, sort_by, C, sort_dir);
+msg_create_fn_w_tail0( EXP_res,  S, csv);
 msg_create_fn0(        BYE_req);
 msg_create_fn0(        BYE_res);
 msg_create_fn_w_tail1( ERR_req, UI, err_id, S, msg);
@@ -65,7 +65,7 @@ I rpc_init() {
     msg_set_size(ADD)
     msg_set_size(FND)
     msg_set_size(LST)
-    //msg_set_size(SRT)
+    msg_set_size(EXP)
     msg_set_size(BYE)
     msg_set_size(SAY)
     msg_set_size(ERR)
@@ -79,7 +79,7 @@ I rpc_init() {
     msg_has_tail(FND_res, pFTI_MATCH)
     msg_has_tail(LST_req, pPAGING_INFO)
     msg_has_tail(LST_res, pRec)
-    //msg_has_tail(SRT_res, pRec)
+    msg_has_tail(EXP_res, C)
     msg_has_tail(ERR_req, C)
     msg_has_tail(ERR_res, C)
     msg_has_tail(SAY_req, C)
@@ -180,8 +180,8 @@ mtype( 5, FND,     _2(tUI(max_hits), tARR(S,query)),
 mtype( 6, LST,     _1(tARR(pPAGING_INFO,pagination)),
                    _1(tARR(pRec,records)))
 
-//mtype( 7, SRT,     _2(tUI(field_id), tUI(dir)),
-//                   _3(tUI(page_num), tUI(out_of), tARR(pRec,records)))
+mtype( 7, EXP,     _2(tUI(sort_by), tC(sort_dir)),
+                   _1(tARR(S,csv)))
 
 mtype( 8, BYE,     _0(),
                    _0())
@@ -204,7 +204,7 @@ enum msg_codes {
     msg_code(4,ADD),
     msg_code(5,FND),
     msg_code(6,LST),
-    //msg_code(7,SRT),
+    msg_code(7,EXP),
     msg_code(8,BYE),
     msg_code(9,SAY),    
     msg_code(50,ERR)
@@ -220,7 +220,7 @@ typedef union {
     msg_ref(ADD)
     msg_ref(FND)
     msg_ref(LST)
-    //msg_ref(SRT)
+    msg_ref(EXP)
     msg_ref(BYE)
     msg_ref(SAY)    
     msg_ref(ERR)    
@@ -251,8 +251,8 @@ msg_create_proto_w_tail1( FND_req, _arg(UI,max_hits), _tail(S,query));
 msg_create_proto_w_tail0( FND_res, _tail(FTI_MATCH,matches));
 msg_create_proto_w_tail0( LST_req, _tail(PAGING_INFO,pagination));
 msg_create_proto_w_tail0( LST_res, _tail(Rec,records));
-//msg_create_proto2(        SRT_req, _arg(UI,field_id), _arg(UI,dir));
-//msg_create_proto_w_tail2( SRT_res, _arg(UI,page_num), _arg(UI,out_of), _tail(Rec,records));
+msg_create_proto2(        EXP_req, _arg(UI,sort_by), _arg(C,sort_dir));
+msg_create_proto_w_tail0( EXP_res, _tail(S,csv));
 msg_create_proto0(        BYE_req);
 msg_create_proto0(        BYE_res);
 msg_create_proto_w_tail0( SAY_req, _tail(S,msg));

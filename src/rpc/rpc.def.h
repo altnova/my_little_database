@@ -33,6 +33,7 @@
 #define tUI(x) UI x
 #define tID(x) ID x
 #define tG(x) G x
+#define tC(x) C x
 
 #define msg_code(code,label) label##_req = code, label##_res = 1 ## code
 
