@@ -14,7 +14,8 @@
 #include "rec.h"
 
 #ifdef CLI_STANDALONE
-#include "fts.h"
+//#include "fts.h"
+#include "idx.h"
 #endif
 
 //! command handler interface
