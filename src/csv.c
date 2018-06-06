@@ -89,8 +89,9 @@ CSV_STATE csv_stream_init(CSV_ADD_FIELD field_fn) {
 UJ csv_stream_end(CSV_STATE s) {
 	LOG("csv_stream_end");
 	T(TEST,"total_bytes=%lu total_records=%lu", s->total_bytes, s->currline-1);
+	UJ r = s->currline-1;
 	free(s);
-	R s->currline-1;}
+	R r;}
 
 UJ csv_stream_parse(CSV_STATE s, C buf[], UI bytes){
 	LOG("csv_stream_parse");

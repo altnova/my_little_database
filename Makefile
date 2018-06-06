@@ -9,7 +9,7 @@ COMMON=src/utl/trc.c src/adt/bag.c
 all: nsr
 
 db: nodb csv
-	$(VLG) gdb ./bin/csv csv/books.csv dat/books.dat 39673
+	$(VLG) ./bin/csv csv/books.csv dat/books.dat 39673
 
 testdb: notestdb csv 
 	$(VLG) ./bin/csv csv/reference.csv fxt/reference.dat 17
