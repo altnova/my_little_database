@@ -710,7 +710,7 @@ UJ idx_test_pagination(UI page_size, I sort_fld, C sort_dir) {
 
 UJ idx_test_csv_batch(S csvbuf, UI size, V*arg) {
 	
-	O("csv chunk %d %d\n", size, scnt(csvbuf));
+	O("csv chunk %d %lu\n", size, scnt(csvbuf));
 	O("(%.100s)...\n", csvbuf);
 	O("(%.100s)\n", csvbuf+size-100);
 	//exit(0);
@@ -722,17 +722,17 @@ I main() {
 	mem_init();
 	//T(TEST,"SZ_REC=%d",SZ_REC);
 
-	//idx_test_core(); //< run these first
+	idx_test_core(); //< run these first
 
-	//db_init("fxt/reference.dat", "fxt/reference.idx");
+	db_init("fxt/reference.dat", "fxt/reference.idx");
 	
-	//idx_test_sort();
+	idx_test_sort();
 
-	//DO(FTI_FIELD_COUNT+1,
-	//	O("\n");idx_test_pagination(5,i,0);)//page_size,sort_fld,sort_dir
+	DO(FTI_FIELD_COUNT+1,
+		O("\n");idx_test_pagination(5,i,0);)//page_size,sort_fld,sort_dir
 
-	db_init("dat/books.dat", "dat/books.idx");
-	idx_csv_export((CSV_EACH)idx_test_csv_batch, 0,0,0);
+	//db_init("dat/books.dat", "dat/books.idx");
+	//idx_csv_export((CSV_EACH)idx_test_csv_batch, 0,0,0);
 
 	db_close();
 	mem_shutdown();
