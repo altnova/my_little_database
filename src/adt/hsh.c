@@ -9,40 +9,12 @@
 #include "../utl/clk.h"
 #include "hsh.h"
 
-//#define HSH_DEFAULT_FN hsh_fnv32
 #define HSH_DEFAULT_FN hsh_djb
 
-//#define HX4_DJBX33A_ROUND(i) h=(h<<5)+h+a[i],
-#define HX4_DJBX33A_ROUND(i)   h=33*(h^a[i]);
-
 //! djbhash \see http://www.burtleburtle.net/bob/hash/doobs.html
-#define DJB_LEVEL 5381
-Z inline HTYPE hsh_djb(S a,UI n){HTYPE h=DJB_LEVEL;DO(n,h=33*(h^a[i]));R h;}
-Z inline HTYPE hsh_djb2(S a,UI n){HTYPE h=DJB_LEVEL;DO(n,h=(h<<5)+h+a[i]);R h;}
-
-//! fnvhash \see https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
-#define FNV_PRIME_32 16777619
-#define FNV_OFFSET_32 2166136261U
-Z inline HTYPE hsh_fnv32(const S s, const I n){
-	HTYPE h = FNV_OFFSET_32;
-	DO(n,h=h^(s[i]);h=h * FNV_PRIME_32)R h;} 
-
-/*
-Z inline HTYPE hsh_djb2(S key, UJ len)
-{
-  HTYPE hash, i;
-  for (hash=0, i=0; i<len; ++i)
-  {
-    hash += key[i];
-    hash += (hash << 10);
-    hash ^= (hash >> 6);
-  }
-  hash += (hash << 3);
-  hash ^= (hash >> 11);
-  hash += (hash << 15);
-  return (hash & mask);
-}
-*/
+//! One of the best known hash functions for strings, due to djb.
+//! Computes very fast and distributes very well, yields uint32.
+Z inline HTYPE hsh_djb(S a,UI n){HTYPE h=5381;DO(n,h=33*(h^a[i]));R h;}
 
 //! copy with seek \param d dest \param s source \param n len
 ZS dsn(V* d, V* s, UJ n){R memcpy(d,s,n)+n;}
@@ -107,7 +79,6 @@ V* hsh_get(HT ht, V*s, sz n) {
 	R r->s;
 }
 
-//! \see https://github.com/twonds/ejabberd/blob/master/apps/ejabberd/c_src/tls_drv.c
 BKT hsh_ins(HT ht, V*k, sz n, V*payload){
 	LOG("hsh_ins");
 	P(!k||!n,NULL); //< null ptr or empty key
@@ -486,6 +457,17 @@ Z inline HTYPE hsh_djb3(S a, UI n) {
     }
     DO(n,h=(h<<5)+h+a[i])R h;
 }
+
+//! fnvhash \see https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
+#define FNV_PRIME_32 16777619
+#define FNV_OFFSET_32 2166136261U
+Z inline HTYPE hsh_fnv32(const S s, const I n){
+	HTYPE h = FNV_OFFSET_32;
+	DO(n,h=h^(s[i]);h=h * FNV_PRIME_32)R h;} 
+
+Z inline HTYPE hsh_djb2(S a,UI n){HTYPE h=DJB_LEVEL;DO(n,h=(h<<5)+h+a[i]);R h;}
+
+//! \see https://github.com/twonds/ejabberd/blob/master/apps/ejabberd/c_src/tls_drv.c
 
 
 */
