@@ -3,6 +3,8 @@
 WHAT THE FUCK IS A HASH TABLE
 -----------------------------
 
+kelas <me@kel.as>
+
 A hash table is a remarkable data structure designed for efficient 
 retrieval of arbitrary data items (called "values") by a given "key"
 uniquely assiciated with each value. As such, a hash table implements an 
