@@ -97,7 +97,7 @@ The following example illustrates the basic idea of the algorithm.
 
 Let the initial *level* be 4 (the table capacity is therefore 8 slots). We 
 begin by inserting 5 buckets. During an insertion, we map the hash value 
-onto the lower half of the address space, as the upper part didn't even 
+onto the lower half of the address space, as if the upper part didn't even 
 exist. Assuming the first 4 insertions did not produce any collisitions, 
 we have:
 
